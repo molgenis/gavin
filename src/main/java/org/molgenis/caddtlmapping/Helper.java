@@ -16,6 +16,9 @@ import java.util.stream.Stream;
 
 import org.molgenis.data.Entity;
 import org.molgenis.data.vcf.VcfRepository;
+import org.molgenis.r.ROutputHandler;
+import org.molgenis.r.RScriptExecutor;
+import org.molgenis.r.StringROutputHandler;
 
 public class Helper
 {
@@ -58,10 +61,17 @@ public class Helper
 	{
 		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMapping");
 		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
+		int index = 0;
 		while (vcfRepoIter.hasNext())
 		{
+			if(index % 5000 == 0)
+			{
+				System.out.println("Seen " + index + " variants..");
+			}
+			
 			Entity record = vcfRepoIter.next();
-			System.out.println(record.toString());
+			// System.out.println(record.toString());
+			index++;
 		}
 		vcfRepo.close();
 		return null;
@@ -111,5 +121,15 @@ public class Helper
 		Stream<Entry<String, Double>> st = map.entrySet().stream();
 		st.sorted(Comparator.comparing(e -> e.getValue())).forEach(e -> result.put(e.getKey(), e.getValue()));
 		return result;
+	}
+
+	public void Rscript()
+	{
+		/*
+		 * png("~/Desktop/test.png"); plot(c(1,2,3,4,5)); dev.off()
+		 */
+		RScriptExecutor r = new RScriptExecutor("/usr/bin/Rscript");
+		ROutputHandler outputHandler = new StringROutputHandler();
+		r.executeScript(new File("/Users/jvelde/Desktop/test.R"), outputHandler);
 	}
 }
