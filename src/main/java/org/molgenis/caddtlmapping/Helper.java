@@ -4,16 +4,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
-import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotation.RepositoryAnnotator;
-import org.molgenis.data.support.DefaultAttributeMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.vcf.VcfRepository;
 
 public class Helper
@@ -42,7 +43,9 @@ public class Helper
 
 	/**
 	 * Returns a map of sequence feature to list of candidate variant 'line numbers'. We simply count along and store
-	 * the index of candidates.
+	 * the index of candidates. We use doubles to deal with multi allelic variants. For example, usually an index could
+	 * be 154.0, but if there are multiple variants, they are encoded as 154.1 for the first alternative allele, and so
+	 * on. Also store the (approximate) locations of the sequence features in a map.
 	 * 
 	 * @param vcfFile
 	 * @param exacFile
@@ -50,8 +53,8 @@ public class Helper
 	 * @return
 	 * @throws IOException
 	 */
-	public static HashMap<String, List<Integer>> getCandidateVariantsPerGene(File vcfFile, File exacFile,
-			double mafThreshold) throws IOException
+	public static HashMap<String, List<Double>> getCandidateVariantsPerGene(File vcfFile, File exacFile,
+			double mafThreshold, HashMap<String, String> sequenceFeatureLocations) throws IOException
 	{
 		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMapping");
 		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
@@ -60,6 +63,53 @@ public class Helper
 			Entity record = vcfRepoIter.next();
 			System.out.println(record.toString());
 		}
+		vcfRepo.close();
 		return null;
+	}
+
+	/**
+	 * Get list of CADD scores for indices within patient VCF adjusted by inheritance mode
+	 * 
+	 * @param list
+	 * @param vcfFile
+	 * @param caddFile
+	 * @param inheritance
+	 * @return
+	 */
+	public static double[] getPatientCaddScores(List<Double> list, File vcfFile, File caddFile, String inheritance,
+			ArrayList<String> patientSampleIdList)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param list
+	 * @param vcfFile
+	 * @param caddFile
+	 * @param exacFile
+	 * @param inheritance
+	 * @return
+	 */
+	public static double[] getPopulationCaddScores(List<Double> list, File vcfFile, File caddFile, File exacFile,
+			String inheritance)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * Helper function to sort LOD scores
+	 * 
+	 * @author jvelde
+	 *
+	 */
+	public static <K, V extends Comparable<? super V>> LinkedHashMap<String, Double> sortByValue(Map<String, Double> map)
+	{
+		LinkedHashMap<String, Double> result = new LinkedHashMap<>();
+		Stream<Entry<String, Double>> st = map.entrySet().stream();
+		st.sorted(Comparator.comparing(e -> e.getValue())).forEach(e -> result.put(e.getKey(), e.getValue()));
+		return result;
 	}
 }
