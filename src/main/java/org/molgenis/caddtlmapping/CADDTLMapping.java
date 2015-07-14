@@ -1,7 +1,6 @@
 package org.molgenis.caddtlmapping;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -57,10 +56,9 @@ public class CADDTLMapping
 
 	/**
 	 * Central function of the tool
-	 * 
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void start() throws IOException
+	public void start() throws Exception
 	{
 
 		// list of sample identifers within the VCF file that represent the patients
