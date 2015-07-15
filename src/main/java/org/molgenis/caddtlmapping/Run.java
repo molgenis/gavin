@@ -15,7 +15,7 @@ public class Run
 		if (!(args.length == 6 || args.length == 7))
 		{
 			throw new Exception(
-					"Must supply at least 6 arguments: patient VCF, ExAC, CADD, output, MAF, inheritance, sampleIds");
+					"Must supply at least 6 arguments: patient VCF (tabix indexed), ExAC, CADD, output, MAF, inheritance, sampleIds");
 		}
 
 		File vcfFile = new File(args[0]);

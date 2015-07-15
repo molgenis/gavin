@@ -4,34 +4,38 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
-import java.util.stream.Stream;
 
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator;
 import org.molgenis.data.annotator.tabix.TabixReader;
+import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 import org.molgenis.data.vcf.VcfRepository;
 import org.molgenis.r.ROutputHandler;
 import org.molgenis.r.RScriptExecutor;
 import org.molgenis.r.StringROutputHandler;
 
+import com.google.common.collect.ImmutableList;
+
 public class Helper
 {
-	private int secondPassIndex;
-	private int secondPassIndexForPopContrasting;
+	// private int secondPassIndex;
+	// private int secondPassIndexForPopContrasting;
+	private TabixVcfRepository patientTabixReader;
 	private TabixReader exacTabixReader;
 	private TabixReader caddTabixReader;
 
-	public Helper(File exacFile, File caddFile) throws IOException
+	public Helper(File vcfFile, File exacFile, File caddFile) throws IOException
 	{
-		this.secondPassIndex = 0;
-		this.secondPassIndexForPopContrasting = 0;
+		// this.secondPassIndex = 0;
+		// this.secondPassIndexForPopContrasting = 0;
+		this.patientTabixReader = new TabixVcfRepository(vcfFile, "patientreader");
 		this.exacTabixReader = new TabixReader(exacFile.getAbsolutePath());
 		this.caddTabixReader = new TabixReader(caddFile.getAbsolutePath());
 	}
@@ -58,10 +62,8 @@ public class Helper
 	}
 
 	/**
-	 * Returns a map of sequence feature to list of candidate variant 'line numbers'. We simply count along and store
-	 * the index of candidates. We use doubles to deal with multi allelic variants. For example, usually an index could
-	 * be 154.0, but if there are multiple variants, they are encoded as 154.1 for the first alternative allele, and so
-	 * on. Also store the (approximate) locations of the sequence features in a map.
+	 * Returns a map of 'sequence feature' to list of 'candidate variants' denoted by chr:pos-pos location in the Tabix
+	 * file.
 	 * 
 	 * @param vcfFile
 	 * @param exacFile
@@ -69,11 +71,11 @@ public class Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public LinkedHashMap<String, List<Double>> getCandidateVariantsPerGene(File vcfFile, double mafThreshold,
+	public LinkedHashMap<String, List<String>> getCandidateVariantsPerGene(File vcfFile, double mafThreshold,
 			Map<String, String> sequenceFeatureLocations) throws Exception
 	{
 
-		LinkedHashMap<String, List<Double>> res = new LinkedHashMap<String, List<Double>>();
+		LinkedHashMap<String, List<String>> res = new LinkedHashMap<String, List<String>>();
 
 		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMappingFirstPass");
 		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
@@ -126,50 +128,62 @@ public class Helper
 			if (altSplit.length > 1)
 			{
 				// TODO
-				// System.out.println("WARNING: for now, ignoring multi allelic input patient variants!! " +
-				// record.toString());
+				System.out.println("INDEVELOPMENT: for now, ignoring multi allelic input patient variants!! "
+						+ record.toString());
 				continue;
 			}
 
 			// filter by protein impact
 			// TODO for now, hard-code only consider MODERATE and HIGH impact, but later on, make this optional or
 			// configurable
-			String[] annSplit = record.getString("INFO_ANN").split("\\|", -1);
-			SnpEffAnnotator.Impact impact = Enum.valueOf(SnpEffAnnotator.Impact.class, annSplit[2]);
-			if (!(impact.equals(SnpEffAnnotator.Impact.MODERATE) || impact.equals(SnpEffAnnotator.Impact.HIGH)))
+
+			// multiple annotations? could even be multiple genes!!
+			// example:
+			// ANN=T|missense_variant|MODERATE|ANGPTL7|ANGPTL7|transcript|NM_021146.3|Coding|3/5|c.658C>T|p.Arg220Cys|949/2290|658/1041|220/346||,T|intron_variant|MODIFIER|MTOR|MTOR|transcript|NM_004958.3|Coding|28/57|c.4253+5498G>A||||||
+
+			String[] multiAnn = record.getString("INFO_ANN").split(",");
+
+			for (int i = 0; i < multiAnn.length; i++)
 			{
-				continue;
+				String ann = multiAnn[i];
+				String[] annSplit = ann.split("\\|", -1);
+				SnpEffAnnotator.Impact impact = Enum.valueOf(SnpEffAnnotator.Impact.class, annSplit[2]);
+				if (!(impact.equals(SnpEffAnnotator.Impact.MODERATE) || impact.equals(SnpEffAnnotator.Impact.HIGH)))
+				{
+					continue;
+				}
+
+				// filter by MAF
+				double exacMaf = 0.0;
+				String exacVariant = getFromExAC(chr, pos, ref, alt);
+				if (exacVariant != null)
+				{
+					String AFstring = getInfoFieldFromExACVariant(exacVariant, "AF", chr, pos, ref, alt);
+					exacMaf = Double.parseDouble(AFstring);
+				}
+
+				// filter by MAF
+				if (exacMaf > mafThreshold)
+				{
+					continue;
+				}
+
+				// all passed!
+				String gene = annSplit[3];
+
+				if (!res.containsKey(gene))
+				{
+					List<String> candLocsForGene = new ArrayList<String>();
+					res.put(gene, candLocsForGene);
+					// for location, simply store pos of the first candidate here
+					sequenceFeatureLocations.put(gene, pos);
+				}
+
+				// store index of this candidate
+				// add 0.1 for other alt allele, maybe even 0.2 for second alt allele, etc. TODO
+				// btw NOT the same as multiple snpEff annotations
+				res.get(gene).add(chr + ":" + pos + "-" + pos);
 			}
-
-			// filter by MAF
-			double exacMaf = 0.0;
-			String exacVariant = getFromExAC(chr, pos, ref, alt);
-			if (exacVariant != null)
-			{
-				String AFstring = getInfoFieldForExACVariant(exacVariant, "AF", chr, pos, ref, alt);
-				exacMaf = Double.parseDouble(AFstring);
-			}
-
-			// filter by MAF
-			if (exacMaf > mafThreshold)
-			{
-				continue;
-			}
-
-			// all passed!
-			String gene = annSplit[3];
-
-			if (!res.containsKey(gene))
-			{
-				List<Double> indicesForGene = new ArrayList<Double>();
-				res.put(gene, indicesForGene);
-				// for location, simply store pos of the first candidate here
-				sequenceFeatureLocations.put(gene, pos);
-			}
-
-			// store index of this candidate
-			// add 0.1 for other alt, maybe even 0.2 for second alt, etc. TODO
-			res.get(gene).add(index + 0.0);
 
 		}
 		vcfRepo.close();
@@ -184,7 +198,7 @@ public class Helper
 	 * @return
 	 * @throws Exception
 	 */
-	private String getInfoFieldForExACVariant(String exacVariant, String infoFieldWanted, String chr, String pos,
+	private String getInfoFieldFromExACVariant(String exacVariant, String infoFieldWanted, String chr, String pos,
 			String ref, String alt) throws Exception
 	{
 		String[] split = exacVariant.split("\t", -1);
@@ -289,102 +303,117 @@ public class Helper
 		return null;
 	}
 
+	// private String getCandidateVariant(String chrPosQuery) throws Exception
+	// {
+	// TabixReader.Iterator it = patientTabixReader.query(chrPosQuery);
+	// //1:23000-24000
+	// String askedChr = chrPosQuery.split(":",-1)[0];
+	// String askedPos = chrPosQuery.split("-",-1)[1];
+	// String next;
+	// while (it != null && (next = it.next()) != null)
+	// {
+	// String[] nextSplit = next.split("\t", -1);
+	// if(nextSplit[0].equals(askedChr) && nextSplit[1].equals(askedPos))
+	// {
+	// return next;
+	// }
+	// }
+	// throw new Exception("Could not find " + chrPosQuery + " in patient vcf!");
+	// }
+
 	/**
 	 * Get list of CADD scores for indices within patient VCF adjusted by inheritance mode
 	 * 
-	 * @param list
+	 * @param candList
 	 * @param vcfFile
 	 * @param caddFile
 	 * @param inheritance
 	 * @return
 	 * @throws Exception
 	 */
-	public double[] getPatientCaddScores(List<Double> list, Iterator<Entity> patientVcfIter, String inheritance,
+	public double[] getPatientCaddScores(List<String> candList, String inheritance,
 			ArrayList<String> patientSampleIdList) throws Exception
 	{
 
 		// HACK 2 CHECK
 		// patientSampleIdList = null;
 
-		Entity record;
-		int variantsProcessed = 0;
+		// Entity record;
+		// int variantsProcessed = 0;
 		ArrayList<Double> allCaddScores = new ArrayList<Double>();
-		while (patientVcfIter.hasNext())
+
+		for (String candChrPos : candList)
 		{
-			this.secondPassIndex++;
-			System.out.println("secondPassIndex="+secondPassIndex + ", list=" + list.toString());
+			ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos);
+			if (candVariantList.size() > 1)
+			{
+				throw new Exception("More than 1 candidate variant in query results for " + candChrPos);
+			}
+			Entity candVariant = candVariantList.get(0);
+			String chr = candVariant.getString("#CHROM");
+			String pos = candVariant.getString("POS");
+			String ref = candVariant.getString("REF");
+			String alt = candVariant.getString("ALT");
 
-			record = patientVcfIter.next();
+			Double cadd = getCaddScore(chr, pos, ref, alt);
 
-			if (list.contains(Math.floor(secondPassIndex)))
+			// System.out.println("YES! cadd: " + cadd);
+
+			if (cadd == null)
+			{
+				System.out.println("CADD null, have to skip this variant...");
+
+			}
+
+			else
 			{
 
-				String chr = record.getString("#CHROM");
-				String pos = record.getString("POS");
-				String ref = record.getString("REF");
-				String alt = record.getString("ALT");
-
-				Double cadd = getCaddScore(chr, pos, ref, alt);
-
-				System.out.println("YES! cadd: " + cadd);
-
-				if (cadd == null)
-				{
-					System.out.println("CADD null, have to skip this variant...");
-
-				}
-
-				else
+				// iterate over the genotypes
+				Iterable<Entity> sampleEntities = candVariant.getEntities(VcfRepository.SAMPLES);
+				for (Entity sample : sampleEntities)
 				{
 
-					// iterate over the genotypes
-					Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
-					for (Entity sample : sampleEntities)
+					if (patientSampleIdList == null)
 					{
+						// TODO in this case: consider EVERY genotype!
+						// refactor.......
 
-						if (patientSampleIdList == null)
-						{
-							// TODO in this case: consider EVERY genotype!
-							// refactor.......
+						List<Double> caddForGeno = combineGenotypeWithCadd(sample.get("GT").toString(), cadd,
+								inheritance);
+						allCaddScores.addAll(caddForGeno);
 
-							List<Double> caddForGeno = combineGenotypeWithCadd(sample.get("GT").toString(), cadd,
-									inheritance);
-							allCaddScores.addAll(caddForGeno);
-
-						}
-
-						// TODO known ugly....
-						// NAME='905957_T_100386'
-						else if (patientSampleIdList.contains(sample.get("NAME").toString().split("_")[2]))
-						{
-							List<Double> caddForGeno = combineGenotypeWithCadd(sample.get("GT").toString(), cadd,
-									inheritance);
-							allCaddScores.addAll(caddForGeno);
-						}
-
-						else
-						{
-
-						}
 					}
 
+					// TODO known ugly....
+					// NAME='905957_T_100386'
+					else if (patientSampleIdList.contains(sample.get("NAME").toString().split("_")[2]))
+					{
+						List<Double> caddForGeno = combineGenotypeWithCadd(sample.get("GT").toString(), cadd,
+								inheritance);
+						allCaddScores.addAll(caddForGeno);
+					}
+
+					else
+					{
+						// not a patient, ignore
+					}
 				}
 
-				variantsProcessed++;
 			}
 
-//			System.out.println("list.size()=" + list.size() + ", variantsProcessed=" + variantsProcessed);
-			if (list.size() == variantsProcessed)
-			{
-
-				// System.out.println("returning: " + allCaddScores.toString());
-				return convertDoubles(allCaddScores);
-			}
-
+			// variantsProcessed++;
 		}
 
-		throw new Exception(
-				"getPatientCaddScores ran through entire patient VCF file without finalizing candidate variants, something went wrong");
+		// System.out.println("list.size()=" + list.size() + ", variantsProcessed=" + variantsProcessed);
+		// if (candList.size() == variantsProcessed)
+		// {
+		//
+		// // System.out.println("returning: " + allCaddScores.toString());
+		//
+		// }
+
+		return convertDoubles(allCaddScores);
+
 	}
 
 	/**
@@ -496,7 +525,7 @@ public class Helper
 	/**
 	 * Get a comparable set of variants from the population to contract against
 	 * 
-	 * @param list
+	 * @param candList
 	 * @param vcfFile
 	 * @param caddFile
 	 * @param exacFile
@@ -504,53 +533,39 @@ public class Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public double[] getPopulationCaddScores(List<Double> list, Iterator<Entity> patientVcfIterForPopContrasting,
-			String inheritance) throws Exception
+	public double[] getPopulationCaddScores(List<String> candList, String inheritance) throws Exception
 	{
 
-		int variantsProcessed = 0;
-
-		Entity record;
 		ArrayList<Double> allCaddScores = new ArrayList<Double>();
-		while (patientVcfIterForPopContrasting.hasNext())
+
+		for (String candChrPos : candList)
 		{
-			this.secondPassIndexForPopContrasting++;
-
-			record = patientVcfIterForPopContrasting.next();
-
-			if (list.contains(Math.floor(secondPassIndexForPopContrasting)))
+			ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos);
+			if (candVariantList.size() > 1)
 			{
-
-				String chr = record.getString("#CHROM");
-				String pos = record.getString("POS");
-				String ref = record.getString("REF");
-				String alt = record.getString("ALT");
-
-				String exacVariant = getFromExAC(chr, pos, ref, alt);
-
-				Double cadd = getCaddScore(chr, pos, ref, alt);
-
-				if (exacVariant != null && cadd != null)
-				{
-					List<Double> caddForGeno = getGenotypeCountsForExACVariantAndCombineWithCADD(exacVariant,
-							inheritance, cadd, chr, pos, ref, alt);
-					allCaddScores.addAll(caddForGeno);
-
-				}
-				else
-				{
-					// TODO
-					// instead, we should look for a comparable variant nearby!! or try other CADD files!! etc
-				}
-
-				variantsProcessed++;
+				throw new Exception("More than 1 candidate variant in query results for " + candChrPos);
 			}
+			Entity candVariant = candVariantList.get(0);
+			String chr = candVariant.getString("#CHROM");
+			String pos = candVariant.getString("POS");
+			String ref = candVariant.getString("REF");
+			String alt = candVariant.getString("ALT");
 
-			if (list.size() == variantsProcessed)
+			Double cadd = getCaddScore(chr, pos, ref, alt);
+
+			String exacVariant = getFromExAC(chr, pos, ref, alt);
+
+			if (exacVariant != null && cadd != null)
 			{
+				List<Double> caddForGeno = getGenotypeCountsForExACVariantAndCombineWithCADD(exacVariant, inheritance,
+						cadd, chr, pos, ref, alt);
+				allCaddScores.addAll(caddForGeno);
 
-				// System.out.println("returning: " + allCaddScores.toString());
-				return convertDoubles(allCaddScores);
+			}
+			else
+			{
+				// TODO
+				// instead, we should look for a comparable variant nearby!! or try other CADD files!! etc
 			}
 
 		}
@@ -563,8 +578,8 @@ public class Helper
 	{
 		List<Double> caddForExacVariantGenotypes = new ArrayList<Double>();
 
-		String AC_HetString = getInfoFieldForExACVariant(exacVariant, "AC_Het", chr, pos, ref, alt);
-		String AC_HomString = getInfoFieldForExACVariant(exacVariant, "AC_Hom", chr, pos, ref, alt);
+		String AC_HetString = getInfoFieldFromExACVariant(exacVariant, "AC_Het", chr, pos, ref, alt);
+		String AC_HomString = getInfoFieldFromExACVariant(exacVariant, "AC_Hom", chr, pos, ref, alt);
 
 		// if (AC_Het == null || AC_Hom == null)
 		// {
@@ -608,20 +623,6 @@ public class Helper
 		return caddForExacVariantGenotypes;
 	}
 
-	/**
-	 * Helper function to sort LOD scores
-	 * 
-	 * @author jvelde
-	 *
-	 */
-	public <K, V extends Comparable<? super V>> LinkedHashMap<String, Double> sortByValue(Map<String, Double> map)
-	{
-		LinkedHashMap<String, Double> result = new LinkedHashMap<>();
-		Stream<Entry<String, Double>> st = map.entrySet().stream();
-		st.sorted(Comparator.comparing(e -> e.getValue())).forEach(e -> result.put(e.getKey(), e.getValue()));
-		return result;
-	}
-
 	private void Rscript()
 	{
 		/*
@@ -646,5 +647,46 @@ public class Helper
 			ret[i] = doubles.get(i).doubleValue();
 		}
 		return ret;
+	}
+
+	/**
+	 * Sort hashmap
+	 * 
+	 * @param passedMap
+	 * @return
+	 */
+	public LinkedHashMap<String, Double> sortHashMapByValuesD(HashMap<String, Double> passedMap)
+	{
+		List<String> mapKeys = new ArrayList<String>(passedMap.keySet());
+		List<Double> mapValues = new ArrayList<Double>(passedMap.values());
+		Collections.sort(mapValues);
+		Collections.sort(mapKeys);
+
+		LinkedHashMap<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+
+		Iterator<Double> valueIt = mapValues.iterator();
+		while (valueIt.hasNext())
+		{
+			Object val = valueIt.next();
+			Iterator<String> keyIt = mapKeys.iterator();
+
+			while (keyIt.hasNext())
+			{
+				Object key = keyIt.next();
+				String comp1 = passedMap.get(key).toString();
+				String comp2 = val.toString();
+
+				if (comp1.equals(comp2))
+				{
+					passedMap.remove(key);
+					mapKeys.remove(key);
+					sortedMap.put((String) key, (Double) val);
+					break;
+				}
+
+			}
+
+		}
+		return sortedMap;
 	}
 }

@@ -2,17 +2,17 @@ package org.molgenis.caddtlmapping;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
-import org.molgenis.data.Entity;
-import org.molgenis.data.vcf.VcfRepository;
 
 // "CADD-TL mapping"
 // test 3 inheritance models: recessive, additive, dominant
 // test 3 frequency models: singleton (0%), rare (<1%), common (<5%)
+//
+// requires patient VCF to be indexed TODO: bgzip myfile.vcf; tabix -p vcf myfile.vcf.gz; 
 //
 // simple mechanics:
 // 1. get set of candidate variants (+genotypes) from patients by filtering on MAF, impact, etc
@@ -63,7 +63,7 @@ public class CADDTLMapping
 	public void start() throws Exception
 	{
 
-		Helper h = new Helper(exacFile, caddFile);
+		Helper h = new Helper(vcfFile, exacFile, caddFile);
 
 		// list of sample identifers within the VCF file that represent the patients
 		// TODO: check VCF file and give warnings when there are identifiers not mapping etc
@@ -72,60 +72,43 @@ public class CADDTLMapping
 
 		System.out.println("First pass to tag potentially pathogenic variants and store feature locations..");
 		LinkedHashMap<String, String> sequenceFeatureLocations = new LinkedHashMap<String, String>();
-		LinkedHashMap<String, List<Double>> candidates = h.getCandidateVariantsPerGene(vcfFile, mafThreshold,
+		LinkedHashMap<String, List<String>> candidates = h.getCandidateVariantsPerGene(vcfFile, mafThreshold,
 				sequenceFeatureLocations);
 		System.out.println("A total of " + candidates.size() + " sequence features have 1 or more tagged variants.");
 
 		System.out.println("Second pass to perform CADDTL mapping on each sequence feature..");
-		LinkedHashMap<String, Double> lodScores = new LinkedHashMap<String, Double>();
-
-		// set up 2 iterators
-		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMappingPatients");
-		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
-		VcfRepository vcfRepoForPopContrasting = new VcfRepository(vcfFile, "CADDTLMappingPopulation");
-		Iterator<Entity> vcfRepoIterForPopContrasting = vcfRepoForPopContrasting.iterator();
+		HashMap<String, Double> lodScores = new HashMap<String, Double>();
 
 		for (String sequenceFeature : candidates.keySet())
 		{
 			System.out.println("Now investigating " + sequenceFeature + " (" + candidates.get(sequenceFeature).size()
 					+ " tagged variants)");
 
-			
-			double[] patientCaddScores = h.getPatientCaddScores(candidates.get(sequenceFeature), vcfRepoIter,
-					inheritance, patientSampleIdList);
-			double[] populationCaddScores = h.getPopulationCaddScores(candidates.get(sequenceFeature),
-					vcfRepoIterForPopContrasting, inheritance);
-			
-//			System.out.println("patientCaddScores size = " + patientCaddScores.length);
-//			System.out.println("populationCaddScores size = " + populationCaddScores.length);
-			
+			double[] patientCaddScores = h.getPatientCaddScores(candidates.get(sequenceFeature), inheritance,
+					patientSampleIdList);
+			double[] populationCaddScores = h.getPopulationCaddScores(candidates.get(sequenceFeature), inheritance);
+
 			double lod = 0;
-			if(patientCaddScores.length > 0 && populationCaddScores.length > 0)
+			if (patientCaddScores.length > 0 && populationCaddScores.length > 0)
 			{
 				MannWhitneyUTest mwt = new MannWhitneyUTest();
 				double pval = mwt.mannWhitneyUTest(patientCaddScores, populationCaddScores);
+				pval = pval != 0 ? pval : 0.0000000001;
 				lod = -Math.log10(pval);
 			}
 
 			lodScores.put(sequenceFeature, lod);
-
 			System.out.println("Evaluated " + patientCaddScores.length + " patient scores vs. "
 					+ populationCaddScores.length + " population scores resulting in a LOD score of " + lod);
 		}
-		vcfRepo.close();
-		vcfRepoForPopContrasting.close();
 
 		System.out.println("Processing the results..");
-		LinkedHashMap<String, Double> sortedLodScores = h.sortByValue(lodScores);
-
-		System.out.println("Hits with LOD > 3, sorted:");
+		LinkedHashMap<String, Double> sortedLodScores = h.sortHashMapByValuesD(lodScores);
+		
+		System.out.println("Hits, sorted low to high:");
 		for (String sequenceFeature : sortedLodScores.keySet())
 		{
 			System.out.println(sequenceFeature + "\t" + sortedLodScores.get(sequenceFeature));
-			if (sortedLodScores.get(sequenceFeature).doubleValue() <= 3.0)
-			{
-				break;
-			}
 		}
 		System.out.println("Output plot written to: TODO");
 
