@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,6 +32,7 @@ public class Helper
 	public Helper(File exacFile, File caddFile) throws IOException
 	{
 		this.secondPassIndex = 0;
+		this.secondPassIndexForPopContrasting = 0;
 		this.exacTabixReader = new TabixReader(exacFile.getAbsolutePath());
 		this.caddTabixReader = new TabixReader(caddFile.getAbsolutePath());
 	}
@@ -76,7 +76,7 @@ public class Helper
 
 		HashMap<String, List<Double>> res = new HashMap<String, List<Double>>();
 
-		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMapping");
+		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMappingFirstPass");
 		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
 
 		// keep track of the 'line' in which variant was seen
@@ -93,7 +93,7 @@ public class Helper
 
 			// FIXME
 			/** DEV **/
-			if (index == 2000)
+			if (index == 10000)
 			{
 				vcfRepo.close();
 				return res;
@@ -144,10 +144,11 @@ public class Helper
 
 			// filter by MAF
 			double exacMaf = 0.0;
-			String exacVariant = getFromExAC(exacTabixReader, chr, pos, ref, alt);
+			String exacVariant = getFromExAC(chr, pos, ref, alt);
 			if (exacVariant != null)
 			{
-				exacMaf = getMAFForExACVariant(exacVariant, chr, pos, ref, alt);
+				String AFstring = getInfoFieldForExACVariant(exacVariant, "AF", chr, pos, ref, alt);
+				exacMaf = Double.parseDouble(AFstring);
 			}
 
 			// filter by MAF
@@ -184,8 +185,8 @@ public class Helper
 	 * @return
 	 * @throws Exception
 	 */
-	private double getMAFForExACVariant(String exacVariant, String chr, String pos, String ref, String alt)
-			throws Exception
+	private String getInfoFieldForExACVariant(String exacVariant, String infoFieldWanted, String chr, String pos,
+			String ref, String alt) throws Exception
 	{
 		String[] split = exacVariant.split("\t", -1);
 
@@ -217,17 +218,16 @@ public class Helper
 		String[] infoSplit = split[7].split(";", -1);
 		for (String infoField : infoSplit)
 		{
-			if (infoField.startsWith("AF="))
+			if (infoField.startsWith(infoFieldWanted + "="))
 			{
-				String mafValues = infoField.replace("AF=", "");
-				String[] mafValuesSplit = mafValues.split(",", -1);
-				String mafString = mafValuesSplit[indexOfAlt];
-				double maf = Double.parseDouble(mafString);
-				return maf;
+				String infoValues = infoField.replace(infoFieldWanted + "=", "");
+				String[] infoValuesSplit = infoValues.split(",", -1);
+				String infoValueString = infoValuesSplit[indexOfAlt];
+				return infoValueString;
 			}
 		}
 
-		throw new Exception("Could not extract MAF from variant: " + exacVariant);
+		throw new Exception("Could not extract " + infoFieldWanted + " from variant: " + exacVariant);
 	}
 
 	/**
@@ -241,11 +241,10 @@ public class Helper
 	 * @return
 	 * @throws IOException
 	 */
-	private String getFromExAC(TabixReader exacTabixReader, String chr, String pos, String ref, String alt)
-			throws IOException
+	private String getFromExAC(String chr, String pos, String ref, String alt) throws IOException
 	{
 
-		TabixReader.Iterator it = exacTabixReader.query(chr + ":" + pos + "-" + pos);
+		TabixReader.Iterator it = this.exacTabixReader.query(chr + ":" + pos + "-" + pos);
 		String next;
 		while (it != null && (next = it.next()) != null)
 		{
@@ -502,13 +501,15 @@ public class Helper
 	 * @param exacFile
 	 * @param inheritance
 	 * @return
+	 * @throws Exception
 	 */
 	public double[] getPopulationCaddScores(List<Double> list, Iterator<Entity> patientVcfIterForPopContrasting,
-			String inheritance)
+			String inheritance) throws Exception
 	{
 
-		Entity record;
 		int variantsProcessed = 0;
+
+		Entity record;
 		ArrayList<Double> allCaddScores = new ArrayList<Double>();
 		while (patientVcfIterForPopContrasting.hasNext())
 		{
@@ -523,13 +524,87 @@ public class Helper
 				String pos = record.getString("POS");
 				String ref = record.getString("REF");
 				String alt = record.getString("ALT");
-				
-				
-				
+
+				String exacVariant = getFromExAC(chr, pos, ref, alt);
+
+				Double cadd = getCaddScore(chr, pos, ref, alt);
+
+				if (exacVariant != null && cadd != null)
+				{
+					List<Double> caddForGeno = getGenotypeCountsForExACVariantAndCombineWithCADD(exacVariant,
+							inheritance, cadd, chr, pos, ref, alt);
+					allCaddScores.addAll(caddForGeno);
+
+				}
+				else
+				{
+					// TODO
+					// instead, we should look for a comparable variant nearby!! or try other CADD files!! etc
+				}
+
+				variantsProcessed++;
+			}
+
+			if (list.size() == variantsProcessed)
+			{
+
+				// System.out.println("returning: " + allCaddScores.toString());
+				return convertDoubles(allCaddScores);
+			}
+
+		}
+
+		return convertDoubles(allCaddScores);
+	}
+
+	private List<Double> getGenotypeCountsForExACVariantAndCombineWithCADD(String exacVariant, String inheritance,
+			Double cadd, String chr, String pos, String ref, String alt) throws Exception
+	{
+		List<Double> caddForExacVariantGenotypes = new ArrayList<Double>();
+
+		String AC_HetString = getInfoFieldForExACVariant(exacVariant, "AC_Het", chr, pos, ref, alt);
+		String AC_HomString = getInfoFieldForExACVariant(exacVariant, "AC_Hom", chr, pos, ref, alt);
+
+		// if (AC_Het == null || AC_Hom == null)
+		// {
+		// throw new Exception("AC_Het == null || AC_Hom == null for " + exacVariant);
+		// }
+
+		int AC_Het = Integer.parseInt(AC_HetString);
+		int AC_Hom = Integer.parseInt(AC_HomString);
+
+		// for hom alt, always add twice
+		for (int i = 0; i < AC_Hom; i++)
+		{
+			caddForExacVariantGenotypes.add(cadd);
+			caddForExacVariantGenotypes.add(cadd);
+		}
+
+		for (int i = 0; i < AC_Het; i++)
+		{
+			// for het, it depends on inheritance model
+			if (inheritance.equals("additive"))
+			{
+				// add once for additive
+				caddForExacVariantGenotypes.add(cadd);
+			}
+			else if (inheritance.equals("dominant"))
+			{
+				// add twice for dominant
+				caddForExacVariantGenotypes.add(cadd);
+				caddForExacVariantGenotypes.add(cadd);
+			}
+			else if (inheritance.equals("recessive"))
+			{
+				// dont add them for recessive!
+			}
+			else
+			{
+				throw new Exception("unknown inheritance!" + inheritance);
 			}
 		}
 
-		return null;
+		return caddForExacVariantGenotypes;
 	}
 
 	/**

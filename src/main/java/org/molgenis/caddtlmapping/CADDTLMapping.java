@@ -81,30 +81,40 @@ public class CADDTLMapping
 		HashMap<String, Double> lodScores = new HashMap<String, Double>();
 
 		// set up 2 iterators
-		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMapping");
+		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMappingPatients");
 		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
-		VcfRepository vcfRepoForPopContrasting = new VcfRepository(vcfFile, "CADDTLMapping");
-		Iterator<Entity> vcfRepoIterForPopContrasting = vcfRepo.iterator();
+		VcfRepository vcfRepoForPopContrasting = new VcfRepository(vcfFile, "CADDTLMappingPopulation");
+		Iterator<Entity> vcfRepoIterForPopContrasting = vcfRepoForPopContrasting.iterator();
 
 		for (String sequenceFeature : candidates.keySet())
 		{
 			System.out.println("Now investigating " + sequenceFeature + " (" + candidates.get(sequenceFeature).size()
 					+ " tagged variants)");
 
+			
 			double[] patientCaddScores = h.getPatientCaddScores(candidates.get(sequenceFeature), vcfRepoIter,
 					inheritance, patientSampleIdList);
 			double[] populationCaddScores = h.getPopulationCaddScores(candidates.get(sequenceFeature),
 					vcfRepoIterForPopContrasting, inheritance);
+			
+//			System.out.println("patientCaddScores size = " + patientCaddScores.length);
+//			System.out.println("populationCaddScores size = " + populationCaddScores.length);
+			
+			double lod = 0;
+			if(patientCaddScores.length > 0 && populationCaddScores.length > 0)
+			{
+				MannWhitneyUTest mwt = new MannWhitneyUTest();
+				double pval = mwt.mannWhitneyUTest(patientCaddScores, populationCaddScores);
+				lod = -Math.log10(pval);
+			}
 
-			MannWhitneyUTest mwt = new MannWhitneyUTest();
-			double pval = mwt.mannWhitneyU(patientCaddScores, populationCaddScores);
-			double lod = -Math.log10(pval);
 			lodScores.put(sequenceFeature, lod);
 
 			System.out.println("Evaluated " + patientCaddScores.length + " patient scores vs. "
 					+ populationCaddScores.length + " population scores resulting in a LOD score of " + lod);
 		}
 		vcfRepo.close();
+		vcfRepoForPopContrasting.close();
 
 		System.out.println("Processing the results..");
 		LinkedHashMap<String, Double> sortedLodScores = h.sortByValue(lodScores);
