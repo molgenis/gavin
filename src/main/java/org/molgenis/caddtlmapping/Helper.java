@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,11 +69,11 @@ public class Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public HashMap<String, List<Double>> getCandidateVariantsPerGene(File vcfFile, double mafThreshold,
-			HashMap<String, String> sequenceFeatureLocations) throws Exception
+	public LinkedHashMap<String, List<Double>> getCandidateVariantsPerGene(File vcfFile, double mafThreshold,
+			Map<String, String> sequenceFeatureLocations) throws Exception
 	{
 
-		HashMap<String, List<Double>> res = new HashMap<String, List<Double>>();
+		LinkedHashMap<String, List<Double>> res = new LinkedHashMap<String, List<Double>>();
 
 		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMappingFirstPass");
 		Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
@@ -313,6 +312,7 @@ public class Helper
 		while (patientVcfIter.hasNext())
 		{
 			this.secondPassIndex++;
+			System.out.println("secondPassIndex="+secondPassIndex + ", list=" + list.toString());
 
 			record = patientVcfIter.next();
 
@@ -373,6 +373,7 @@ public class Helper
 				variantsProcessed++;
 			}
 
+//			System.out.println("list.size()=" + list.size() + ", variantsProcessed=" + variantsProcessed);
 			if (list.size() == variantsProcessed)
 			{
 
@@ -403,7 +404,7 @@ public class Helper
 		if (genotype.equals("./."))
 		{
 			// missing genotype... skip
-			return null;
+			return res;
 		}
 
 		String[] genoSplit = genotype.split("/", -1);

@@ -2,7 +2,6 @@ package org.molgenis.caddtlmapping;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,13 +71,13 @@ public class CADDTLMapping
 		ArrayList<String> patientSampleIdList = h.loadPatientSampleIdList(patientSampleIdsFile);
 
 		System.out.println("First pass to tag potentially pathogenic variants and store feature locations..");
-		HashMap<String, String> sequenceFeatureLocations = new HashMap<String, String>();
-		HashMap<String, List<Double>> candidates = h.getCandidateVariantsPerGene(vcfFile, mafThreshold,
+		LinkedHashMap<String, String> sequenceFeatureLocations = new LinkedHashMap<String, String>();
+		LinkedHashMap<String, List<Double>> candidates = h.getCandidateVariantsPerGene(vcfFile, mafThreshold,
 				sequenceFeatureLocations);
 		System.out.println("A total of " + candidates.size() + " sequence features have 1 or more tagged variants.");
 
 		System.out.println("Second pass to perform CADDTL mapping on each sequence feature..");
-		HashMap<String, Double> lodScores = new HashMap<String, Double>();
+		LinkedHashMap<String, Double> lodScores = new LinkedHashMap<String, Double>();
 
 		// set up 2 iterators
 		VcfRepository vcfRepo = new VcfRepository(vcfFile, "CADDTLMappingPatients");
