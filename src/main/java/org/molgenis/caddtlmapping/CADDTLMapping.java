@@ -46,8 +46,8 @@ public class CADDTLMapping
 	private String inheritance;
 	private File patientSampleIdsFile;
 
-	public CADDTLMapping(File vcfFile, File exacFile, File caddFile, double mafThreshold,
-			String inheritance, File patientSampleIdsFile)
+	public CADDTLMapping(File vcfFile, File exacFile, File caddFile, double mafThreshold, String inheritance,
+			File patientSampleIdsFile)
 	{
 		super();
 		this.vcfFile = vcfFile;
@@ -55,7 +55,8 @@ public class CADDTLMapping
 		this.caddFile = caddFile;
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 		Date date = new Date();
-		this.outputFile = new File("caddtlmappingresults_" +dateFormat.format(date) + "_" + inheritance + "_" + mafThreshold + ".tsv");
+		this.outputFile = new File("caddtlmappingresults_" + dateFormat.format(date) + "_" + inheritance + "_"
+				+ mafThreshold + ".tsv");
 		this.mafThreshold = mafThreshold;
 		this.inheritance = inheritance;
 		this.patientSampleIdsFile = patientSampleIdsFile;
@@ -73,8 +74,12 @@ public class CADDTLMapping
 
 		// list of sample identifers within the VCF file that represent the patients
 		// TODO: check VCF file and give warnings when there are identifiers not mapping etc
-		System.out.println("Loading patient sampleID list..");
-		ArrayList<String> patientSampleIdList = h.loadPatientSampleIdList(patientSampleIdsFile);
+		ArrayList<String> patientSampleIdList = null;
+		if (patientSampleIdsFile != null)
+		{
+			System.out.println("Loading patient sampleID list..");
+			patientSampleIdList = h.loadPatientSampleIdList(patientSampleIdsFile);
+		}
 
 		System.out.println("First pass to tag potentially pathogenic variants and store feature locations..");
 		LinkedHashMap<String, String> sequenceFeatureLocations = new LinkedHashMap<String, String>();

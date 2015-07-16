@@ -114,7 +114,7 @@ public class Helper
 
 			// filter by quality
 			String filter = record.getString("FILTER");
-			if (!filter.equals("PASS"))
+			if (filter == null || !filter.equals("PASS"))
 			{
 				continue;
 			}
@@ -646,8 +646,8 @@ public class Helper
 		scriptPw.println("hits <- as.data.frame(read.table(\"" + dataframeLocation
 				+ "\", check.names=FALSE, header=TRUE, sep =\"\\t\", quote=\"\", as.is=TRUE))");
 		scriptPw.println("hits$P <- as.numeric(hits$P)");
-		scriptPw.println("png(\"" + plotLocation + "\")");
-		scriptPw.println("manhattan(hits)");
+		scriptPw.println("png(\"" + plotLocation + "\", res=200, width=1920, height=1080)");
+		scriptPw.println("manhattan(hits, col = c(\"blue4\", \"orange3\"))");
 		scriptPw.println("dev.off()");
 		scriptPw.flush();
 		scriptPw.close();
@@ -668,7 +668,7 @@ public class Helper
 	{
 		try
 		{
-			double d = Double.parseDouble(str);
+			Double.parseDouble(str);
 		}
 		catch (NumberFormatException nfe)
 		{

@@ -7,6 +7,7 @@ public class Run
 
 	/**
 	 * Check all arguments and start the tool
+	 * 
 	 * @param args
 	 * @throws Exception
 	 */
@@ -15,7 +16,11 @@ public class Run
 		if (!(args.length == 5 || args.length == 6))
 		{
 			throw new Exception(
-					"Must supply at least 6 arguments: patient VCF (tabix indexed), ExAC, CADD, MAF, inheritance, sampleIds");
+					"Must supply at least 6 arguments: patient VCF (tabix indexed), ExAC, CADD, MAF, inheritance, sampleIds\n"
+							+ "Typical input prep:\n"
+							+ "java -Xmx2g -jar snpEff.jar hg19 -v -canon -ud 0 1504.vcf > 1504_snpeff.vcf\n"
+							+ "vcf-sort 1504_snpeff.vcf | bgzip > 1504_snpeff_sorted.vcf.gz\n"
+							+ "tabix -p vcf 1504_snpeff_sorted.vcf.gz\n" + "java -Xmx2g -jar CADDTLMapping .. etc\n");
 		}
 
 		File vcfFile = new File(args[0]);
@@ -71,10 +76,9 @@ public class Run
 
 		System.out.println("Arguments OK !\nStarting..");
 
-		CADDTLMapping cm = new CADDTLMapping(vcfFile, exacFile, caddFile, MAF, inheritance,
-				patientSampleIdsFile);
+		CADDTLMapping cm = new CADDTLMapping(vcfFile, exacFile, caddFile, MAF, inheritance, patientSampleIdsFile);
 		cm.start();
-		
+
 		System.out.println("All done!");
 	}
 
