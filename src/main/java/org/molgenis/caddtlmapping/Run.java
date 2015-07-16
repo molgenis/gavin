@@ -12,10 +12,10 @@ public class Run
 	 */
 	public static void main(String[] args) throws Exception
 	{
-		if (!(args.length == 6 || args.length == 7))
+		if (!(args.length == 5 || args.length == 6))
 		{
 			throw new Exception(
-					"Must supply at least 6 arguments: patient VCF (tabix indexed), ExAC, CADD, output, MAF, inheritance, sampleIds");
+					"Must supply at least 6 arguments: patient VCF (tabix indexed), ExAC, CADD, MAF, inheritance, sampleIds");
 		}
 
 		File vcfFile = new File(args[0]);
@@ -36,13 +36,7 @@ public class Run
 			throw new Exception("Input CADD file does not exist or directory: " + caddFile.getAbsolutePath());
 		}
 
-		File outputFile = new File(args[3]);
-		if (outputFile.isFile())
-		{
-			System.out.println("WARNING: output file already exists: " + outputFile.getAbsolutePath());
-		}
-
-		String MAF_input = args[4];
+		String MAF_input = args[3];
 		double MAF = -1;
 		try
 		{
@@ -57,7 +51,7 @@ public class Run
 			throw new Exception("Input MAF must be between 0 and 1:" + MAF_input);
 		}
 
-		String inheritance = args[5];
+		String inheritance = args[4];
 		if (!(inheritance.equals("additive") || inheritance.equals("dominant") || inheritance.equals("recessive")))
 		{
 			throw new Exception("Input inheritance model must be 'additive', 'dominant' or 'recessive', not "
@@ -65,9 +59,9 @@ public class Run
 		}
 
 		File patientSampleIdsFile = null;
-		if (args.length == 7)
+		if (args.length == 6)
 		{
-			patientSampleIdsFile = new File(args[6]);
+			patientSampleIdsFile = new File(args[5]);
 			if (!patientSampleIdsFile.isFile())
 			{
 				throw new Exception("Input patient sample IDs file does not exist or directory: "
@@ -77,7 +71,7 @@ public class Run
 
 		System.out.println("Arguments OK !\nStarting..");
 
-		CADDTLMapping cm = new CADDTLMapping(vcfFile, exacFile, caddFile, outputFile, MAF, inheritance,
+		CADDTLMapping cm = new CADDTLMapping(vcfFile, exacFile, caddFile, MAF, inheritance,
 				patientSampleIdsFile);
 		cm.start();
 		

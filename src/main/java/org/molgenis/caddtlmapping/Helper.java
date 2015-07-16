@@ -3,6 +3,8 @@ package org.molgenis.caddtlmapping;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,11 +96,11 @@ public class Helper
 
 			// FIXME
 			/** DEV **/
-			if (index == 10000)
-			{
-				vcfRepo.close();
-				return res;
-			}
+			// if (index == 10000)
+			// {
+			// vcfRepo.close();
+			// return res;
+			// }
 			/** DEV **/
 
 			Entity record = vcfRepoIter.next();
@@ -176,7 +178,7 @@ public class Helper
 					List<String> candLocsForGene = new ArrayList<String>();
 					res.put(gene, candLocsForGene);
 					// for location, simply store pos of the first candidate here
-					sequenceFeatureLocations.put(gene, pos);
+					sequenceFeatureLocations.put(gene, chr + "\t" + pos);
 				}
 
 				// store index of this candidate
@@ -347,7 +349,9 @@ public class Helper
 			ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos);
 			if (candVariantList.size() > 1)
 			{
-				throw new Exception("More than 1 candidate variant in query results for " + candChrPos);
+				// TODO: throw new Exception ??
+				// or iterate over multiple hits ??
+				System.out.println("WARNING: More than 1 candidate variant in query results for " + candChrPos + "!!");
 			}
 			Entity candVariant = candVariantList.get(0);
 			String chr = candVariant.getString("#CHROM");
@@ -543,7 +547,9 @@ public class Helper
 			ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos);
 			if (candVariantList.size() > 1)
 			{
-				throw new Exception("More than 1 candidate variant in query results for " + candChrPos);
+				// TODO: throw new Exception ??
+				// or iterate over multiple hits ??
+				System.out.println("WARNING: More than 1 candidate variant in query results for " + candChrPos + "!!");
 			}
 			Entity candVariant = candVariantList.get(0);
 			String chr = candVariant.getString("#CHROM");
@@ -623,14 +629,90 @@ public class Helper
 		return caddForExacVariantGenotypes;
 	}
 
-	private void Rscript()
+	/**
+	 * Create R script that plots image at given location using given dataset location
+	 * 
+	 * @param scriptLocation
+	 * @param plotLocation
+	 * @throws UnsupportedEncodingException
+	 * @throws FileNotFoundException
+	 */
+	public void Rscript(String scriptLocation, String plotLocation, String dataframeLocation)
+			throws FileNotFoundException, UnsupportedEncodingException
 	{
-		/*
-		 * png("~/Desktop/test.png"); plot(c(1,2,3,4,5)); dev.off()
-		 */
+
+		PrintWriter scriptPw = new PrintWriter(scriptLocation, "UTF-8");
+		scriptPw.println("library(qqman)");
+		scriptPw.println("hits <- as.data.frame(read.table(\"" + dataframeLocation
+				+ "\", check.names=FALSE, header=TRUE, sep =\"\\t\", quote=\"\", as.is=TRUE))");
+		scriptPw.println("hits$P <- as.numeric(hits$P)");
+		scriptPw.println("png(\"" + plotLocation + "\")");
+		scriptPw.println("manhattan(hits)");
+		scriptPw.println("dev.off()");
+		scriptPw.flush();
+		scriptPw.close();
+
 		RScriptExecutor r = new RScriptExecutor("/usr/bin/Rscript");
 		ROutputHandler outputHandler = new StringROutputHandler();
-		r.executeScript(new File("/Users/jvelde/Desktop/test.R"), outputHandler);
+		r.executeScript(new File(scriptLocation), outputHandler);
+
+	}
+
+	/**
+	 * Check if string is a number
+	 * 
+	 * @param str
+	 * @return
+	 */
+	private boolean isNumeric(String str)
+	{
+		try
+		{
+			double d = Double.parseDouble(str);
+		}
+		catch (NumberFormatException nfe)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Needed for the qqman R package.. X should be 23, Y becomes 24, MT becomes 25 though this is arbitrary
+	 * 
+	 * @param loc
+	 * @return
+	 */
+	public String changeChromLetterToNumber(String loc)
+	{
+		String[] locSplit = loc.split("\t", -1);
+		String chr = locSplit[0];
+
+		// if numeric, good, just return the input loc
+		if (isNumeric(chr))
+		{
+			return loc;
+		}
+
+		String pos = locSplit[1];
+		if (chr.equalsIgnoreCase("X"))
+		{
+			return "23" + "\t" + pos;
+		}
+		else if (chr.equalsIgnoreCase("Y"))
+		{
+			return "24" + "\t" + pos;
+		}
+		else if (chr.equalsIgnoreCase("MT"))
+		{
+			return "25" + "\t" + pos;
+		}
+		else
+		{
+			System.out.println("WARNING: could not change chromosome letter " + chr
+					+ " to a number! R plot using qqman will fail");
+			return loc;
+		}
 	}
 
 	/**
