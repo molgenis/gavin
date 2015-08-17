@@ -1,4 +1,4 @@
-package org.molgenis.caddtlmapping;
+package org.molgenis.caddtlmapping.mannwhitney;
 
 import java.io.File;
 
