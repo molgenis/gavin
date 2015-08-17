@@ -35,10 +35,26 @@ public class Run
 			throw new Exception("Input ExAC file does not exist or directory: " + exacFile.getAbsolutePath());
 		}
 
-		File caddFile = new File(args[2]);
-		if (!caddFile.isDirectory())
+		File caddFolder = new File(args[2]);
+		if (!caddFolder.isDirectory())
 		{
-			throw new Exception("Input CADD folder does not exist or directory: " + caddFile.getAbsolutePath());
+			throw new Exception("Input CADD folder does not exist or directory: " + caddFolder.getAbsolutePath());
+		}
+		else
+		{
+			boolean hasCaddFile = false;
+			for(File f : caddFolder.listFiles())
+			{
+				if(f.getName().endsWith(".tsv.gz"))
+				{
+					hasCaddFile = true;
+					break;
+				}
+			}
+			if(!hasCaddFile)
+			{
+				throw new Exception("No files ending with '.tsv.gz' found in CADD folder: " + caddFolder.getAbsolutePath());
+			}
 		}
 
 		String inheritance = args[3];
@@ -61,7 +77,7 @@ public class Run
 
 		System.out.println("Arguments OK !\nStarting..");
 
-		CADDTLMapping cm = new CADDTLMapping(vcfFile, exacFile, caddFile, inheritance, patientSampleIdsFile);
+		CADDTLMapping cm = new CADDTLMapping(vcfFile, exacFile, caddFolder, inheritance, patientSampleIdsFile);
 		cm.start();
 
 		System.out.println("All done!");
