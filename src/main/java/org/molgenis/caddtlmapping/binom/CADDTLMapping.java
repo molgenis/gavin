@@ -87,47 +87,70 @@ public class CADDTLMapping
 		{
 			if (!binnedExACGTC.keySet().contains(sequenceFeature))
 			{
-				System.out.println("WARNING: ExAC does not have a gene named '" + sequenceFeature + "' ! skipping..");
+//				System.out.println("WARNING: ExAC does not have a gene named '" + sequenceFeature + "' ! skipping..");
 				continue;
 			}
 
 			for (BinnedGenotypeCount patientGTC : binnedPatientGTC.get(sequenceFeature))
 			{
-				System.out.println(sequenceFeature + ", cadd " + patientGTC.bin.lower + "-" + patientGTC.bin.upper);
+			//	System.out.println(sequenceFeature + ", cadd " + patientGTC.bin.lower + "-" + patientGTC.bin.upper);
 				int successPat = patientGTC.actingGenotypes;
 				int drawsPat = patientGTC.totalGenotypes;
 
 				double prob = -1;
-				for (BinnedGenotypeCount exacGTC : binnedPatientGTC.get(sequenceFeature))
+				boolean probFound = false;
+				for (BinnedGenotypeCount exacGTC : binnedExACGTC.get(sequenceFeature))
 				{
 					if (exacGTC.bin.lower == patientGTC.bin.lower && exacGTC.bin.upper == patientGTC.bin.upper)
 					{
-						double successExAC = patientGTC.actingGenotypes;
-						double drawsExAC = patientGTC.totalGenotypes;
+						double successExAC = (double) exacGTC.actingGenotypes;
+						double drawsExAC = (double) exacGTC.totalGenotypes;
 						prob = successExAC / drawsExAC;
-						
+						probFound = true;
+						break;
 					}
 				}
 
+				if(!probFound)
+				{
+					prob = 0.0;
+				//	throw new Exception("No prob for "+sequenceFeature+"!");
+				}
+				
 				BinomialTest binom = new BinomialTest();
 				double pval = binom.binomialTest(drawsPat, successPat, prob, AlternativeHypothesis.GREATER_THAN);
+				pval = pval != 0 ? pval : 0.0000000001;
 				double lod = -Math.log10(pval);
+				
+				if(patientGTC.bin.lower == 30.0){
+	//				System.out.println(sequenceFeature + ", "+patientGTC.bin.lower + "-" + patientGTC.bin.upper+", draws: " + drawsPat + ", successes: " + successPat + ", prob: " + prob + ", p-val: "+ pval);
+				}
+				
 		//		System.out.println(sequenceFeature + " has LOD " + lod);
-				lodScores.put(sequenceFeature, lod);
+				lodScores.put(sequenceFeature + "_" + patientGTC.bin.lower + "-" + patientGTC.bin.upper, lod);
+				
+				if(patientGTC.bin.lower == 30.0 && lod > 7.30103)
+				{
+					System.out.println("significant hit: " + sequenceFeature + ", " + patientGTC.bin.lower + "-" + patientGTC.bin.upper + " LOD = " + lod);
+				}
+				else if(lod > 4)
+				{
+		//			System.out.println("interesting hit: " + sequenceFeature + ", " + patientGTC.bin.lower + "-" + patientGTC.bin.upper + " LOD = " + lod);
+				}
 			}
 
 		}
 		
 		
 		
-		System.out.println("Processing the results..");
-		LinkedHashMap<String, Double> sortedLodScores = h.sortHashMapByValuesD(lodScores);
-
-		System.out.println("Hits, sorted low to high:");
-		for (String sequenceFeature : sortedLodScores.keySet())
-		{
-			System.out.println(sequenceFeature + "\t" + sortedLodScores.get(sequenceFeature));
-		}
+//		System.out.println("Processing the results..");
+//		LinkedHashMap<String, Double> sortedLodScores = h.sortHashMapByValuesD(lodScores);
+//
+//		System.out.println("Hits, sorted low to high:");
+//		for (String sequenceFeature : sortedLodScores.keySet())
+//		{
+//			System.out.println(sequenceFeature + "\t" + sortedLodScores.get(sequenceFeature));
+//		}
 		
 		
 

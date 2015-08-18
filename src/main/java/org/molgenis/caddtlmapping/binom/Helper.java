@@ -3,6 +3,8 @@ package org.molgenis.caddtlmapping.binom;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,11 +27,14 @@ public class Helper
 	private TabixVcfRepository patientTabixReader;
 	private TabixVcfRepository exacTabixReader;
 	private List<TabixReader> caddTabixReader;
+	private File caddFolder;
 
 	private boolean dev = false; // FIXME remove for final version
 
 	public Helper(File vcfFile, File exacFile, File caddFolder) throws IOException
 	{
+		this.caddFolder = caddFolder;
+
 		this.patientTabixReader = new TabixVcfRepository(vcfFile, "patients");
 		System.out.println("Created TabixVcfRepository 'patients' on " + vcfFile.getName());
 
@@ -74,114 +79,130 @@ public class Helper
 	{
 		HashMap<String, List<BinnedGenotypeCount>> res = new HashMap<String, List<BinnedGenotypeCount>>();
 
-		Iterator<Entity> patientRepoIter = patientTabixReader.iterator();
+		// TODO add bins to file name?
+		File previouslyBinnedGTC = new File(this.caddFolder, "tmp_PATIENT_"+inheritance+"_previouslyBinnedGTC.tsv");
 
-		// keep track of the 'line' in which variant was seen
-		int index = 0;
-
-		while (patientRepoIter.hasNext())
+		if (previouslyBinnedGTC.exists())
 		{
-			index++;
+			return readPreviouslyBinnedGTC(previouslyBinnedGTC);
+		}
 
-			if (index % 10000 == 0)
+		else
+		{
+
+			Iterator<Entity> patientRepoIter = patientTabixReader.iterator();
+
+			// keep track of the 'line' in which variant was seen
+			int index = 0;
+
+			while (patientRepoIter.hasNext())
 			{
-				System.out.println("Seen " + index + " patient variants..");
-			}
+				index++;
 
-			Entity record = patientRepoIter.next();
-
-			String chr = record.getString("#CHROM");
-			String pos = record.getString("POS");
-			String ref = record.getString("REF");
-			String alt = record.getString("ALT");
-
-			String[] altSplit = alt.split(",", -1);
-
-			if (altSplit.length > 1)
-			{
-				// TODO
-				// System.out.println("WARNING: skipping multi allelic PATIENT VARIANT for now..");
-				continue;
-			}
-
-			Set<String> partOfFeature = new HashSet<String>();
-
-			String[] multiAnn = record.getString("INFO_ANN").split(",");
-
-			for (int i = 0; i < multiAnn.length; i++)
-			{
-				String ann = multiAnn[i];
-				String[] annSplit = ann.split("\\|", -1);
-				String gene = annSplit[3];
-				if (gene.isEmpty())
+				if (index % 10000 == 0)
 				{
-					throw new Exception("reminder: gene can be empty :) check for it");
+					System.out.println("Seen " + index + " patient variants..");
 				}
-				partOfFeature.add(gene);
-			}
 
-			Double cadd = null;
-			try
-			{
-				cadd = getCaddScore(chr, pos, ref, alt);
-			}
-			catch (java.lang.ArrayIndexOutOfBoundsException e)
-			{
-				System.out.println("caught  java.lang.ArrayIndexOutOfBoundsException for " + record.toString());
-			}
-			if (cadd == null)
-			{
-				// TODO
-				// System.out.println("No CADD score found! skipping...");
-				continue;
-			}
+				Entity record = patientRepoIter.next();
 
-			int totalGenotypes = 0;
-			int actingGenotypes = 0;
+				String chr = record.getString("#CHROM");
+				String pos = record.getString("POS");
+				String ref = record.getString("REF");
+				String alt = record.getString("ALT");
 
-			// iterate over the genotypes
-			Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
-			for (Entity sample : sampleEntities)
-			{
+				String[] altSplit = alt.split(",", -1);
 
-				String genotype = sample.get("GT").toString();
-
-				if (genotype.equals("./."))
+				if (altSplit.length > 1)
 				{
+					// TODO
+					// System.out.println("WARNING: skipping multi allelic PATIENT VARIANT for now..");
 					continue;
 				}
 
-				totalGenotypes++;
+				Set<String> partOfFeature = new HashSet<String>();
 
-				if (patientSampleIdList == null)
+				String[] multiAnn = record.getString("INFO_ANN").split(",");
+
+				for (int i = 0; i < multiAnn.length; i++)
 				{
-					// TODO in this case: consider EVERY genotype!
-					// refactor.......
-
-					actingGenotypes += getActingGenotype(genotype, inheritance);
-
+					String ann = multiAnn[i];
+					String[] annSplit = ann.split("\\|", -1);
+					String gene = annSplit[3];
+					if (gene.isEmpty())
+					{
+						throw new Exception("reminder: gene can be empty :) check for it");
+					}
+					partOfFeature.add(gene);
 				}
 
-				// TODO known ugly....
-				// NAME='905957_T_100386'
-				else if (patientSampleIdList.contains(sample.get("NAME").toString().split("_")[2]))
+				Double cadd = null;
+				try
 				{
-
-					actingGenotypes += getActingGenotype(genotype, inheritance);
-
+					cadd = getCaddScore(chr, pos, ref, alt);
+				}
+				catch (java.lang.ArrayIndexOutOfBoundsException e)
+				{
+					System.out.println("caught  java.lang.ArrayIndexOutOfBoundsException for " + record.toString());
+				}
+				if (cadd == null)
+				{
+					// TODO
+					// System.out.println("No CADD score found! skipping...");
+					continue;
 				}
 
-				else
+				int totalGenotypes = 0;
+				int actingGenotypes = 0;
+
+				// iterate over the genotypes
+				Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
+				for (Entity sample : sampleEntities)
 				{
-					// not a patient, ignore
+
+					String genotype = sample.get("GT").toString();
+
+					if (genotype.equals("./."))
+					{
+						continue;
+					}
+
+					
+					// TODO: wrong: base total on patients found in file !!!!
+					
+
+					if (patientSampleIdList == null)
+					{
+						// TODO in this case: consider EVERY genotype!
+						// refactor.......
+
+						actingGenotypes += getActingGenotype(genotype, inheritance);
+						totalGenotypes++;
+					}
+
+					// TODO known ugly....
+					// NAME='905957_T_100386'
+					else if (patientSampleIdList.contains(sample.get("NAME").toString().split("_")[2]))
+					{
+
+						actingGenotypes += getActingGenotype(genotype, inheritance);
+						totalGenotypes++;
+					}
+
+					else
+					{
+						// not a patient, ignore
+					}
 				}
+
+				addCountsToCaddBins(partOfFeature, bins, cadd, res, actingGenotypes, totalGenotypes);
+
 			}
 
-			addCountsToCaddBins(partOfFeature, bins, cadd, res, actingGenotypes, totalGenotypes);
-
+			writeOutBinnedGTC(res, previouslyBinnedGTC);
+			
+			return res;
 		}
-
-		return res;
 	}
 
 	// TODO only works for 0 or 1 based genotypes!! does not support 1/2 etc !!
@@ -243,124 +264,204 @@ public class Helper
 
 	}
 
+	private HashMap<String, List<BinnedGenotypeCount>> readPreviouslyBinnedGTC(File previouslyBinnedGTC)
+			throws FileNotFoundException
+	{
+		System.out.println("Reading cached file '" + previouslyBinnedGTC + "' !");
+		HashMap<String, List<BinnedGenotypeCount>> res = new HashMap<String, List<BinnedGenotypeCount>>();
+
+		Scanner s = new Scanner(previouslyBinnedGTC);
+
+		String line = null;
+		while (s.hasNextLine())
+		{
+			line = s.nextLine();
+			String[] split = line.split("\t", -1);
+			String sequenceFeature = split[0];
+			double binLower = Double.parseDouble(split[1]);
+			double binUpper = Double.parseDouble(split[2]);
+			int actingGTC = Integer.parseInt(split[3]);
+			int totalGTC = Integer.parseInt(split[4]);
+
+			if (res.containsKey(sequenceFeature))
+			{
+				Bin bin = new Bin(binLower, binUpper);
+				res.get(sequenceFeature).add(new BinnedGenotypeCount(bin, actingGTC, totalGTC));
+			}
+			else
+			{
+				ArrayList<BinnedGenotypeCount> bgc = new ArrayList<BinnedGenotypeCount>();
+				// FIXME: ignore input bins, just get bins from file??
+				Bin bin = new Bin(binLower, binUpper);
+				bgc.add(new BinnedGenotypeCount(bin, actingGTC, totalGTC));
+				res.put(sequenceFeature, bgc);
+			}
+
+		}
+		s.close();
+
+		return res;
+	}
+
+	/**
+	 * TODO: what happens when you re-run with different bins??
+	 * 
+	 * @param bins
+	 * @param inheritance
+	 * @return
+	 * @throws Exception
+	 */
 	public HashMap<String, List<BinnedGenotypeCount>> getBinnedGenotypeCountsPerSequenceFeature(Bin[] bins,
 			String inheritance) throws Exception
 	{
 
 		HashMap<String, List<BinnedGenotypeCount>> res = new HashMap<String, List<BinnedGenotypeCount>>();
 
-		Iterator<Entity> exacRepoIter = exacTabixReader.iterator();
+		// TODO add bin info to file name?
+		File previouslyBinnedGTC = new File(this.caddFolder, "tmp_EXAC_"+inheritance+"_previouslyBinnedGTC.tsv");
 
-		// keep track of the 'line' in which variant was seen
-		int index = 0;
-
-		while (exacRepoIter.hasNext())
+		if (previouslyBinnedGTC.exists())
 		{
-			index++;
-
-			if (index % 10000 == 0)
-			{
-				System.out.println("Seen " + index + " ExAC variants..");
-			}
-
-			if (dev)
-			{
-				/** DEV **/
-				if (index == 100000)
-				{
-					exacTabixReader.close();
-					return res;
-				}
-
-			}
-
-			Entity record = exacRepoIter.next();
-
-			String chr = record.getString("#CHROM");
-			String pos = record.getString("POS");
-			String ref = record.getString("REF");
-			String alt = record.getString("ALT");
-
-			String[] altSplit = alt.split(",", -1);
-
-			if (altSplit.length > 1)
-			{
-				// TODO
-				// System.out.println("WARNING: skipping multi allelic for now..");
-				continue;
-			}
-
-			Double cadd = null;
-			try
-			{
-				cadd = getCaddScore(chr, pos, ref, alt);
-			}
-			catch (ArrayIndexOutOfBoundsException e)
-			{
-				System.out.println("caught java.lang.ArrayIndexOutOfBoundsException for " + record.toString() + " !!");
-				continue;
-			}
-
-			if (cadd == null)
-			{
-				// TODO
-				// System.out.println("No CADD score found! skipping...");
-				continue;
-			}
-
-			// System.out.println(record.toString());
-
-			Set<String> partOfFeature = new HashSet<String>();
-			if (record.getString("INFO_CSQ") != null)
-			{
-				String[] info_csq_split = record.getString("INFO_CSQ").toString().split(",", -1);
-				for (String info_csq : info_csq_split)
-				{
-					String sequenceFeature = info_csq.split("\\|", -1)[14];
-
-					if (!sequenceFeature.isEmpty())
-					{
-						partOfFeature.add(sequenceFeature);
-					}
-					// System.out.println(sequenceFeature);
-				}
-			}
-
-			// TODO: X/Y hemi ? calculate nr of genotypes etc
-			record.getString("INFO_AC_Hemi");
-
-			String AC_HetString = record.getString("INFO_AC_Het");
-			String AC_HomString = record.getString("INFO_AC_Hom");
-			String AN_AdjString = record.getString("INFO_AN_Adj");
-
-			int AC_Het = Integer.parseInt(AC_HetString);
-			int AC_Hom = Integer.parseInt(AC_HomString);
-			int AN_Adj = Integer.parseInt(AN_AdjString);
-
-			double totalGenotypes = AN_Adj / 2.0;
-			double actingGenotypes = 0;
-			if (inheritance.equals("dominant"))
-			{
-				actingGenotypes = AC_Het + AC_Hom;
-			}
-			else if (inheritance.equals("additive"))
-			{
-				actingGenotypes = (AC_Het / 2.0) + AC_Hom; // FIXME: 11/2 = 5, so should be ok ?
-			}
-			else if (inheritance.equals("recessive"))
-			{
-				actingGenotypes = AC_Hom;
-			}
-			else
-			{
-				throw new Exception("unknown mode of inheritance " + inheritance);
-			}
-
-			addCountsToCaddBins(partOfFeature, bins, cadd, res, actingGenotypes, totalGenotypes);
-
+			return readPreviouslyBinnedGTC(previouslyBinnedGTC);
 		}
 
-		return res;
+		else
+		{
+
+			Iterator<Entity> exacRepoIter = exacTabixReader.iterator();
+
+			// keep track of the 'line' in which variant was seen
+			int index = 0;
+
+			while (exacRepoIter.hasNext())
+			{
+				index++;
+
+				if (index % 10000 == 0)
+				{
+					System.out.println("Seen " + index + " ExAC variants..");
+				}
+
+				if (dev)
+				{
+					/** DEV **/
+					if (index == 100000)
+					{
+						exacTabixReader.close();
+						return res;
+					}
+
+				}
+
+				Entity record = exacRepoIter.next();
+
+				String chr = record.getString("#CHROM");
+				String pos = record.getString("POS");
+				String ref = record.getString("REF");
+				String alt = record.getString("ALT");
+
+				String[] altSplit = alt.split(",", -1);
+
+				if (altSplit.length > 1)
+				{
+					// TODO
+					// System.out.println("WARNING: skipping multi allelic for now..");
+					continue;
+				}
+
+				Double cadd = null;
+				try
+				{
+					cadd = getCaddScore(chr, pos, ref, alt);
+				}
+				catch (ArrayIndexOutOfBoundsException e)
+				{
+					System.out.println("caught java.lang.ArrayIndexOutOfBoundsException for " + record.toString()
+							+ " !!");
+					continue;
+				}
+
+				if (cadd == null)
+				{
+					// TODO
+					// System.out.println("No CADD score found! skipping...");
+					continue;
+				}
+
+				// System.out.println(record.toString());
+
+				Set<String> partOfFeature = new HashSet<String>();
+				if (record.getString("INFO_CSQ") != null)
+				{
+					String[] info_csq_split = record.getString("INFO_CSQ").toString().split(",", -1);
+					for (String info_csq : info_csq_split)
+					{
+						String sequenceFeature = info_csq.split("\\|", -1)[14];
+
+						if (!sequenceFeature.isEmpty())
+						{
+							partOfFeature.add(sequenceFeature);
+						}
+						// System.out.println(sequenceFeature);
+					}
+				}
+
+				// TODO: X/Y hemi ? calculate nr of genotypes etc
+				record.getString("INFO_AC_Hemi");
+
+				String AC_HetString = record.getString("INFO_AC_Het");
+				String AC_HomString = record.getString("INFO_AC_Hom");
+				String AN_AdjString = record.getString("INFO_AN_Adj");
+
+				int AC_Het = Integer.parseInt(AC_HetString);
+				int AC_Hom = Integer.parseInt(AC_HomString);
+				int AN_Adj = Integer.parseInt(AN_AdjString);
+
+				double totalGenotypes = AN_Adj / 2.0;
+				double actingGenotypes = 0;
+				if (inheritance.equals("dominant"))
+				{
+					actingGenotypes = AC_Het + AC_Hom;
+				}
+				else if (inheritance.equals("additive"))
+				{
+					actingGenotypes = (AC_Het / 2.0) + AC_Hom; // FIXME: 11/2 = 5, so should be ok ?
+				}
+				else if (inheritance.equals("recessive"))
+				{
+					actingGenotypes = AC_Hom;
+				}
+				else
+				{
+					throw new Exception("unknown mode of inheritance " + inheritance);
+				}
+
+				addCountsToCaddBins(partOfFeature, bins, cadd, res, actingGenotypes, totalGenotypes);
+
+			}
+
+			writeOutBinnedGTC(res, previouslyBinnedGTC);
+
+			return res;
+		}
+
+	}
+	
+	private void writeOutBinnedGTC(HashMap<String, List<BinnedGenotypeCount>> res, File binnedGTC) throws FileNotFoundException, UnsupportedEncodingException
+	{
+		PrintWriter pw = new PrintWriter(binnedGTC, "UTF-8");
+		for (String sequenceFeature : res.keySet())
+		{
+			for (BinnedGenotypeCount bgc : res.get(sequenceFeature))
+			{
+				pw.println(sequenceFeature + "\t" + bgc.bin.lower + "\t" + bgc.bin.upper + "\t"
+						+ bgc.actingGenotypes + "\t" + bgc.totalGenotypes);
+			}
+			pw.flush();
+		}
+		pw.close();
+		System.out.println("wrote binned genotype counts to '" + binnedGTC.getAbsolutePath()
+				+ "' for later re-use");
 	}
 
 	private void addCountsToCaddBins(Set<String> partOfFeature, Bin[] bins, double cadd,
@@ -413,7 +514,7 @@ public class Helper
 	}
 
 	/**
-	 * Get CADD score
+	 * Get scaled (not raw!!) CADD score
 	 * 
 	 * @param chr
 	 * @param pos
@@ -434,7 +535,7 @@ public class Helper
 				// 1 878331 C T 1.590426 13.80
 				if (split[0].equals(chr) && split[1].equals(pos) && split[2].equals(ref) && split[3].equals(alt))
 				{
-					return Double.parseDouble(split[4]);
+					return Double.parseDouble(split[5]);
 				}
 			}
 
