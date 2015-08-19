@@ -122,16 +122,11 @@ public class CADDTLMapping
 				pval = pval != 0 ? pval : 0.0000000001;
 				double lod = -Math.log10(pval);
 				
-				if(patientGTC.bin.lower == 30.0){
-	//				System.out.println(sequenceFeature + ", "+patientGTC.bin.lower + "-" + patientGTC.bin.upper+", draws: " + drawsPat + ", successes: " + successPat + ", prob: " + prob + ", p-val: "+ pval);
-				}
-				
-		//		System.out.println(sequenceFeature + " has LOD " + lod);
 				lodScores.put(sequenceFeature + "_" + patientGTC.bin.lower + "-" + patientGTC.bin.upper, lod);
 				
-				if(patientGTC.bin.lower == 30.0 && lod > 7.30103)
+				if(lod > 7.30103)
 				{
-					System.out.println("significant hit: " + sequenceFeature + ", " + patientGTC.bin.lower + "-" + patientGTC.bin.upper + " LOD = " + lod);
+					System.out.println(sequenceFeature + ", "+patientGTC.bin.lower + "-" + patientGTC.bin.upper+", draws: " + drawsPat + ", successes: " + successPat + ", prob: " + prob + ", p-val: "+ pval + ", LOD: " + lod);
 				}
 				else if(lod > 4)
 				{
