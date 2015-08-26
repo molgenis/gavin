@@ -346,7 +346,8 @@ public class Helper
 
 		for (String candChrPos : candList)
 		{
-			ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos);
+	//		ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos); FIXME
+			ImmutableList<Entity> candVariantList = null;
 			if (candVariantList.size() > 1)
 			{
 				// TODO: throw new Exception ??
@@ -544,7 +545,8 @@ public class Helper
 
 		for (String candChrPos : candList)
 		{
-			ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos);
+		//	ImmutableList<Entity> candVariantList = patientTabixReader.queryTabixSyntax(candChrPos); FIXME
+			ImmutableList<Entity> candVariantList = null;
 			if (candVariantList.size() > 1)
 			{
 				// TODO: throw new Exception ??
