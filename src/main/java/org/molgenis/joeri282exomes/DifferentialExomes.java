@@ -69,7 +69,11 @@ public class DifferentialExomes
 
 			System.out.println("GENE: " + gene);
 			// calculateGroupDiff(geneToSampleToLOF.get(gene));
+			
+			//do statistics per gene
 			calculateGroupChiSq(geneToSampleToLOF.get(gene));
+			
+			
 			System.out.println("----");
 
 			pw.println(sb.toString());
@@ -82,7 +86,87 @@ public class DifferentialExomes
 
 	private void calculateGroupChiSq(HashMap<String, Boolean> sampleToLOF)
 	{
-		HashMap<String, ArrayList<Boolean>> valuesPerGroup = new HashMap<String, ArrayList<Boolean>>();
+		HashMap<String, ArrayList<Boolean>> groupValues = new HashMap<String, ArrayList<Boolean>>();
+		
+		for (String sample : sampleToGroup.keySet())
+		{
+			String group = sampleToGroup.get(sample);
+
+			// put samples into different buckets depending on their group 'annotation'
+			if (groupValues.containsKey(group))
+			{
+				groupValues.get(group).add(sampleToLOF.get(sample));
+			}
+			else
+			{
+				ArrayList<Boolean> values = new ArrayList<Boolean>();
+				values.add(sampleToLOF.get(sample));
+				groupValues.put(group, values);
+			}
+		}
+		
+		
+		
+		//test 1 group vs all the others by counting the number of TRUE and FALSE
+		for(String group : groupValues.keySet())
+		{
+			
+			int a = 0;
+			int b = 0;
+			int c = 0;
+			int d = 0;
+			
+			for(Boolean value : groupValues.get(group))
+			{
+				if(value == true)
+				{
+					
+					a++;
+				}
+				else
+				{
+					b++;
+				}
+			}
+			
+			
+			// now, iterate over ALL groups again, but EXCLUDE the group we're currently looking at
+			
+			for(String otherGroup : groupValues.keySet())
+			{
+				if(otherGroup.equals(group))
+				{
+					break;
+				}
+				for(Boolean value : groupValues.get(group))
+				{
+					if(value == true)
+					{
+						c++;
+					}
+					else
+					{
+						d++;
+					}
+				}
+			}
+			
+			// fisher exact test
+			double pval = FishersExactTest.run(a, b, c, d);
+			
+			double lod = -Math.log10(pval);
+			
+			System.out.println("Fisher's Exact Test on " + group + " (using: " + a +", " + b +", " + c +", " + d +"),  results in pval " + pval + " (LOD: "+lod+")");
+			
+			
+			
+			if(lod > 7)
+			{
+				System.out.println("!! interesting: " + group + " stands out with LOD " + lod);
+			}
+			
+		}
+		
 
 		// example from: http://commons.apache.org/proper/commons-math/userguide/stat.html
 		// long[] observed = {10, 9, 11};
@@ -101,7 +185,7 @@ public class DifferentialExomes
 		// java:
 		// double pval = FishersExactTest.run(10, 20, 100, 150);
 		// pval 0.8163955241091263
-		System.out.println(pval);
+		// System.out.println(pval);
 
 	}
 
