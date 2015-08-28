@@ -666,7 +666,7 @@ public class Helper
 	 * @param str
 	 * @return
 	 */
-	private boolean isNumeric(String str)
+	private static boolean isNumeric(String str)
 	{
 		try
 		{
@@ -685,7 +685,7 @@ public class Helper
 	 * @param loc
 	 * @return
 	 */
-	public String changeChromLetterToNumber(String loc)
+	public static String changeChromLetterToNumber(String loc)
 	{
 		String[] locSplit = loc.split("\t", -1);
 		String chr = locSplit[0];

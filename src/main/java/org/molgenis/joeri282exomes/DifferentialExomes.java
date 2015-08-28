@@ -1,25 +1,41 @@
 package org.molgenis.joeri282exomes;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.apache.commons.math3.stat.inference.TestUtils;
+import org.molgenis.caddtlmapping.mannwhitney.Helper;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 import org.molgenis.data.vcf.VcfRepository;
+import org.molgenis.r.ROutputHandler;
+import org.molgenis.r.RScriptExecutor;
+import org.molgenis.r.StringROutputHandler;
 
 public class DifferentialExomes
 {
 	private File vcfFile;
 	private File patientGroups;
+	private File outputDataFrame;
 	private TabixVcfRepository vcfReader;
 	private HashMap<String, String> sampleToGroup;
+	private Set<String> groups;
+	
+	//TODO remove
+	boolean devMode = false;
 
 	public DifferentialExomes(File vcfFile, File patientGroups) throws IOException
 	{
@@ -29,6 +45,7 @@ public class DifferentialExomes
 		this.vcfFile = vcfFile;
 		this.patientGroups = patientGroups;
 		this.vcfReader = new TabixVcfRepository(vcfFile, "patients");
+		Set<String> groups = new HashSet<String>();
 
 		HashMap<String, String> sampleToGroup = new HashMap<String, String>();
 		Scanner s = new Scanner(patientGroups);
@@ -38,17 +55,31 @@ public class DifferentialExomes
 			line = s.nextLine();
 			String[] lineSplit = line.split("\t", -1);
 			sampleToGroup.put(lineSplit[0], lineSplit[1]);
+			groups.add(lineSplit[1]);
 		}
 		s.close();
 
 		this.sampleToGroup = sampleToGroup;
+		this.groups = groups;
+		
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+		Date date = new Date();
+		String inheritance = "recessive";
+		String impact = "high";
+		this.outputDataFrame = new File("fisherdiffexomes_" + dateFormat.format(date) + "_" + inheritance + "_"
+				+ impact + ".tsv");
 	}
 
 	public void start() throws Exception
 	{
 
 		PrintWriter pw = new PrintWriter("/Users/jvelde/Desktop/joeri282exomes/DiffExOut.tsv", "UTF-8");
-		HashMap<String, HashMap<String, Boolean>> geneToSampleToLOF = getSampleLOF();
+		
+		
+		LinkedHashMap<String, String> sequenceFeatureLocations = new LinkedHashMap<String, String>();
+		
+		
+		HashMap<String, HashMap<String, Boolean>> geneToSampleToLOF = getSampleLOF(sequenceFeatureLocations);
 
 		for (String sample : sampleToGroup.keySet())
 		{
@@ -56,6 +87,11 @@ public class DifferentialExomes
 		}
 		pw.print("\n");
 		pw.flush();
+		
+		//gene, to group, to pval
+		HashMap<String, HashMap<String, Double>> pvals = new HashMap<String, HashMap<String, Double>>();
+		
+		
 
 		for (String gene : geneToSampleToLOF.keySet())
 		{
@@ -71,21 +107,68 @@ public class DifferentialExomes
 			// calculateGroupDiff(geneToSampleToLOF.get(gene));
 			
 			//do statistics per gene
-			calculateGroupChiSq(geneToSampleToLOF.get(gene));
+			HashMap<String, Double> groupToPval = calculateGroupChiSq(geneToSampleToLOF.get(gene), gene);
 			
+			pvals.put(gene, groupToPval);
 			
-			System.out.println("----");
+	//		System.out.println("----");
 
 			pw.println(sb.toString());
 			pw.flush();
 		}
 
 		pw.close();
+		
+		
+		
+		System.out.println("Writing output dataframe to " + outputDataFrame.getAbsolutePath());
+		PrintWriter pwDF = new PrintWriter(outputDataFrame, "UTF-8");
+		
+		StringBuilder header = new StringBuilder();
+		header.append("SNP\tCHR\tBP");
+		for(String group : groups)
+		{
+			header.append("\t" + "P_" + group);
+		}
+		pwDF.println(header.toString());
+		for (String sequenceFeature : pvals.keySet())
+		{
+			String loc = Helper.changeChromLetterToNumber((sequenceFeatureLocations.get(sequenceFeature)));
+			
+			StringBuilder line = new StringBuilder();
+			line.append(sequenceFeature + "\t" + loc);
+			for(String group : groups)
+			{
+				line.append("\t" + pvals.get(sequenceFeature).get(group));
+			}
+			pwDF.println(line.toString());
+			
+		}
+		pwDF.flush();
+		pwDF.close();
+
+		// SNP CHR BP P
+		// rs1 1 100000 0.9148
+		// rs2 1 200000 0.9371
+		// rs3 1 400000 0.2861
+		// rs4 1 300000 0.8304
+		// rs5 1 500000 0.6417
+		// rs6 1 600000 0.5191
+
+		String scriptLocation = outputDataFrame.getAbsolutePath() + ".R";
+		String plotLocation = outputDataFrame.getAbsolutePath() + ".png";
+		System.out.println("Creating plot at " + plotLocation + " using " + scriptLocation);
+		Rscript(scriptLocation, plotLocation, outputDataFrame.getCanonicalPath());
+		
 
 	}
 
-	private void calculateGroupChiSq(HashMap<String, Boolean> sampleToLOF)
+	private HashMap<String, Double> calculateGroupChiSq(HashMap<String, Boolean> sampleToLOF, String geneName)
 	{
+		HashMap<String, Double> groupToPval = new HashMap<String, Double>();
+		
+		
+//		System.out.println("sampleToLOF size " + sampleToLOF.size());
 		HashMap<String, ArrayList<Boolean>> groupValues = new HashMap<String, ArrayList<Boolean>>();
 		
 		for (String sample : sampleToGroup.keySet())
@@ -96,21 +179,32 @@ public class DifferentialExomes
 			if (groupValues.containsKey(group))
 			{
 				groupValues.get(group).add(sampleToLOF.get(sample));
+//				System.out.println("Adding " + sampleToLOF.get(sample) + " for sample " + sample + " in group " + group);
 			}
 			else
 			{
 				ArrayList<Boolean> values = new ArrayList<Boolean>();
 				values.add(sampleToLOF.get(sample));
 				groupValues.put(group, values);
+//				System.out.println("Creating " + sampleToLOF.get(sample) + " for sample " + sample + " in group " + group);
 			}
 		}
+		
+		
+		//group values total count?
+		int totalCount = 0;
+		for(String key : groupValues.keySet())
+		{
+			totalCount += groupValues.get(key).size();	
+		}
+//		System.out.println("groupValues total size " + totalCount);
 		
 		
 		
 		//test 1 group vs all the others by counting the number of TRUE and FALSE
 		for(String group : groupValues.keySet())
 		{
-			
+//			System.out.println("Going to test " + group);
 			int a = 0;
 			int b = 0;
 			int c = 0;
@@ -120,7 +214,6 @@ public class DifferentialExomes
 			{
 				if(value == true)
 				{
-					
 					a++;
 				}
 				else
@@ -129,16 +222,20 @@ public class DifferentialExomes
 				}
 			}
 			
+//			System.out.println("counts: " + a + "x TRUE, " + b + "x FALSE");
+			
 			
 			// now, iterate over ALL groups again, but EXCLUDE the group we're currently looking at
 			
 			for(String otherGroup : groupValues.keySet())
 			{
+//				System.out.println("Against other group: " + otherGroup);
 				if(otherGroup.equals(group))
 				{
-					break;
+//					System.out.println("GROUP ITSELF, CONTINUE");
+					continue;
 				}
-				for(Boolean value : groupValues.get(group))
+				for(Boolean value : groupValues.get(otherGroup))
 				{
 					if(value == true)
 					{
@@ -149,21 +246,33 @@ public class DifferentialExomes
 						d++;
 					}
 				}
+//				System.out.println("othergroup counts: " + c + "x TRUE, " + d + "x FALSE");
 			}
 			
 			// fisher exact test
 			double pval = FishersExactTest.run(a, b, c, d);
 			
+			groupToPval.put(group, pval);
+			
 			double lod = -Math.log10(pval);
 			
-			System.out.println("Fisher's Exact Test on " + group + " (using: " + a +", " + b +", " + c +", " + d +"),  results in pval " + pval + " (LOD: "+lod+")");
-			
-			
-			
-			if(lod > 7)
-			{
-				System.out.println("!! interesting: " + group + " stands out with LOD " + lod);
-			}
+//			System.out.println("Fisher's Exact Test on " + group + " (using: " + a +", " + b +", " + c +", " + d +"),  results in pval " + pval + " (LOD: "+lod+")");
+
+//			if(lod > 7)
+//			{
+//				System.out.println("lod >7 "+geneName+", interesting: " + group + " stands out with LOD " + lod);
+//			}
+//			
+//			else if(lod > 3)
+//			{
+//				System.out.println("lod >3 "+geneName+",  " + group + "  has LOD " + lod);
+//			}
+//			
+//			else if(lod > 2)
+//			{
+//				System.out.println("lod >2 "+geneName+", " + group + " has LOD " + lod);
+//			}
+
 			
 		}
 		
@@ -187,6 +296,8 @@ public class DifferentialExomes
 		// pval 0.8163955241091263
 		// System.out.println(pval);
 
+		
+		return groupToPval;
 	}
 
 	/**
@@ -243,7 +354,7 @@ public class DifferentialExomes
 
 	}
 
-	public HashMap<String, HashMap<String, Boolean>> getSampleLOF() throws Exception
+	public HashMap<String, HashMap<String, Boolean>> getSampleLOF(LinkedHashMap<String, String> sequenceFeatureLocations) throws Exception
 	{
 		HashMap<String, HashMap<String, Boolean>> geneToSampleToLOF = new HashMap<String, HashMap<String, Boolean>>();
 
@@ -251,6 +362,7 @@ public class DifferentialExomes
 
 		// keep track of the 'line' in which variant was seen
 		int index = 0;
+		int passedFilter = 0;
 
 		vcfIterNext: while (vcfIter.hasNext())
 		{
@@ -261,15 +373,21 @@ public class DifferentialExomes
 				System.out.println("Seen " + index + " variants..");
 			}
 
-			if (index % 10000 == 0)
+			if (devMode && index % 10000 == 0)
 			{
-				System.out.println("DEV !! quitting...");
-				break;
+				System.out.println("DEV !! quitting..."); break;
 			}
 
 			Entity record = vcfIter.next();
 
 			// System.out.println("looking at " + record.toString());
+			
+			String filter = record.getString("FILTER");
+			if(!filter.equals("PASS"))
+			{
+				continue;
+			}
+			passedFilter++;
 
 			String chr = record.getString("#CHROM");
 			String pos = record.getString("POS");
@@ -287,6 +405,7 @@ public class DifferentialExomes
 
 			String[] multiAnn = record.getString("INFO_ANN").split(",");
 
+			multiAnn:
 			for (int i = 0; i < multiAnn.length; i++)
 			{
 				String ann = multiAnn[i];
@@ -295,7 +414,7 @@ public class DifferentialExomes
 
 				if (!impact.equals("HIGH"))
 				{
-					continue vcfIterNext;
+					continue multiAnn; //FIXME: correct ??
 				}
 
 				String gene = annSplit[3];
@@ -320,6 +439,11 @@ public class DifferentialExomes
 						// String sampleName = sample.get("NAME").toString().split("_")[2];
 						String sampleName = sample.get("ORIGINAL_NAME").toString();
 						addGeneSampleLOF(geneToSampleToLOF, gene, sampleName);
+						
+						if(!sequenceFeatureLocations.containsKey(gene))
+						{
+							sequenceFeatureLocations.put(gene, chr + "\t" + pos);
+						}
 
 					}
 
@@ -328,7 +452,10 @@ public class DifferentialExomes
 			}
 
 		}
+		
+		System.out.println(passedFilter + " of " + index + " variants passed filter");
 
+		//TODO: we don't have the genes that didn't match the criteria for at least 1 variant! e.g. for knockout we have ~500 genes...
 		for (String gene : geneToSampleToLOF.keySet())
 		{
 			// System.out.println("gene " + gene);
@@ -365,5 +492,41 @@ public class DifferentialExomes
 			geneToSampleToLOF.put(gene, sampleToLOF);
 		}
 	}
+	
+	
+	/**
+	 * Create R script that plots image at given location using given dataset location
+	 * 
+	 * @param scriptLocation
+	 * @param plotLocation
+	 * @throws UnsupportedEncodingException
+	 * @throws FileNotFoundException
+	 */
+	public void Rscript(String scriptLocation, String plotLocation, String dataframeLocation)
+			throws FileNotFoundException, UnsupportedEncodingException
+	{
+
+		PrintWriter scriptPw = new PrintWriter(scriptLocation, "UTF-8");
+		scriptPw.println("library(qqman)");
+		scriptPw.println("hits <- as.data.frame(read.table(\"" + dataframeLocation
+				+ "\", check.names=FALSE, header=TRUE, sep =\"\\t\", quote=\"\", as.is=TRUE))");
+		for(String group : groups)
+		{
+			scriptPw.println("hits$P_"+group+" <- as.numeric(hits$P_"+group+")");
+		}
+		//preselect 1 group as "the P-value"
+		scriptPw.println("hits$P <- as.numeric(hits$P_"+groups.toArray()[0].toString()+")");
+		scriptPw.println("png(\"" + plotLocation + "\", res=200, width=1920, height=1080)");
+		scriptPw.println("manhattan(hits, col = c(\"blue4\", \"orange3\"))");
+		scriptPw.println("dev.off()");
+		scriptPw.flush();
+		scriptPw.close();
+
+		RScriptExecutor r = new RScriptExecutor("/usr/bin/Rscript");
+		ROutputHandler outputHandler = new StringROutputHandler();
+		r.executeScript(new File(scriptLocation), outputHandler);
+
+	}
+
 
 }
