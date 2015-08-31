@@ -1,4 +1,4 @@
-package org.molgenis.joeri282exomes;
+package org.molgenis.data.annotation.joeri282exomes;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
