@@ -654,7 +654,7 @@ public class Helper
 		scriptPw.flush();
 		scriptPw.close();
 
-		RScriptExecutor r = new RScriptExecutor("/usr/bin/Rscript");
+		RScriptExecutor r = new RScriptExecutor("/usr/bin/Rscript", null);
 		ROutputHandler outputHandler = new StringROutputHandler();
 		r.executeScript(new File(scriptLocation), outputHandler);
 
