@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.RepositoryAnnotator;
@@ -27,6 +28,8 @@ public class ClinicalFilters
 
 	private HashMap<String, String> sampleToGroup;
 	private Set<String> groups;
+
+	private String gtcMessage = null;
 
 	public void go(File vcfFile, File patientGroups, File exacFile) throws Exception
 	{
@@ -52,11 +55,23 @@ public class ClinicalFilters
 		{ "ASAH1", "ATP7A", "CHCHD10", "DNAJB2", "DYNC1H1", "IGHMBP2", "PLEKHG5", "SMN1", "SMN2", "TRPV4", "UBA1",
 				"VAPB" }));
 
-		// this is "hardcoded", could be read for a file, but for now OK
+		// source: http://cdn.intechopen.com/pdfs-wm/39738.pdf (http://dx.doi.org/10.5772/48477)
+		ArrayList<String> avmGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "ACVR1", "ACVR2B", "ALDH1A2", "ANKRD1", "CFC1", "CITED2", "CRELD1", "ELN", "FLNA", "FOG2", "FOXH1", "GATA4",
+				"GATA6", "GDF1", "GJA1", "HAND2", "IRX4", "JAG1", "LEFTY2", "MYH11", "MYH6", "MYH7", "NKX2-5",
+				"NKX2-6", "NODAL", "NOTCH1", "PDGFRA", "TBX20", "TDGF1", "TFAP2B", "THRAP2", "VEGF", "ZIC3" }));
+
+		// source: http://www.ncbi.nlm.nih.gov/books/NBK1485/ (plus SARS2 from CGD)
+		ArrayList<String> pulmhypGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "BMPR2", "ACVRL1", "KCNK3", "CAV1", "SMAD9", "BMPR1B", "SARS2" }));
+
+		// FIXME: this is "hardcoded", could be read for a file, but for now OK, as long as it matches..
 		this.patientgroupToGenes.put("glycogen", gsdGenes);
 		this.patientgroupToGenes.put("stickler", sticklerGenes);
 		this.patientgroupToGenes.put("musclewn", smaGenes);
 		this.patientgroupToGenes.put("ironacc", ironaccGenes);
+		this.patientgroupToGenes.put("avm", avmGenes);
+		this.patientgroupToGenes.put("pulmhyp", pulmhypGenes);
 
 		Set<String> groups = new HashSet<String>();
 
@@ -102,6 +117,7 @@ public class ClinicalFilters
 			String altStr = record.getString("ALT");
 			String exac_af_STR = record.get("EXAC_AF") == null ? null : record.get("EXAC_AF").toString();
 			String exac_ac_hom_STR = record.get("EXAC_AC_HOM") == null ? null : record.get("EXAC_AC_HOM").toString();
+			String exac_ac_het_STR = record.get("EXAC_AC_HET") == null ? null : record.get("EXAC_AC_HET").toString();
 			String[] multiAnn = record.getString("INFO_ANN").split(",");
 
 			String[] altsplit = altStr.split(",", -1);
@@ -116,6 +132,12 @@ public class ClinicalFilters
 			if (exac_ac_hom_STR != null)
 			{
 				exac_ac_hom_split = exac_ac_hom_STR.split(",", -1);
+			}
+
+			String[] exac_ac_het_split = new String[altsplit.length];
+			if (exac_ac_het_STR != null)
+			{
+				exac_ac_het_split = exac_ac_het_STR.split(",", -1);
 			}
 
 			/**
@@ -142,6 +164,8 @@ public class ClinicalFilters
 					continue;
 				}
 
+				String effect = annSplit[1];
+
 				String gene = annSplit[3];
 				if (gene.isEmpty())
 				{
@@ -149,10 +173,13 @@ public class ClinicalFilters
 				}
 
 				// check if we're looking at a gene that is part of one of the candidate lists, if not, skip it
+				
+				
 				String candidateGeneGroup = null;
 				for (String patientGroup : patientgroupToGenes.keySet())
 				{
-					if (patientgroupToGenes.get(patientGroup).contains(gene))
+					ArrayList<String> patientGroupGenes = patientgroupToGenes.get(patientGroup);
+					if (patientGroupGenes.stream().anyMatch(geneName -> geneName.equalsIgnoreCase(gene)))
 					{
 						candidateGeneGroup = patientGroup;
 						break;
@@ -163,29 +190,37 @@ public class ClinicalFilters
 					continue;
 				}
 
-				// TODO: print CADD scores
+				// TODO: add CADD scores
 
 				int[] patient_GTC = countGTC(record, i, candidateGeneGroup);
-
 				if (patient_GTC == null)
 				{
 					continue;
 				}
 
-				String ExAC_AC_HOM = exac_ac_hom_split[i] == null ? "0" : exac_ac_hom_split[i];
 				String ExAC_AF = exac_af_split[i] == null ? "0" : exac_af_split[i];
+				int ExAC_AC_HOM = exac_ac_hom_split[i] == null ? 0 : Integer.parseInt(exac_ac_hom_split[i]);
+				int ExAC_AC_HET = exac_ac_het_split[i] == null ? 0 : Integer.parseInt(exac_ac_het_split[i]);
 
-				//if not actually seen in patients, skip it...
-				if(patient_GTC[1] == 0 && patient_GTC[2] == 0)
+				// if not actually seen in patients, skip it...
+				if (patient_GTC[1] == 0 && patient_GTC[2] == 0)
 				{
 					continue;
 				}
-				
-				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + gene + ", ExAC_AF="
-						+ ExAC_AF + " (ExAC hom=" + ExAC_AC_HOM + ", Patient hom=" + patient_GTC[2] + "), impact: "
-						+ impact + "[pat homref=" + patient_GTC[0] + " het=" + patient_GTC[1] + "]";
 
-				System.out.println(candidateGeneGroup + "candidate? " + variantInfo);
+				// if the number of people in exac with het or homalt exceed our patients with this variant.. it's hard
+				// to believe it :-\ exac has late-onset, common diseases, see: http://exac.broadinstitute.org/about
+				if (ExAC_AC_HET > patient_GTC[1] || ExAC_AC_HOM > patient_GTC[2])
+				{
+					continue;
+				}
+
+				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + gene + ", effect: "
+						+ effect + ", impact: " + impact + ", ExAC [allelefreq=" + ExAC_AF + ", hets=" + ExAC_AC_HET
+						+ ", homalts=" + ExAC_AC_HOM + "], patients [homrefs=" + patient_GTC[0] + ", hets="
+						+ patient_GTC[1] + ", homalts=" + patient_GTC[2] + "], details: [" + this.gtcMessage + "]";
+
+				System.out.println(candidateGeneGroup + " candidate: " + variantInfo);
 
 			}
 
@@ -194,6 +229,7 @@ public class ClinicalFilters
 
 	public int[] countGTC(Entity record, int altIndex, String candidateGeneGroup)
 	{
+		this.gtcMessage = "";
 
 		// because alt index = 0 for the first alt, we add 1
 		altIndex = altIndex + 1;
@@ -208,9 +244,10 @@ public class ClinicalFilters
 		Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
 		for (Entity sample : sampleEntities)
 		{
+			String sampleName = sample.get("ORIGINAL_NAME").toString();
 
-			// only if the sample patient group matches the candidate genes for this group, count GTC
-			if (!candidateGeneGroup.equals(sampleToGroup.get(sample.get("ORIGINAL_NAME").toString())))
+			// only count GTC if the sample patient group matches the candidate gene 'group'
+			if (!candidateGeneGroup.equals(sampleToGroup.get(sampleName)))
 			{
 				continue;
 			}
@@ -224,9 +261,9 @@ public class ClinicalFilters
 				continue;
 			}
 
-			// quality filter: we want depth 20 or more
+			// quality filter: we want depth X or more
 			int depthOfCoverage = Integer.parseInt(sample.get("DP").toString());
-			if (depthOfCoverage < 20)
+			if (depthOfCoverage < 10)
 			{
 				continue;
 			}
@@ -239,10 +276,12 @@ public class ClinicalFilters
 					|| genotype.equals(altIndex + "|0"))
 			{
 				gtc[1]++;
+				this.gtcMessage += "het:" + sampleName + ",dp:" + depthOfCoverage + " ";
 			}
 			else if (genotype.equals(altIndex + "/" + altIndex) || genotype.equals(altIndex + "|" + altIndex))
 			{
 				gtc[2]++;
+				this.gtcMessage += "hom:" + sampleName + ",dp:" + depthOfCoverage + " ";
 			}
 			else if (genotype.contains(altIndex + ""))
 			{
