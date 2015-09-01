@@ -22,33 +22,41 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClinicalFilters
 {
-	/**
-	 * Candidates
-	 */
-	// source: CGD, matching 'stickler syndrome'
-	ArrayList<String> sticklerGenes = new ArrayList<String>(Arrays.asList(new String[]
-	{ "COL11A1", "COL11A2", "COL9A1", "COL9A2", "COL2A1" }));
 
-	// source: CGD, matching 'glycogen storage disease'
-	ArrayList<String> gsdGenes = new ArrayList<String>(Arrays.asList(new String[]
-	{ "AGL", "ALDOA", "ENO3", "G6PC", "GAA", "GBE1", "GYG1", "GYS1", "GYS2", "LDHA", "PFKM", "PGAM2", "PHKA1", "PHKA2",
-			"PHKB", "PHKG2", "PRKAG2", "PYGL", "PYGM", "SLC2A2", "SLC37A4" }));
-
-	// source: http://www.ncbi.nlm.nih.gov/books/NBK121988/ - 6 of which in CGD as well
-	ArrayList<String> ironaccGenes = new ArrayList<String>(Arrays.asList(new String[]
-	{ "PANK2", "PLA2G6", "C19orf12", "FA2H", "ATP13A2", "WDR45", "COASY", "FTL", "CP", "DCAF17" }));
-
-	// source: CGD, matching 'spinal muscular atrophy'
-	ArrayList<String> smaGenes = new ArrayList<String>(
-			Arrays.asList(new String[]
-			{ "ASAH1", "ATP7A", "CHCHD10", "DNAJB2", "DYNC1H1", "IGHMBP2", "PLEKHG5", "SMN1", "SMN2", "TRPV4", "UBA1",
-					"VAPB" }));
+	HashMap<String, ArrayList<String>> patientgroupToGenes = new HashMap<String, ArrayList<String>>();
 
 	private HashMap<String, String> sampleToGroup;
 	private Set<String> groups;
 
 	public void go(File vcfFile, File patientGroups, File exacFile) throws Exception
 	{
+
+		/**
+		 * Candidates. NOTE: these should NOT overlap!!
+		 */
+		// source: CGD, matching 'stickler syndrome'
+		ArrayList<String> sticklerGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "COL11A1", "COL11A2", "COL9A1", "COL9A2", "COL2A1" }));
+
+		// source: CGD, matching 'glycogen storage disease'
+		ArrayList<String> gsdGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "AGL", "ALDOA", "ENO3", "G6PC", "GAA", "GBE1", "GYG1", "GYS1", "GYS2", "LDHA", "PFKM", "PGAM2", "PHKA1",
+				"PHKA2", "PHKB", "PHKG2", "PRKAG2", "PYGL", "PYGM", "SLC2A2", "SLC37A4" }));
+
+		// source: http://www.ncbi.nlm.nih.gov/books/NBK121988/ - 6 of which in CGD as well
+		ArrayList<String> ironaccGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "PANK2", "PLA2G6", "C19orf12", "FA2H", "ATP13A2", "WDR45", "COASY", "FTL", "CP", "DCAF17" }));
+
+		// source: CGD, matching 'spinal muscular atrophy'
+		ArrayList<String> smaGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "ASAH1", "ATP7A", "CHCHD10", "DNAJB2", "DYNC1H1", "IGHMBP2", "PLEKHG5", "SMN1", "SMN2", "TRPV4", "UBA1",
+				"VAPB" }));
+
+		// this is "hardcoded", could be read for a file, but for now OK
+		this.patientgroupToGenes.put("glycogen", gsdGenes);
+		this.patientgroupToGenes.put("stickler", sticklerGenes);
+		this.patientgroupToGenes.put("musclewn", smaGenes);
+		this.patientgroupToGenes.put("ironacc", ironaccGenes);
 
 		Set<String> groups = new HashSet<String>();
 
@@ -140,45 +148,53 @@ public class ClinicalFilters
 					throw new Exception("reminder: gene can be empty??");
 				}
 
-				// TODO: print genotype counts
+				// check if we're looking at a gene that is part of one of the candidate lists, if not, skip it
+				String candidateGeneGroup = null;
+				for (String patientGroup : patientgroupToGenes.keySet())
+				{
+					if (patientgroupToGenes.get(patientGroup).contains(gene))
+					{
+						candidateGeneGroup = patientGroup;
+						break;
+					}
+				}
+				if (candidateGeneGroup == null)
+				{
+					continue;
+				}
+
 				// TODO: print CADD scores
 
-				int[] patient_GTC = countGTC(record, i);
+				int[] patient_GTC = countGTC(record, i, candidateGeneGroup);
+
+				if (patient_GTC == null)
+				{
+					continue;
+				}
 
 				String ExAC_AC_HOM = exac_ac_hom_split[i] == null ? "0" : exac_ac_hom_split[i];
 				String ExAC_AF = exac_af_split[i] == null ? "0" : exac_af_split[i];
 
+				//if not actually seen in patients, skip it...
+				if(patient_GTC[1] == 0 && patient_GTC[2] == 0)
+				{
+					continue;
+				}
+				
 				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + gene + ", ExAC_AF="
 						+ ExAC_AF + " (ExAC hom=" + ExAC_AC_HOM + ", Patient hom=" + patient_GTC[2] + "), impact: "
 						+ impact + "[pat homref=" + patient_GTC[0] + " het=" + patient_GTC[1] + "]";
 
-				if (sticklerGenes.contains(gene))
-				{
-					System.out.println("stickler candidate? " + variantInfo);
-				}
-
-				if (gsdGenes.contains(gene))
-				{
-					System.out.println("gsd candidate? " + variantInfo);
-				}
-
-				if (ironaccGenes.contains(gene))
-				{
-					System.out.println("ironacc candidate? " + variantInfo);
-				}
-
-				if (smaGenes.contains(gene))
-				{
-					System.out.println("sma candidate? " + variantInfo);
-				}
+				System.out.println(candidateGeneGroup + "candidate? " + variantInfo);
 
 			}
 
 		}
 	}
 
-	public int[] countGTC(Entity record, int altIndex)
+	public int[] countGTC(Entity record, int altIndex, String candidateGeneGroup)
 	{
+
 		// because alt index = 0 for the first alt, we add 1
 		altIndex = altIndex + 1;
 
@@ -193,6 +209,14 @@ public class ClinicalFilters
 		for (Entity sample : sampleEntities)
 		{
 
+			// only if the sample patient group matches the candidate genes for this group, count GTC
+			if (!candidateGeneGroup.equals(sampleToGroup.get(sample.get("ORIGINAL_NAME").toString())))
+			{
+				continue;
+			}
+
+			// System.out.println("patientGroup="+candidateGeneGroup+"sampleToGroup.get(sample.get(\"ORIGINAL_NAME\").toString())="+sampleToGroup.get(sample.get("ORIGINAL_NAME").toString()));
+
 			String genotype = sample.get("GT").toString();
 
 			if (genotype.equals("./."))
@@ -200,9 +224,12 @@ public class ClinicalFilters
 				continue;
 			}
 
-			// TODO: quality filter
-			
-			// TODO: filter on patient_groups for GTC (scan for each?)
+			// quality filter: we want depth 20 or more
+			int depthOfCoverage = Integer.parseInt(sample.get("DP").toString());
+			if (depthOfCoverage < 20)
+			{
+				continue;
+			}
 
 			if (genotype.equals("0/0") || genotype.equals("0|0"))
 			{
@@ -220,7 +247,8 @@ public class ClinicalFilters
 			else if (genotype.contains(altIndex + ""))
 			{
 				System.out.println("WARNING: genotype " + genotype + " not counted for altindex " + altIndex + " for "
-						+ record.getString("#CHROM") + ":" + record.getString("POS") + " because it's not a ref-alt combination!");
+						+ record.getString("#CHROM") + ":" + record.getString("POS")
+						+ " because it's not a ref-alt combination!");
 			}
 
 		}
