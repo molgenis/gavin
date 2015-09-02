@@ -118,7 +118,7 @@ public class ClinicalFilters
 			String exac_af_STR = record.get("EXAC_AF") == null ? null : record.get("EXAC_AF").toString();
 			String exac_ac_hom_STR = record.get("EXAC_AC_HOM") == null ? null : record.get("EXAC_AC_HOM").toString();
 			String exac_ac_het_STR = record.get("EXAC_AC_HET") == null ? null : record.get("EXAC_AC_HET").toString();
-			String[] multiAnn = record.getString("INFO_ANN").split(",");
+			String[] multiAnn = record.getString("ANN").split(",");
 
 			String[] altsplit = altStr.split(",", -1);
 
@@ -173,8 +173,7 @@ public class ClinicalFilters
 				}
 
 				// check if we're looking at a gene that is part of one of the candidate lists, if not, skip it
-				
-				
+
 				String candidateGeneGroup = null;
 				for (String patientGroup : patientgroupToGenes.keySet())
 				{
@@ -210,7 +209,8 @@ public class ClinicalFilters
 
 				// if the number of people in exac with het or homalt exceed our patients with this variant.. it's hard
 				// to believe it :-\ exac has late-onset, common diseases, see: http://exac.broadinstitute.org/about
-				if (ExAC_AC_HET > patient_GTC[1] || ExAC_AC_HOM > patient_GTC[2])
+				// if (ExAC_AC_HET > patient_GTC[1] || ExAC_AC_HOM > patient_GTC[2])
+				if (ExAC_AC_HET > 10 || ExAC_AC_HOM > 10)
 				{
 					continue;
 				}
@@ -218,7 +218,9 @@ public class ClinicalFilters
 				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + gene + ", effect: "
 						+ effect + ", impact: " + impact + ", ExAC [allelefreq=" + ExAC_AF + ", hets=" + ExAC_AC_HET
 						+ ", homalts=" + ExAC_AC_HOM + "], patients [homrefs=" + patient_GTC[0] + ", hets="
-						+ patient_GTC[1] + ", homalts=" + patient_GTC[2] + "], details: [" + this.gtcMessage + "]";
+						+ patient_GTC[1] + ", homalts=" + patient_GTC[2] + "], controls [homrefs=" + patient_GTC[3]
+						+ ", hets=" + patient_GTC[4] + ", homalts=" + patient_GTC[5] + "], details: ["
+						+ this.gtcMessage + "]";
 
 				System.out.println(candidateGeneGroup + " candidate: " + variantInfo);
 
@@ -237,19 +239,21 @@ public class ClinicalFilters
 		// for a particular ref-alt combination:
 		// [homref, het, homalt]
 		// can only do for ref/alt-index combinations, so e.g. 0/0, 0|2 or 2/2. print warning on 1/2, 3|2, etc.
-		// error if this happens
+		// warn if this happens
+		// also count for "other people" in [3][4] and [5] as control reference
 		int[] gtc = new int[]
-		{ 0, 0, 0 };
+		{ 0, 0, 0, 0, 0, 0 };
 
 		Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
 		for (Entity sample : sampleEntities)
 		{
 			String sampleName = sample.get("ORIGINAL_NAME").toString();
 
-			// only count GTC if the sample patient group matches the candidate gene 'group'
-			if (!candidateGeneGroup.equals(sampleToGroup.get(sampleName)))
+			// GTC count applies to the 'disease gene panel' of the patient disease group
+			boolean controls = true;
+			if (candidateGeneGroup.equals(sampleToGroup.get(sampleName)))
 			{
-				continue;
+				controls = false;
 			}
 
 			// System.out.println("patientGroup="+candidateGeneGroup+"sampleToGroup.get(sample.get(\"ORIGINAL_NAME\").toString())="+sampleToGroup.get(sample.get("ORIGINAL_NAME").toString()));
@@ -270,18 +274,43 @@ public class ClinicalFilters
 
 			if (genotype.equals("0/0") || genotype.equals("0|0"))
 			{
-				gtc[0]++;
+				if (controls)
+				{
+					gtc[3]++;
+				}
+				else
+				{
+					gtc[0]++;
+				}
 			}
-			else if (genotype.equals("0/" + altIndex) || genotype.equals("0|" + altIndex)
-					|| genotype.equals(altIndex + "|0"))
+			else if (genotype.equals("0/" + altIndex) || genotype.equals(altIndex + "/0")
+					|| genotype.equals("0|" + altIndex) || genotype.equals(altIndex + "|0"))
 			{
-				gtc[1]++;
-				this.gtcMessage += "het:" + sampleName + ",dp:" + depthOfCoverage + " ";
+				if (controls)
+				{
+					gtc[4]++;
+					this.gtcMessage += "ctrlhet:" + sampleName + ",dp:" + depthOfCoverage + ",gt:" + genotype + " ";
+				}
+				else
+				{
+					gtc[1]++;
+					this.gtcMessage += "pathet:" + sampleName + ",dp:" + depthOfCoverage + ",gt:" + genotype + " ";
+				}
+
 			}
 			else if (genotype.equals(altIndex + "/" + altIndex) || genotype.equals(altIndex + "|" + altIndex))
 			{
-				gtc[2]++;
-				this.gtcMessage += "hom:" + sampleName + ",dp:" + depthOfCoverage + " ";
+				if (controls)
+				{
+					gtc[5]++;
+					this.gtcMessage += "ctrlhom:" + sampleName + ",dp:" + depthOfCoverage + ",gt:" + genotype + " ";
+				}
+				else
+				{
+					gtc[2]++;
+					this.gtcMessage += "pathom:" + sampleName + ",dp:" + depthOfCoverage + ",gt:" + genotype + " ";
+				}
+
 			}
 			else if (genotype.contains(altIndex + ""))
 			{
