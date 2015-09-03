@@ -165,6 +165,9 @@ public class ClinicalFilters
 				}
 
 				String effect = annSplit[1];
+				
+				String cDNA = annSplit[9];
+				String aaChange = annSplit[10];
 
 				String gene = annSplit[3];
 				if (gene.isEmpty())
@@ -215,7 +218,7 @@ public class ClinicalFilters
 					continue;
 				}
 
-				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + gene + ", effect: "
+				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + cDNA +", " + aaChange +", " + gene + ", effect: "
 						+ effect + ", impact: " + impact + ", ExAC [allelefreq=" + ExAC_AF + ", hets=" + ExAC_AC_HET
 						+ ", homalts=" + ExAC_AC_HOM + "], patients [homrefs=" + patient_GTC[0] + ", hets="
 						+ patient_GTC[1] + ", homalts=" + patient_GTC[2] + "], controls [homrefs=" + patient_GTC[3]
