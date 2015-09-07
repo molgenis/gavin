@@ -65,6 +65,27 @@ public class ClinicalFilters
 		ArrayList<String> pulmhypGenes = new ArrayList<String>(Arrays.asList(new String[]
 		{ "BMPR2", "ACVRL1", "KCNK3", "CAV1", "SMAD9", "BMPR1B", "SARS2" }));
 
+		ArrayList<String> sevGenes = new ArrayList<String>(Arrays.asList(new String[]
+		{ "ACTB", "ANO3", "ATP1A3", "BCAP31", "CACNA1B", "CIZ1", "COL6A3", "DRD2", "GCH1", "GNAL", "HPCA", "KCTD17",
+				"MT-ND1", "MT-ND3", "MT-ND4", "MT-ND6", "PRKRA", "SCP2", "SGCE", "SLC19A3", "SLC30A10", "SLC6A3",
+				"SPR", "TAF1", "THAP1", "TOR1A", "TUBB4A", "FOXG1", "MECP2", "COL4A1", "SLC2A10", "ABCB11", "ABCB4",
+				"ATP8B1", "TJP2", "VIPAS39", "ABCA12", "CERS3", "CLDN1", "CSTA", "CYP4F22", "GJB2", "KRT1", "KRT10",
+				"KRT2", "LIPN", "NIPAL4", "PNPLA1", "POMP", "SLC27A4", "SNAP29", "ST14", "TGM1", "ADK", "AK1", "BCKDK",
+				"GALK1", "GK", "HK1", "PHKA2", "PKLR", "TMPRSS15", "RAG1", "QARS", "ASAH1", "CERS1", "CLCN2", "CNTN2",
+				"COL6A2", "CSTB", "EFHC1", "EPM2A", "FCMTE2", "GABRA1", "GOSR2", "KCNC1", "KCTD7", "MT-ND5", "MT-TF",
+				"MT-TL1", "MT-TS1", "NHLRC1", "NOL3", "PRICKLE1", "PRICKLE2", "SCARB2", "SLC16A1", "TBC1D24", "TRNH",
+				"TRNK", "TRNP", "TRNS2", "ALDH7A1", "CACNB4", "CASR", "CHRNA2", "CHRNA4", "CHRNB2", "CLN8", "CNTNAP2",
+				"CPA6", "DEPDC5", "DNM1", "DOCK7", "GABRB3", "GABRG2", "GAL4114", "GRIN2A", "HCN1", "IER3IP1", "KCNA2",
+				"KCNMA1", "KCNT1", "LGI1", "RELN", "SCN1A", "SCN1B", "SNIP1", "SRPX2", "STRADA", "STX1B", "SYN1",
+				"ABCB7", "ABHD12", "ADCK3", "AFG3L2", "ANO10", "APTX", "ATCAY", "ATM", "ATP2B3", "ATXN1", "ATXN10",
+				"ATXN2", "ATXN3", "ATXN7", "ATXN8", "ATXN8OS", "BEAN1", "CA81382", "CACNA1A", "CAMTA1", "CCDC88C",
+				"CWF19L1", "DNAJC3", "DNMT1", "ELOVL4", "ELOVL5", "FGF14", "FLVCR1", "FMR1", "FXN", "GBA2", "GRID2",
+				"GRM1", "ITPR1", "KCNA1", "KCNC3", "KCND3", "KCNJ10", "KIAA0226", "KIF1C", "MRE11A", "MT-ATP6",
+				"MTPAP", "NOP56", "OPA1", "PAX6", "PCNA", "PDYN", "PEX10", "PIK3R5", "PNKP", "POLG", "PPP2R2B",
+				"PRKCG", "RNF216", "SACS", "SCN8A", "SETX", "SLC1A3", "SLC9A1", "SNAP25", "SNX14", "SPTBN2", "STUB1",
+				"SYNE1", "SYT14", "TBP", "TDP1", "TGM6", "TMEM240", "TPP1", "TRPC3", "TTBK2", "TTPA", "VAMP1", "VLDLR",
+				"WWOX", "ZNF592" }));
+
 		// FIXME: this is "hardcoded", could be read for a file, but for now OK, as long as it matches..
 		this.patientgroupToGenes.put("glycogen", gsdGenes);
 		this.patientgroupToGenes.put("stickler", sticklerGenes);
@@ -72,6 +93,7 @@ public class ClinicalFilters
 		this.patientgroupToGenes.put("ironacc", ironaccGenes);
 		this.patientgroupToGenes.put("avm", avmGenes);
 		this.patientgroupToGenes.put("pulmhyp", pulmhypGenes);
+		this.patientgroupToGenes.put("sev", sevGenes);
 
 		Set<String> groups = new HashSet<String>();
 
@@ -165,7 +187,7 @@ public class ClinicalFilters
 				}
 
 				String effect = annSplit[1];
-				
+
 				String cDNA = annSplit[9];
 				String aaChange = annSplit[10];
 
@@ -218,12 +240,12 @@ public class ClinicalFilters
 					continue;
 				}
 
-				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + cDNA +", " + aaChange +", " + gene + ", effect: "
-						+ effect + ", impact: " + impact + ", ExAC [allelefreq=" + ExAC_AF + ", hets=" + ExAC_AC_HET
-						+ ", homalts=" + ExAC_AC_HOM + "], patients [homrefs=" + patient_GTC[0] + ", hets="
-						+ patient_GTC[1] + ", homalts=" + patient_GTC[2] + "], controls [homrefs=" + patient_GTC[3]
-						+ ", hets=" + patient_GTC[4] + ", homalts=" + patient_GTC[5] + "], details: ["
-						+ this.gtcMessage + "]";
+				String variantInfo = chr + ":" + pos + "-" + pos + ", " + ref + "/" + alt + ", " + cDNA + ", "
+						+ aaChange + ", " + gene + ", effect: " + effect + ", impact: " + impact
+						+ ", ExAC [allelefreq=" + ExAC_AF + ", hets=" + ExAC_AC_HET + ", homalts=" + ExAC_AC_HOM
+						+ "], patients [homrefs=" + patient_GTC[0] + ", hets=" + patient_GTC[1] + ", homalts="
+						+ patient_GTC[2] + "], controls [homrefs=" + patient_GTC[3] + ", hets=" + patient_GTC[4]
+						+ ", homalts=" + patient_GTC[5] + "], details: [" + this.gtcMessage + "]";
 
 				System.out.println(candidateGeneGroup + " candidate: " + variantInfo);
 
