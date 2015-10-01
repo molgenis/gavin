@@ -14,7 +14,7 @@ public class GetMatchingVariantsFromExAC
 	// download @ ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
 	public static void main(String[] args) throws Exception
 	{
-		HashMap<String, List<ClinVarVariant>> geneToCVV = GetPathogenicVariantsFromClinVar.getAsMap(new File(args[0]));
+		HashMap<String, List<ClinVarVariant>> geneToCVV = Step1_GetClinVarPathogenic.getAsMap(new File(args[0]));
 		GetMatchingVariantsFromExAC.getAsMap(new File(args[1]), geneToCVV);
 	}
 

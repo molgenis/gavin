@@ -13,6 +13,11 @@ public class ClinVarVariant
 	public String gene;
 	public String clinsig;
 	
+	public String clinvarInfoToString()
+	{
+		return name + "|" + gene + "|" + clinsig;
+	}
+	
 	
 	public ClinVarVariant(String chrom, String pos, String id, String ref, String alt, String name, String gene,
 			String clinsig)

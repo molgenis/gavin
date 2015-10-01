@@ -2,19 +2,33 @@ package org.molgenis.calibratecadd;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-public class GetPathogenicVariantsFromClinVar
+public class Step1_GetClinVarPathogenic
 {
 
 
 	// download @ ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
 	public static void main(String[] args) throws Exception
 	{
-		GetPathogenicVariantsFromClinVar.getAsMap(new File(args[0]));
+		HashMap<String, List<ClinVarVariant>> cvv = Step1_GetClinVarPathogenic.getAsMap(new File(args[0]));
+		PrintWriter pw = new PrintWriter(new File(args[1]));
+		pw.println("##fileformat=VCFv4.1");
+		pw.println("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO");
+		for(String gene : cvv.keySet())
+		{
+			for(ClinVarVariant v : cvv.get(gene))
+			{
+				pw.println(v.chrom + "\t" + v.pos + "\t" + v.id + "\t" + v.ref + "\t" + v.alt + "\t" + "." + "\t" + "." + "\t" + "CLINVAR=" + v.clinvarInfoToString());
+			}
+		}
+		pw.flush();
+		pw.close();
+		
 	}
 	
 	
@@ -62,8 +76,9 @@ public class GetPathogenicVariantsFromClinVar
 				geneFromName = name.substring(name.indexOf('(') + 1, name.indexOf(')'));
 			}
 
-			if (gene.equals("-"))
+			if (gene.equals("-") || gene.equals(""))
 			{
+				if(gene.equals("")) { System.out.println("override: '"+gene+"' to '"+geneFromName+"'"); }
 				gene = geneFromName;
 			}
 
