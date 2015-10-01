@@ -15,7 +15,7 @@ public class ClinVarVariant
 	
 	public String clinvarInfoToString()
 	{
-		return name + "|" + gene + "|" + clinsig;
+		return name + "|" + gene + "|" + clinsig.replace(";", ",");
 	}
 	
 	

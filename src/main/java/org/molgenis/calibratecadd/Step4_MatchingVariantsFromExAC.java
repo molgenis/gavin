@@ -8,14 +8,14 @@ import java.util.List;
 import org.molgenis.data.annotator.tabix.TabixReader;
 import org.molgenis.data.annotator.tabix.TabixReader.Iterator;
 
-public class GetMatchingVariantsFromExAC
+public class Step4_MatchingVariantsFromExAC
 {
 
 	// download @ ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
 	public static void main(String[] args) throws Exception
 	{
 		HashMap<String, List<ClinVarVariant>> geneToCVV = Step1_GetClinVarPathogenic.getAsMap(new File(args[0]));
-		GetMatchingVariantsFromExAC.getAsMap(new File(args[1]), geneToCVV);
+		Step4_MatchingVariantsFromExAC.getAsMap(new File(args[1]), geneToCVV);
 	}
 
 	

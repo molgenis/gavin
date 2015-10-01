@@ -1,7 +1,6 @@
 package org.molgenis.calibratecadd;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +24,9 @@ public class Step2_FixIndelNotation
 	 * "At present, ClinVar's VCF file is limited to records that have been assigned rs#."
 	 * 
 	 * @param args
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws Exception
 	{
 		Scanner s = new Scanner(new File(args[0]));
 		PrintWriter pw = new PrintWriter(new File(args[2]));
@@ -36,6 +35,8 @@ public class Step2_FixIndelNotation
 		
 		int fixes = 0;
 		int failedFixes = 0;
+		int lost = 0;
+		int totalPassedVariants = 0;
 		
 		//failed fixed due to missing the target: 627 @ 10, 605 @ 20, 604 @ 25+
 		int fixWindowSearchSize = 25;
@@ -49,77 +50,97 @@ public class Step2_FixIndelNotation
 			line = s.nextLine();
 			if(line.startsWith("#"))
 			{
+				//header, just print and continue
+				pw.println(line);
 				continue;
 			}
 			
-			String[] split = line.split("\t", -1);
-			
-			if(split[2].equals("-1")) {
-				//no RS id, so not fixable (we don't expect it in the VCF file)
-				continue;
-			}
+			String[] lineSplit = line.split("\t", -1);
 			
 			//deletions will have '-' as alt, insertions '-' as ref
 			//sometimes also 'na' is used, e.g. "na	T" for a delCTinsA variant
-			//so we check them all, and if none are found, continue
-			if(!(split[3].equals("na") || split[4].equals("na") || split[3].equals("-") || split[4].equals("-")))
+			//so we check them all, and if none are found, assume its OK, print and continue
+			//additional check: ref and alt the same! eg. rs10993994 (10:51549496-51549496) : T T in clinvar-tabdelim, T C in clinvar-vcf ...
+			if(!(lineSplit[3].equals("na") || lineSplit[4].equals("na") || lineSplit[3].equals("-") || lineSplit[4].equals("-") || lineSplit[3].equals(lineSplit[4])))
 			{
+				totalPassedVariants++;
+				pw.println(line);
 				continue;
 			}
 			
-//			System.out.println("attempting to fix: " + line);
+			if(lineSplit[2].equals("-1")) {
+				//no RS id, so not fixable (we don't expect it in the VCF file, and couldn't match it there either)
+				// do not print!
+				lost++;
+				continue;
+			}
+
 			
-			
-			
+			//now the fixing can begin!
 			
 			//NOTE: deletions will be found some position before!
 			//e.g. "47705505 T -" will be in the VCF as "47705504 AT A" !
 			// "47635557 AG -" will be at "47635554	rs63749848 CAG C"
 			//tricky? yes... but we can grab a window and match by RS id :-)
 			
-			List<Entity> records = clinvarVcf.query(split[0], Long.parseLong(split[1])-fixWindowSearchSize, Long.parseLong(split[1])+fixWindowSearchSize);
-			
+			List<Entity> records = clinvarVcf.query(lineSplit[0], Long.parseLong(lineSplit[1])-fixWindowSearchSize, Long.parseLong(lineSplit[1])+fixWindowSearchSize);
 			
 			boolean match = false;
 			for(Entity e : records)
 			{
-				String id = e.getString("ID").replace("rs", "");
-				String id2 = split[2];
-			//	System.out.println(id + " vs " + id2);
-				if(id.equals(id2))
+				String idFromClinVarVCF = e.getString("ID").replace("rs", "");
+				String idFromOurClinVarPathoList = lineSplit[2];
+				if(idFromClinVarVCF.equals(idFromOurClinVarPathoList))
 				{
+					if(match == true)
+					{
+						throw new Exception("double match?? " + line);
+					}
+					StringBuffer fixedLine = new StringBuffer();
+					for(int i = 0; i < lineSplit.length; i++)
+					{
+						if(i == 3)
+						{
+							fixedLine.append(e.getString("REF") + "\t");
+						}
+						else if(i == 4)
+						{
+							fixedLine.append(e.getString("ALT") + "\t");
+						}
+						else
+						{
+							fixedLine.append(lineSplit[i] + "\t");
+						}
+//						if(e.getString("REF").equals(e.getString("ALT")))
+//						{
+//							System.out.println("WTF?? " + e.toString());
+//						}
+					}
+					fixedLine.deleteCharAt(fixedLine.length()-1);
+					pw.println(fixedLine.toString());
 					match = true;
 					fixes++;
-//					System.out.println("match! " + id);
+					totalPassedVariants++;
 				}
 			}
 			
 			if(!match)
 			{
 				failedFixes++;
-//				System.out.println("NO MATCH FOR " + line);
 			}
-			
-			
-			//now, get it from the ClinVar-VCF and match by RS id
-			//there can be multiple variants on a position, e.g. 11:108205721, but using RS we can still get the correct one!
-			
-//			
-//	//		if(!split[2].equals("-1")) { System.out.println("!!!!! " + line); }
-//			String posKey = split[0] + "_" + split[1] + "_" + split[3] + "_" + split[4];
-//			
-//			if(posToLine.containsKey(posKey))
-//			{
-//		//		System.out.println("ALREADY CONTAINS " + posKey + " --> " + line);
-//			}
-//			posToLine.put(posKey, line);
-//			
-			
 			
 		}
 		
-		System.out.println("SUCCEEDED FIXES: " + fixes);
-		System.out.println("FAILED FIXES: " + failedFixes);
+		pw.flush();
+		pw.close();
+		
+		System.out.println("total variants seen:" + (totalPassedVariants+lost+failedFixes));
+		System.out.println("total passed variants after checking & fixing: " + totalPassedVariants);
+		System.out.println("total variants dropped (not fixable/fixed): " + (lost+failedFixes));
+		System.out.println("variants dropped without attempting to fix (not possible): " + lost);
+		System.out.println("total fixed attempted: " + (fixes+failedFixes));
+		System.out.println("fixes succeeded: " + fixes);
+		System.out.println("fixes failed: " + failedFixes);
 
 	}
 
