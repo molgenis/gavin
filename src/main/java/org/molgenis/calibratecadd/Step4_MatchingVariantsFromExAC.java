@@ -5,17 +5,24 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import org.molgenis.calibratecadd.structs.ClinVarVariant;
 import org.molgenis.data.annotator.tabix.TabixReader;
 import org.molgenis.data.annotator.tabix.TabixReader.Iterator;
 
 public class Step4_MatchingVariantsFromExAC
 {
 
-	// download @ ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
+	/**
+	 * Uses:
+	 * [0] file produced in step 3
+	 * [1] ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz (+ in the same folder ExAC.r0.3.sites.vep.vcf.gz.tbi )
+	 * [2] output file
+	 */
 	public static void main(String[] args) throws Exception
 	{
-		HashMap<String, List<ClinVarVariant>> geneToCVV = Step1_GetClinVarPathogenic.getAsMap(new File(args[0]));
-		Step4_MatchingVariantsFromExAC.getAsMap(new File(args[1]), geneToCVV);
+		
+		
+		
 	}
 
 	

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import org.molgenis.calibratecadd.structs.ClinVarVariant;
+
 public class Step1_GetClinVarPathogenic
 {
 
@@ -18,12 +20,13 @@ public class Step1_GetClinVarPathogenic
 		HashMap<String, List<ClinVarVariant>> cvv = Step1_GetClinVarPathogenic.getAsMap(new File(args[0]));
 		PrintWriter pw = new PrintWriter(new File(args[1]));
 		
+		pw.println("##fileformat=VCFv4.1");
+		pw.println("##reference=hg19.fasta");
 		for(String chr : new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y", "MT"})
 		{
 			pw.println("##contig=<ID="+chr+">");
 		}
-		
-		pw.println("##fileformat=VCFv4.1");
+		pw.println("##INFO=<ID=CLINVAR,Number=1,Type=String,Description=\"ClinVar\">");
 		pw.println("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO");
 		
 		for(String gene : cvv.keySet())

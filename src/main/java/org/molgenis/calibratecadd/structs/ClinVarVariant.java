@@ -1,4 +1,4 @@
-package org.molgenis.calibratecadd;
+package org.molgenis.calibratecadd.structs;
 
 public class ClinVarVariant
 {
@@ -15,7 +15,7 @@ public class ClinVarVariant
 	
 	public String clinvarInfoToString()
 	{
-		return name + "|" + gene + "|" + clinsig.replace(";", ",");
+		return name + "|" + gene + "|" + clinsig.replace(";", "/");
 	}
 	
 	

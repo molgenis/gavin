@@ -7,3 +7,5 @@ Work flow
 5) write combined set to VCF and run though CADD web service
 6) combine CADD output with original file and write data frame for R
 7) run R script to perform statistics and pictures
+
+
