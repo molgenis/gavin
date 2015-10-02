@@ -99,7 +99,12 @@ public class Step2_FixIndelNotation
 					StringBuffer fixedLine = new StringBuffer();
 					for(int i = 0; i < lineSplit.length; i++)
 					{
-						if(i == 3)
+						if(i == 1)
+						{
+					//		System.out.println("updating position from " + lineSplit[1] + " to " + e.getString("POS"));
+							fixedLine.append(e.getString("POS") + "\t");
+						}
+						else if(i == 3)
 						{
 							fixedLine.append(e.getString("REF") + "\t");
 						}

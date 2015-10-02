@@ -13,7 +13,8 @@ import org.molgenis.calibratecadd.structs.ClinVarVariant;
 public class Step1_GetClinVarPathogenic
 {
 
-
+	public static String CLINVAR_INFO = "CLINVAR";
+	
 	// download @ ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
 	public static void main(String[] args) throws Exception
 	{
@@ -26,14 +27,14 @@ public class Step1_GetClinVarPathogenic
 		{
 			pw.println("##contig=<ID="+chr+">");
 		}
-		pw.println("##INFO=<ID=CLINVAR,Number=1,Type=String,Description=\"ClinVar\">");
+		pw.println("##INFO=<ID="+CLINVAR_INFO+",Number=1,Type=String,Description=\"ClinVar\">");
 		pw.println("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO");
 		
 		for(String gene : cvv.keySet())
 		{
 			for(ClinVarVariant v : cvv.get(gene))
 			{
-				pw.println(v.chrom + "\t" + v.pos + "\t" + v.id + "\t" + v.ref + "\t" + v.alt + "\t" + "." + "\t" + "." + "\t" + "CLINVAR=" + v.clinvarInfoToString());
+				pw.println(v.chrom + "\t" + v.pos + "\t" + v.id + "\t" + v.ref + "\t" + v.alt + "\t" + "." + "\t" + "." + "\t" + CLINVAR_INFO + "=" + v.clinvarInfoToString());
 			}
 		}
 		pw.flush();
