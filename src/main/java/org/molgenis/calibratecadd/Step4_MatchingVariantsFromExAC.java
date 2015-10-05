@@ -1,15 +1,19 @@
 package org.molgenis.calibratecadd;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.molgenis.calibratecadd.structs.ClinVarVariant;
+import org.molgenis.calibratecadd.misc.Step4_Helper;
+import org.molgenis.calibratecadd.structs.ImpactRatios;
+import org.molgenis.calibratecadd.structs.VariantIntersectResult;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotator.tabix.TabixReader;
 import org.molgenis.data.annotator.tabix.TabixReader.Iterator;
+import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 import org.molgenis.data.vcf.VcfRepository;
 
 public class Step4_MatchingVariantsFromExAC
@@ -25,13 +29,13 @@ public class Step4_MatchingVariantsFromExAC
 	{
 		Step4_MatchingVariantsFromExAC step4 = new Step4_MatchingVariantsFromExAC();
 		step4.loadClinvarPatho(args[0]);
-		step4.getGeneIntervalVariantsFromExAC(args[1]);
+		step4.createMatchingExACsets(args[1]);
+		step4.printVariantsToFile(args[2]);
 
 	}
 
 	HashMap<String, List<Entity>> clinvarPatho = new HashMap<String, List<Entity>>();
-	
-	HashMap<String, List<String>> exacIntervals = new HashMap<String, List<String>>();
+	HashMap<String, List<Entity>> matchedExACvariants = new HashMap<String, List<Entity>>();
 
 	private void loadClinvarPatho(String clinvarPathoLoc) throws Exception
 	{
@@ -99,7 +103,7 @@ public class Step4_MatchingVariantsFromExAC
 		vcfRepo.close();
 	}
 
-	private void getGeneIntervalVariantsFromExAC(String exacLoc) throws IOException
+	private void createMatchingExACsets(String exacLoc) throws IOException
 	{
 		System.out.println("loading matching exac variants..");
 
@@ -107,17 +111,16 @@ public class Step4_MatchingVariantsFromExAC
 		int passedVariants = 0;
 		int matchedVariants = 0;
 		int droppedGenes = 0;
-		
+
 		int index = 0;
 		for (String gene : clinvarPatho.keySet())
 		{
 			index++;
 			if (index % 100 == 0)
 			{
-				System.out.println("Seen " + index + " of "+clinvarPatho.keySet().size()+" genes..");
+				System.out.println("Seen " + index + " of " + clinvarPatho.keySet().size() + " genes..");
 			}
-			
-			
+
 			String chrom = null;
 			long leftMostPos = -1;
 			long rightMostPos = -1;
@@ -141,41 +144,47 @@ public class Step4_MatchingVariantsFromExAC
 				}
 			}
 
-			TabixReader tr = new TabixReader(exacLoc);
+			TabixVcfRepository tr = new TabixVcfRepository(new File(exacLoc), "exac");
+
+			// TabixReader tr = new TabixReader(exacLoc);
 			Iterator it = null;
-		
-			try{
-				it = tr.query(chrom + ":" + leftMostPos + "-" + rightMostPos);
-			}
-			catch(java.lang.ArrayIndexOutOfBoundsException e)
+
+			List<Entity> exacVariants = new ArrayList<Entity>();
+
+			try
 			{
-				//chromosome not found, e.g. MT
+				exacVariants = tr.query(chrom, leftMostPos, rightMostPos);
 			}
-			
-			int count = 0;
-			String next = null;
-			ArrayList<String> exacLines = new ArrayList<String>();
-			while (it != null && (next = it.next()) != null)
+			catch (java.lang.ArrayIndexOutOfBoundsException e)
 			{
-				// System.out.println(next);
-				exacLines.add(next);
-				count++;
+				// no chrom in tabix or so
 			}
 
-	//		System.out.println(gene + " " + leftMostPos + " " + rightMostPos + " " + " has " + " " + count);
-			
-			if(count > 0)
+			// System.out.println(gene + " " + leftMostPos + " " + rightMostPos + " " + " has " + " " + count);
+
+			if (exacVariants.size() > 0)
 			{
 				passedGenes++;
-				passedVariants += exacLines.size();
+				passedVariants += exacVariants.size();
+
+				// java.lang.OutOfMemoryError: Java heap space
+				// exacIntervals.put(gene, exacLines);
 				
-			//	java.lang.OutOfMemoryError: Java heap space
-			//	exacIntervals.put(gene, exacLines);
+				VariantIntersectResult vir = Step4_Helper.intersectVariants(exacVariants, clinvarPatho.get(gene));
 				
-				List<String> matchingExAC = createMatchingExACset(clinvarPatho.get(gene), exacLines);
+				//calculate MAF for shared variants, and use them to filter the other ExAC variants
+				//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
+				double medianMAF = Step4_Helper.calculateMedianMAF(vir.inBoth);
+				List<Entity> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, medianMAF);
+
+				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
+				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
+				ImpactRatios ir = Step4_Helper.calculateImpactRatios(vir.inClinVarOnly, vir.inBoth);
+				List<Entity> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
 				
-				matchedVariants += matchingExAC.size();
-				
+				matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
+				matchedVariants += exacFilteredByMAFandImpact.size();
+
 			}
 			else
 			{
@@ -183,23 +192,33 @@ public class Step4_MatchingVariantsFromExAC
 			}
 
 		}
-		
-		//oct 2015: 2638 pass, 960040 variants, 393 dropped
+
+		// oct 2015: 2638 pass, 960040 variants, 393 dropped
 		System.out.println("passed genes (>0 interval exac variants): " + passedGenes);
-		System.out.println("passed variants (total count in passed genes): " + passedVariants);
+		System.out.println("passed variants (total count in all passed genes): " + passedVariants);
+		System.out.println("matched variants (total variants used for final calibration): " + matchedVariants);
 		System.out.println("dropped genes (0 interval exac variants): " + droppedGenes);
 
 	}
 	
 	
-	
-	private List<String> createMatchingExACset(List<Entity> clinvar, List<String> exac)
+	private void printVariantsToFile(String file) throws FileNotFoundException
 	{
-		int nrHighImpactClinVar = 0;
+		PrintWriter pw_forR = new PrintWriter("forR_" + file);
+		PrintWriter pw_forCADD = new PrintWriter("forCADD_" + file);
 		
-		List<String> res = new ArrayList<String>();
-		
-		return res;
+		for(String gene : clinvarPatho.keySet())
+		{
+			if(matchedExACvariants.containsKey(gene))
+			{
+				//print data from clinvarPatho and matchedExACvariants to file
+			}
+		}
+		pw_forR.flush();
+		pw_forR.close();
+		pw_forCADD.flush();
+		pw_forCADD.close();
 	}
+
 
 }
