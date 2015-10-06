@@ -22,7 +22,7 @@ public class ImpactRatios
 	{
 		if(high+moderate+low+modifier != 100)
 		{
-			throw new Exception("Impact rations should add up to 100");
+			throw new Exception("Impact rations should add up to 100, but instead: " + high + "+" + moderate + "+" + low + "+"+modifier +"=" + (high+moderate+low+modifier));
 		}
 	}
 

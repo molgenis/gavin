@@ -6,9 +6,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.molgenis.calibratecadd.structs.EntityPlus;
 import org.molgenis.calibratecadd.structs.ImpactRatios;
 import org.molgenis.calibratecadd.structs.VariantIntersectResult;
 import org.molgenis.data.Entity;
+import org.molgenis.data.support.DefaultEntityMetaData;
 
 public class Step4_Helper
 {
@@ -43,17 +45,17 @@ public class Step4_Helper
 						String alt = altSplit[altIndex];
 						if (alt.equals(clinvarVariant.getString("ALT")))
 						{
-							System.out.println("match on chrom/pos/ref/alt:");
-							System.out.println(exacVariant.toString());
-							System.out.println(clinvarVariant.toString());
+//							System.out.println("MATCH ON chrom/pos/ref/alt:");
+//							System.out.println(exacVariant.toString());
+//							System.out.println(clinvarVariant.toString());
 							
 							//edit the variant if we have >1 alt so we only keep this particular alt allele and matching AF field
 							if(altSplit.length > 1)
 							{
 								exacVariant.set("ALT", alt);
 								exacVariant.set("AF", exacVariant.getString("AF").split(",", -1)[altIndex]);
-								System.out.println("CHANGED TO: ");
-								System.out.println(exacVariant.toString());
+//								System.out.println("CHANGED TO: ");
+//								System.out.println(exacVariant.toString());
 							}
 							
 							// TODO also merge data instead of 2 lists?
@@ -117,18 +119,21 @@ public class Step4_Helper
 
 
 
-	public static List<Entity> filterExACvariantsByMAF(List<Entity> inExACOnly, double medianMAF)
+	public static List<EntityPlus> filterExACvariantsByMAF(List<Entity> inExACOnly, double medianMAF) throws Exception
 	{
-		List<Entity> res = new ArrayList<Entity>();
+		List<EntityPlus> res = new ArrayList<EntityPlus>();
+		
 		filterVariants:
 		for(Entity exacVariant : inExACOnly)
 		{
-			String[] altSplit = exacVariant.getString("ALT").split(",", -1);
+			EntityPlus exacVariantPlus = new EntityPlus(exacVariant);
+			
+			String[] altSplit = exacVariantPlus.getE().getString("ALT").split(",", -1);
 			for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
 			{
 				String alt = altSplit[altIndex];
-				double maf = Double.parseDouble(exacVariant.getString("AF").split(",",-1)[altIndex]);
-				int ac = Integer.parseInt(exacVariant.getString("AC_Adj").split(",",-1)[altIndex]);
+				double maf = Double.parseDouble(exacVariantPlus.getE().getString("AF").split(",",-1)[altIndex]);
+				int ac = Integer.parseInt(exacVariantPlus.getE().getString("AC_Adj").split(",",-1)[altIndex]);
 		
 				boolean keep = false;
 				
@@ -147,11 +152,19 @@ public class Step4_Helper
 					//'edit' variant for this particular alt allele
 					if(altSplit.length > 1)
 					{
-						exacVariant.set("ALT", alt);
-						exacVariant.set("AF", maf);
-						exacVariant.set("AC_Adj", ac);
+						exacVariantPlus.getE().set("ALT", alt);
+						exacVariantPlus.getE().set("AF", maf);
+						exacVariantPlus.getE().set("AC_Adj", ac);
+						
+						//update the 'variant annotation' line 'CSQ' to match this alt
+						//includes adding 'impact' for later use
+
+						updateCSQ(exacVariantPlus, alt);	
+						
+						System.out.println("IMPACT = " + exacVariantPlus.getKeyVal().get("IMPACT").toString());
+						
 					}
-					res.add(exacVariant);
+					res.add(exacVariantPlus);
 					
 					//don't consider other alt alleles, just stick with the one we found first and continue
 					continue filterVariants;
@@ -161,7 +174,54 @@ public class Step4_Helper
 		return res;
 	}
 
+	public static void updateCSQ(EntityPlus exacVariant, String altAllele) throws Exception
+	{
+		String csq = exacVariant.getE().getString("CSQ");	
+//		System.out.println("LOOKING FOR ALT " + altAllele);
+		
+		boolean found = false;
+		
+		//multiple transcripts, with each multiple alleles
+		for(String csqs : csq.split(",", -1))
+		{
+			String[] csqSplit = csqs.split("\\|", -1);
+//			System.out.println("csqSplit[0]="+csqSplit[0]);
+//			System.out.println("csqSplit[18]="+csqSplit[18]);
+			if(csqSplit[0].equals(altAllele) && csqSplit[18].equals("YES"))
+			{
+				exacVariant.getE().set("CSQ", csqs);
+				String impact = getHighestImpact(csqSplit[4]);
+				exacVariant.getKeyVal().put("IMPACT", impact);
+				found = true;
+				break;
+			}
+		}
+		if(!found)
+		{
+			throw new Exception("could not return CSQ, no alt allele match + 'YES' consensus");	
+		}
+		
+	}
 
+	//e.g. "splice_acceptor_variant&non_coding_transcript_variant"
+	public static String getHighestImpact(String csqConsequences) throws Exception
+	{
+		int highestImpactRank = -1;
+		for(String consequence : csqConsequences.split("&", -1))
+		{
+			String impact = VEPimpactCategories.getImpact(consequence);
+			int impactRank = VEPimpactCategories.getImpactRank(impact);
+			if(impactRank > highestImpactRank)
+			{
+				highestImpactRank = impactRank;
+			}
+		}
+		if(highestImpactRank == -1)
+		{
+			throw new Exception("no impact match on " + csqConsequences);
+		}
+		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
+	}
 
 	public static ImpactRatios calculateImpactRatios(List<Entity> inClinVarOnly, List<Entity> inBoth) throws Exception
 	{
@@ -195,19 +255,57 @@ public class Step4_Helper
 			}
 		}
 		
-		int total = nrOfHigh + nrOfModerate + nrOfLow + nrOfModifier;
+		double total = nrOfHigh + nrOfModerate + nrOfLow + nrOfModifier;
+		int highPerc = nrOfHigh == 0 ? 0 : (int)Math.round(((double)nrOfHigh/total)*100.0);
+		int modrPerc = nrOfModerate == 0 ? 0 : (int)Math.round(((double)nrOfModerate/total)*100.0);
+		int lowPerc = nrOfLow == 0 ? 0 : (int)Math.round(((double)nrOfLow/total)*100.0);
+		int modfPerc = nrOfModifier == 0 ? 0 : (int)Math.round(((double)nrOfModifier/total)*100);
 		
-		ImpactRatios ir = new ImpactRatios(high, moderate, low, modifier)
+		ImpactRatios ir = new ImpactRatios(highPerc, modrPerc, lowPerc, modfPerc);
 		
-		System.out.println("counts: high=" + nrOfHigh + ", modr=" + nrOfModerate + ", low=" + nrOfLow + ", modf=" + nrOfModifier);
-		return null;
+	//	System.out.println("counts: high=" + nrOfHigh + ", modr=" + nrOfModerate + ", low=" + nrOfLow + ", modf=" + nrOfModifier);
+
+		return ir;
 	}
 
 
 
-	public static List<Entity> shapeExACvariantsByImpactRatios(List<Entity> exacFilteredByMAF, ImpactRatios ir)
+	public static List<EntityPlus> shapeExACvariantsByImpactRatios(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
 	{
-		// TODO Auto-generated method stub
+		
+		//first, just count the impact categories like we do for clinvar
+		int nrOfHigh = 0;
+		int nrOfModerate = 0;
+		int nrOfLow = 0;
+		int nrOfModifier = 0;
+		for(EntityPlus e : exacFilteredByMAF)
+		{
+			System.out.println(e.getKeyVal().toString());
+			String impact = e.getKeyVal().get("IMPACT").toString();
+			if(impact.equals("HIGH"))
+			{
+				nrOfHigh++;
+			}
+			else if(impact.equals("MODERATE"))
+			{
+				nrOfModerate++;
+			}
+			else if(impact.equals("LOW"))
+			{
+				nrOfLow++;
+			}
+			else if(impact.equals("MODIFIER"))
+			{
+				nrOfModifier++;
+			}
+			else
+			{
+				throw new Exception("unrecognized impact: " + impact);
+			}
+		}
+		
+		System.out.println("counting exac impacts: high="+nrOfHigh+", modr="+nrOfModerate+", low="+nrOfLow + ", modf="+nrOfModifier);
+		
 		return null;
 	}
 }
