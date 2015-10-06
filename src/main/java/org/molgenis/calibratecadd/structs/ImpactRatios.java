@@ -25,6 +25,15 @@ public class ImpactRatios
 			throw new Exception("Impact rations should add up to 100");
 		}
 	}
+
+	@Override
+	public String toString()
+	{
+		return "ImpactRatios [high=" + high + ", moderate=" + moderate + ", low=" + low + ", modifier=" + modifier
+				+ "]";
+	}
+	
+	
 	
 	
 }

@@ -103,14 +103,15 @@ public class Step4_MatchingVariantsFromExAC
 		vcfRepo.close();
 	}
 
-	private void createMatchingExACsets(String exacLoc) throws IOException
+	private void createMatchingExACsets(String exacLoc) throws Exception
 	{
 		System.out.println("loading matching exac variants..");
 
 		int passedGenes = 0;
 		int passedVariants = 0;
 		int matchedVariants = 0;
-		int droppedGenes = 0;
+		int droppedGenesClinVarTooFew = 0;
+		int droppedGenesExACtooFew = 0;
 
 		int index = 0;
 		for (String gene : clinvarPatho.keySet())
@@ -124,6 +125,13 @@ public class Step4_MatchingVariantsFromExAC
 			String chrom = null;
 			long leftMostPos = -1;
 			long rightMostPos = -1;
+			
+			//we want at least 2 variants in order to get the interval for exac
+			if(clinvarPatho.get(gene).size() < 2)
+			{
+				droppedGenesClinVarTooFew++;
+				continue;
+			}
 
 			for (Entity cvv : clinvarPatho.get(gene))
 			{
@@ -160,27 +168,33 @@ public class Step4_MatchingVariantsFromExAC
 				// no chrom in tabix or so
 			}
 
-			// System.out.println(gene + " " + leftMostPos + " " + rightMostPos + " " + " has " + " " + count);
+			System.out.println(gene + " " + leftMostPos + " " + rightMostPos + " " + " has " + " " + exacVariants.size());
 
 			if (exacVariants.size() > 0)
 			{
 				passedGenes++;
 				passedVariants += exacVariants.size();
-
-				// java.lang.OutOfMemoryError: Java heap space
-				// exacIntervals.put(gene, exacLines);
 				
+				//found out: which variants are only in ExAC, which only in ClinVar, which in both
 				VariantIntersectResult vir = Step4_Helper.intersectVariants(exacVariants, clinvarPatho.get(gene));
+				
+				System.out.println("VariantIntersectResult for '"+gene+"', clinvaronly: " + vir.inClinVarOnly.size() + ", exaconly: " + vir.inExACOnly.size() + ", both: " + vir.inBoth_exac.size());
 				
 				//calculate MAF for shared variants, and use them to filter the other ExAC variants
 				//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
-				double medianMAF = Step4_Helper.calculateMedianMAF(vir.inBoth);
+				//if we have nothing to go on, we will set this to 0 and only select singleton variants
+				double medianMAF = Step4_Helper.calculateMedianMAF(vir.inBoth_exac);
 				List<Entity> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, medianMAF);
+		
+				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using MAF " + medianMAF);
 
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
-				ImpactRatios ir = Step4_Helper.calculateImpactRatios(vir.inClinVarOnly, vir.inBoth);
+				ImpactRatios ir = Step4_Helper.calculateImpactRatios(vir.inClinVarOnly, vir.inBoth_clinvar);
 				List<Entity> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
+				
+				System.out.println("impact ratio from clinvar variants: " + ir.toString());
+				System.out.println("exaconly filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
 				
 				matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 				matchedVariants += exacFilteredByMAFandImpact.size();
@@ -188,7 +202,7 @@ public class Step4_MatchingVariantsFromExAC
 			}
 			else
 			{
-				droppedGenes++;
+				droppedGenesExACtooFew++;
 			}
 
 		}
@@ -197,8 +211,9 @@ public class Step4_MatchingVariantsFromExAC
 		System.out.println("passed genes (>0 interval exac variants): " + passedGenes);
 		System.out.println("passed variants (total count in all passed genes): " + passedVariants);
 		System.out.println("matched variants (total variants used for final calibration): " + matchedVariants);
-		System.out.println("dropped genes (0 interval exac variants): " + droppedGenes);
-
+		System.out.println("dropped genes (less than 2 clinvar variants): " + droppedGenesClinVarTooFew);
+		System.out.println("dropped genes (2+ clinvar, but 0 interval exac variants): " + droppedGenesExACtooFew);
+		
 	}
 	
 	
