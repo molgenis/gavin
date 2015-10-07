@@ -4,6 +4,8 @@ package org.molgenis.calibratecadd.misc;
 public class VEPimpactCategories
 {
 	
+	public static String IMPACT = "IMPACT";
+	
 	public static int getImpactRank(String impact) throws Exception
 	{
 		switch (impact) {

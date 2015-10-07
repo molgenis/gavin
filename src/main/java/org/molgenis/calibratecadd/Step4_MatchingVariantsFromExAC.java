@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.molgenis.calibratecadd.misc.Step4_Helper;
+import org.molgenis.calibratecadd.misc.VEPimpactCategories;
 import org.molgenis.calibratecadd.structs.EntityPlus;
 import org.molgenis.calibratecadd.structs.ImpactRatios;
 import org.molgenis.calibratecadd.structs.VariantIntersectResult;
@@ -185,6 +186,8 @@ public class Step4_MatchingVariantsFromExAC
 				//if we have nothing to go on, we will set this to 0 and only select singleton variants
 				double medianMAF = Step4_Helper.calculateMedianMAF(vir.inBoth_exac);
 				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, medianMAF);
+				
+				System.out.println("WTF!!! " + exacFilteredByMAF.get(0).getKeyVal().get(VEPimpactCategories.IMPACT));
 		
 				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using MAF " + medianMAF);
 

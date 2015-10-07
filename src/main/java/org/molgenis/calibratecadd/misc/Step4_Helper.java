@@ -119,7 +119,7 @@ public class Step4_Helper
 
 
 
-	public static List<EntityPlus> filterExACvariantsByMAF(List<Entity> inExACOnly, double medianMAF) throws Exception
+	public static List<EntityPlus> filterExACvariantsByMAF(List<Entity> inExACOnly, double MAFthreshold) throws Exception
 	{
 		List<EntityPlus> res = new ArrayList<EntityPlus>();
 		
@@ -135,6 +135,8 @@ public class Step4_Helper
 				double maf = Double.parseDouble(exacVariantPlus.getE().getString("AF").split(",",-1)[altIndex]);
 				int ac = Integer.parseInt(exacVariantPlus.getE().getString("AC_Adj").split(",",-1)[altIndex]);
 		
+				//we consider each alt allele as a possible 'keep' or 'ditch'
+				//though we only keep 1 alt allele if that one is a match
 				boolean keep = false;
 				
 				//the clinvar variants were all 'singletons', so we only select singletons from exac
@@ -142,39 +144,45 @@ public class Step4_Helper
 				{
 					keep = true;
 				}
-				else if(maf <= medianMAF)
+				//else it must be under/equal to MAF threshold
+				else if(maf <= MAFthreshold)
 				{
 					keep = true;
 				}
 				
+				//if keep: we have to update this variant to remove any 'ditched' alternative alleles!
 				if(keep)
 				{
-					//'edit' variant for this particular alt allele
-					if(altSplit.length > 1)
-					{
-						exacVariantPlus.getE().set("ALT", alt);
-						exacVariantPlus.getE().set("AF", maf);
-						exacVariantPlus.getE().set("AC_Adj", ac);
-						
-						//update the 'variant annotation' line 'CSQ' to match this alt
-						//includes adding 'impact' for later use
-
-						updateCSQ(exacVariantPlus, alt);	
-						
-						System.out.println("IMPACT = " + exacVariantPlus.getKeyVal().get("IMPACT").toString());
-						
-					}
-					res.add(exacVariantPlus);
+					exacVariantPlus.getE().set("ALT", alt);
+					exacVariantPlus.getE().set("AF", maf);
+					exacVariantPlus.getE().set("AC_Adj", ac);
 					
-					//don't consider other alt alleles, just stick with the one we found first and continue
-					continue filterVariants;
+					//update the 'variant annotation' line 'CSQ' to match this alt
+					//includes adding 'impact' for later use
+					boolean success = updateCSQ(exacVariantPlus, alt);
+					
+					if(success)
+					{
+				//System.out.println("IMPACT = " + exacVariantPlus.getKeyVal().get(VEPimpactCategories.IMPACT).toString());
+				
+				//		}
+						res.add(exacVariantPlus);
+						
+					//	System.out.println("JUST ADDED " + res.get(0).getKeyVal().get(VEPimpactCategories.IMPACT).toString());
+						
+						//don't consider other alt alleles, just stick with the one we found first and continue
+						continue filterVariants;
+					}
+					
+
 				}
 			}
 		}
+//		System.out.println("RETURNING " + res.get(0).getKeyVal().get(VEPimpactCategories.IMPACT).toString());
 		return res;
 	}
 
-	public static void updateCSQ(EntityPlus exacVariant, String altAllele) throws Exception
+	public static boolean updateCSQ(EntityPlus exacVariant, String altAllele) throws Exception
 	{
 		String csq = exacVariant.getE().getString("CSQ");	
 //		System.out.println("LOOKING FOR ALT " + altAllele);
@@ -185,20 +193,28 @@ public class Step4_Helper
 		for(String csqs : csq.split(",", -1))
 		{
 			String[] csqSplit = csqs.split("\\|", -1);
-//			System.out.println("csqSplit[0]="+csqSplit[0]);
-//			System.out.println("csqSplit[18]="+csqSplit[18]);
+			
+			System.out.println("csqSplit[0]="+csqSplit[0]);
+			System.out.println("csqSplit[18]="+csqSplit[18]);
+	
 			if(csqSplit[0].equals(altAllele) && csqSplit[18].equals("YES"))
 			{
 				exacVariant.getE().set("CSQ", csqs);
 				String impact = getHighestImpact(csqSplit[4]);
-				exacVariant.getKeyVal().put("IMPACT", impact);
+				exacVariant.getKeyVal().put(VEPimpactCategories.IMPACT, impact);
 				found = true;
 				break;
 			}
 		}
+		
 		if(!found)
 		{
-			throw new Exception("could not return CSQ, no alt allele match + 'YES' consensus");	
+	//		System.out.println("could not return CSQ, no alt allele match for '"+altAllele+"' && 'YES' consensus for " + csq);
+			return false;
+		}
+		else
+		{
+			return true;
 		}
 		
 	}
@@ -281,7 +297,7 @@ public class Step4_Helper
 		for(EntityPlus e : exacFilteredByMAF)
 		{
 			System.out.println(e.getKeyVal().toString());
-			String impact = e.getKeyVal().get("IMPACT").toString();
+			String impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
 			if(impact.equals("HIGH"))
 			{
 				nrOfHigh++;
@@ -305,6 +321,77 @@ public class Step4_Helper
 		}
 		
 		System.out.println("counting exac impacts: high="+nrOfHigh+", modr="+nrOfModerate+", low="+nrOfLow + ", modf="+nrOfModifier);
+		
+		//tackle:
+		//we have impact ratios, e.g.: [high=40, moderate=53, low=7, modifier=0]
+		//counting exac impacts: high=25, modr=230, low=144, modf=235
+		//limiting impact type: high with 25, total set we want: 25*(100/40) = 62.5
+		//fill the rest: 62.5*(53/100) = 33.125 moderate impact ones, 4.375 low impact, 0 modifier
+		//33+4+25 = 62, which is fine, just round up/down each impact type
+		
+		//so! little bit tricky: we must get the difference between 'initial' vs 'scaled' for 3 categories, using 1 as 'scaling reference'
+		//if all 3 are negative, it means this is the correct 'scaling reference' because we can remove variants but not add variants!
+		
+		//we don't want to divide by zero.. add a little correction (causes big positive numbers for scaling subtractions but thats ok)
+		double correctForZero = 0.0000000001;
+		double irHigh = ir.high == 0 ? correctForZero : ir.high;
+		double irModr = ir.moderate == 0 ? correctForZero : ir.moderate;
+		double irLow = ir.low == 0 ? correctForZero : ir.low;
+		double irModf = ir.modifier == 0 ? correctForZero : ir.modifier;
+		
+		//alright.. let's test if 'high' is our scaling reference:
+		int highScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfHigh*(irModr/irHigh))));
+		int highScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfHigh*(irLow/irHigh))));
+		int highScaleModfDiff = (int)Math.round(-(nrOfModifier-(nrOfHigh*(irModf/irHigh))));
+		
+		//no? then check if we should scale on 'moderate'
+		int modrScaleHighDiff = (int)Math.round(-(nrOfHigh-(nrOfModerate*(irHigh/irModr))));
+		int modrScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfModerate*(irLow/irModr))));
+		int modrScaleModfDiff = (int)Math.round(-(nrOfModifier-(nrOfModerate*(irModf/irModr))));
+		
+		//no? then check if we should scale on 'low'
+		int lowScaleHighDiff = (int)Math.round(-(nrOfHigh-(nrOfLow*(irHigh/irLow))));
+		int lowScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfLow*(irModr/irLow))));
+		int lowScaleModfDiff = (int)Math.round(-(nrOfModifier-(nrOfLow*(irModf/irLow))));
+		
+		//no? then check if we should scale on 'modifier'
+		int modfScaleHighDiff = (int)Math.round(-(nrOfHigh-(nrOfModifier*(irHigh/irModf))));
+		int modfScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfModifier*(irModr/irModf))));
+		int modfScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfModifier*(irLow/irModf))));
+		
+		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low" + highScaleLowDiff + ", modifier" + highScaleModfDiff);
+		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
+		System.out.println("scaling subtractions for LOW: high=" + lowScaleHighDiff + ", moderate=" + lowScaleModrDiff + ", modifier=" + lowScaleModfDiff);
+		System.out.println("scaling subtractions for MODIFIER: high=" + modfScaleHighDiff + ", moderate=" + modfScaleModrDiff + ", low=" + modfScaleLowDiff);
+		
+		if(highScaleModrDiff < 0 && highScaleLowDiff < 0 && highScaleModfDiff < 0)
+		{
+			System.out.println("we must scale on HIGH impact using " + highScaleModrDiff + ", " + highScaleLowDiff + ", " + highScaleModfDiff);
+			
+		}
+		else if(modrScaleHighDiff < 0 && modrScaleLowDiff < 0 && modrScaleModfDiff < 0)
+		{
+			System.out.println("we must scale on MODERATE impact using " + modrScaleHighDiff + ", " + modrScaleLowDiff + ", " + modrScaleModfDiff);
+			
+		}
+		else if(lowScaleHighDiff < 0 && lowScaleModrDiff < 0 && lowScaleModfDiff < 0)
+		{
+			System.out.println("we must scale on LOW impact using " + lowScaleHighDiff + ", " + lowScaleModrDiff + ", " + lowScaleModfDiff);
+			
+		}
+		else if(modfScaleHighDiff < 0 && modfScaleModrDiff < 0 && modfScaleLowDiff < 0)
+		{
+			System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
+			
+		}
+		else
+		{
+			throw new Exception("could not figure out scaling!");
+		}
+		
+		
+		
+		
 		
 		return null;
 	}
