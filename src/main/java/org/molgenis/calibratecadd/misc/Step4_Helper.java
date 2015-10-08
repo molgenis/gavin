@@ -344,63 +344,79 @@ public class Step4_Helper
 		double irModf = ir.modifier == 0 ? correctForZero : ir.modifier;
 		
 		//alright.. let's test if 'high' is our scaling reference:
-		int highScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfHigh*(irModr/irHigh))));
-		int highScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfHigh*(irLow/irHigh))));
-		int highScaleModfDiff = (int)Math.round(-(nrOfModifier-(nrOfHigh*(irModf/irHigh))));
+		int highScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfHigh*(irModr/irHigh)));
+		int highScaleLowDiff = (int)Math.round(nrOfLow-(nrOfHigh*(irLow/irHigh)));
+		int highScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfHigh*(irModf/irHigh)));
 		
 		//no? then check if we should scale on 'moderate'
-		int modrScaleHighDiff = (int)Math.round(-(nrOfHigh-(nrOfModerate*(irHigh/irModr))));
-		int modrScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfModerate*(irLow/irModr))));
-		int modrScaleModfDiff = (int)Math.round(-(nrOfModifier-(nrOfModerate*(irModf/irModr))));
+		int modrScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfModerate*(irHigh/irModr)));
+		int modrScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModerate*(irLow/irModr)));
+		int modrScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfModerate*(irModf/irModr)));
 		
 		//no? then check if we should scale on 'low'
-		int lowScaleHighDiff = (int)Math.round(-(nrOfHigh-(nrOfLow*(irHigh/irLow))));
-		int lowScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfLow*(irModr/irLow))));
-		int lowScaleModfDiff = (int)Math.round(-(nrOfModifier-(nrOfLow*(irModf/irLow))));
+		int lowScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfLow*(irHigh/irLow)));
+		int lowScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfLow*(irModr/irLow)));
+		int lowScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfLow*(irModf/irLow)));
 		
 		//no? then check if we should scale on 'modifier'
-		int modfScaleHighDiff = (int)Math.round(-(nrOfHigh-(nrOfModifier*(irHigh/irModf))));
-		int modfScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfModifier*(irModr/irModf))));
-		int modfScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfModifier*(irLow/irModf))));
+		int modfScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfModifier*(irHigh/irModf)));
+		int modfScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfModifier*(irModr/irModf)));
+		int modfScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModifier*(irLow/irModf)));
 		
-//		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low" + highScaleLowDiff + ", modifier" + highScaleModfDiff);
-//		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
-//		System.out.println("scaling subtractions for LOW: high=" + lowScaleHighDiff + ", moderate=" + lowScaleModrDiff + ", modifier=" + lowScaleModfDiff);
-//		System.out.println("scaling subtractions for MODIFIER: high=" + modfScaleHighDiff + ", moderate=" + modfScaleModrDiff + ", low=" + modfScaleLowDiff);
+		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low=" + highScaleLowDiff + ", modifier=" + highScaleModfDiff);
+		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
+		System.out.println("scaling subtractions for LOW: high=" + lowScaleHighDiff + ", moderate=" + lowScaleModrDiff + ", modifier=" + lowScaleModfDiff);
+		System.out.println("scaling subtractions for MODIFIER: high=" + modfScaleHighDiff + ", moderate=" + modfScaleModrDiff + ", low=" + modfScaleLowDiff);
 		
 		int removeFromHigh = 0;
 		int removeFromModerate = 0;
 		int removeFromLow = 0;
 		int removeFromModifier = 0;
 		
-		if(highScaleModrDiff < 0 && highScaleLowDiff < 0 && highScaleModfDiff < 0)
+		//TODO: multiple solutions? pick one with LEAST amount of deleted elements!
+		int leastLossSoFar = 0;
+		
+		if(highScaleModrDiff >= 0 && highScaleLowDiff >= 0 && highScaleModfDiff >= 0)
 		{
-//			System.out.println("we must scale on HIGH impact using " + highScaleModrDiff + ", " + highScaleLowDiff + ", " + highScaleModfDiff);
-			removeFromModerate = -highScaleModrDiff;
-			removeFromLow = -highScaleLowDiff;
-			removeFromModifier = -highScaleModfDiff;
+		//	System.out.println("we must scale on HIGH impact using " + highScaleModrDiff + ", " + highScaleLowDiff + ", " + highScaleModfDiff);	
+			int loss = highScaleModrDiff - highScaleLowDiff - highScaleModfDiff;
+			if(leastLossSoFar == 0 || loss < leastLossSoFar)
+			{
+				leastLossSoFar = loss;
+				removeFromModerate = highScaleModrDiff;
+				removeFromLow = highScaleLowDiff;
+				removeFromModifier = highScaleModfDiff;
+				System.out.println("scaling on HIGH is an option, with loss = " + loss);
+			}
+		}
+		
+		if(modrScaleHighDiff >= 0 && modrScaleLowDiff >= 0 && modrScaleModfDiff >= 0)
+		{
+			int loss = highScaleModrDiff - highScaleLowDiff - highScaleModfDiff;
+			if(leastLossSoFar == 0 || loss < leastLossSoFar)
+			{
+				leastLossSoFar = loss;
+				removeFromHigh = modrScaleHighDiff;
+				removeFromLow = modrScaleLowDiff;
+				removeFromModifier = modrScaleModfDiff;
+				System.out.println("scaling on MODERATE is a BETTER option, with loss = " + loss);
+			}
+//			System.out.println("we must scale on MODERATE impact using " + modrScaleHighDiff + ", " + modrScaleLowDiff + ", " + modrScaleModfDiff);
 			
 		}
-		else if(modrScaleHighDiff < 0 && modrScaleLowDiff < 0 && modrScaleModfDiff < 0)
+		if(lowScaleHighDiff >= 0 && lowScaleModrDiff >= 0 && lowScaleModfDiff >= 0)
 		{
-//			System.out.println("we must scale on MODERATE impact using " + modrScaleHighDiff + ", " + modrScaleLowDiff + ", " + modrScaleModfDiff);
-			removeFromHigh = -modrScaleHighDiff;
-			removeFromLow = -modrScaleLowDiff;
-			removeFromModifier = -modrScaleModfDiff;
+			System.out.println("we must scale on LOW impact using " + lowScaleHighDiff + ", " + lowScaleModrDiff + ", " + lowScaleModfDiff);
+			removeFromHigh = lowScaleHighDiff;
+			removeFromModerate = lowScaleModrDiff;
+			removeFromModifier = lowScaleModfDiff;
 		}
-		else if(lowScaleHighDiff < 0 && lowScaleModrDiff < 0 && lowScaleModfDiff < 0)
+		if(modfScaleHighDiff >= 0 && modfScaleModrDiff >= 0 && modfScaleLowDiff >= 0)
 		{
-//			System.out.println("we must scale on LOW impact using " + lowScaleHighDiff + ", " + lowScaleModrDiff + ", " + lowScaleModfDiff);
-			removeFromHigh = -lowScaleHighDiff;
-			removeFromModerate = -lowScaleModrDiff;
-			removeFromModifier = -lowScaleModfDiff;
-		}
-		else if(modfScaleHighDiff < 0 && modfScaleModrDiff < 0 && modfScaleLowDiff < 0)
-		{
-//			System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
-			removeFromHigh = -modfScaleHighDiff;
-			removeFromModerate = -modfScaleModrDiff;
-			removeFromLow = -modfScaleLowDiff;
+			System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
+			removeFromHigh = modfScaleHighDiff;
+			removeFromModerate = modfScaleModrDiff;
+			removeFromLow = modfScaleLowDiff;
 		}
 		else
 		{

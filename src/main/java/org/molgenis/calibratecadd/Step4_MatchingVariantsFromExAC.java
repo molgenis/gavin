@@ -192,9 +192,8 @@ public class Step4_MatchingVariantsFromExAC
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
 				ImpactRatios ir = Step4_Helper.calculateImpactRatios(vir.inClinVarOnly, vir.inBoth_clinvar);
-				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
-				
 				System.out.println("impact ratio from clinvar variants: " + ir.toString());
+				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
 				System.out.println("exaconly filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
 				
 				matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
