@@ -187,8 +187,6 @@ public class Step4_MatchingVariantsFromExAC
 				double medianMAF = Step4_Helper.calculateMedianMAF(vir.inBoth_exac);
 				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, medianMAF);
 				
-				System.out.println("WTF!!! " + exacFilteredByMAF.get(0).getKeyVal().get(VEPimpactCategories.IMPACT));
-		
 				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using MAF " + medianMAF);
 
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants

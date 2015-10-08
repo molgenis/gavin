@@ -132,15 +132,17 @@ public class Step4_Helper
 			for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
 			{
 				String alt = altSplit[altIndex];
-				double maf = Double.parseDouble(exacVariantPlus.getE().getString("AF").split(",",-1)[altIndex]);
-				int ac = Integer.parseInt(exacVariantPlus.getE().getString("AC_Adj").split(",",-1)[altIndex]);
+				//System.out.println("AF field: " + exacVariantPlus.getE().getString("AF"));
+			
+				double maf = Double.parseDouble(exacVariantPlus.getE().getString("AF").split(",",-1)[altIndex]);				
+				int AC_Adj = Integer.parseInt(exacVariantPlus.getE().getString("AC_Adj").split(",",-1)[altIndex]);
 		
 				//we consider each alt allele as a possible 'keep' or 'ditch'
 				//though we only keep 1 alt allele if that one is a match
 				boolean keep = false;
 				
 				//the clinvar variants were all 'singletons', so we only select singletons from exac
-				if(maf == 0.0 && ac == 1)
+				if(maf == 0.0 && AC_Adj == 1)
 				{
 					keep = true;
 				}
@@ -153,28 +155,18 @@ public class Step4_Helper
 				//if keep: we have to update this variant to remove any 'ditched' alternative alleles!
 				if(keep)
 				{
-					exacVariantPlus.getE().set("ALT", alt);
-					exacVariantPlus.getE().set("AF", maf);
-					exacVariantPlus.getE().set("AC_Adj", ac);
 					
 					//update the 'variant annotation' line 'CSQ' to match this alt
 					//includes adding 'impact' for later use
-					boolean success = updateCSQ(exacVariantPlus, alt);
+					boolean success = updateCSQ(exacVariantPlus, alt, maf, AC_Adj);
 					
 					if(success)
 					{
-				//System.out.println("IMPACT = " + exacVariantPlus.getKeyVal().get(VEPimpactCategories.IMPACT).toString());
-				
-				//		}
 						res.add(exacVariantPlus);
-						
-					//	System.out.println("JUST ADDED " + res.get(0).getKeyVal().get(VEPimpactCategories.IMPACT).toString());
-						
+
 						//don't consider other alt alleles, just stick with the one we found first and continue
 						continue filterVariants;
 					}
-					
-
 				}
 			}
 		}
@@ -182,7 +174,7 @@ public class Step4_Helper
 		return res;
 	}
 
-	public static boolean updateCSQ(EntityPlus exacVariant, String altAllele) throws Exception
+	public static boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
 	{
 		String csq = exacVariant.getE().getString("CSQ");	
 //		System.out.println("LOOKING FOR ALT " + altAllele);
@@ -194,12 +186,15 @@ public class Step4_Helper
 		{
 			String[] csqSplit = csqs.split("\\|", -1);
 			
-			System.out.println("csqSplit[0]="+csqSplit[0]);
-			System.out.println("csqSplit[18]="+csqSplit[18]);
+//			System.out.println("csqSplit[0]="+csqSplit[0]);
+//			System.out.println("csqSplit[18]="+csqSplit[18]);
 	
 			if(csqSplit[0].equals(altAllele) && csqSplit[18].equals("YES"))
 			{
 				exacVariant.getE().set("CSQ", csqs);
+				exacVariant.getE().set("ALT", altAllele);
+				exacVariant.getE().set("AF", maf);
+				exacVariant.getE().set("AC_Adj", AC_Adj);
 				String impact = getHighestImpact(csqSplit[4]);
 				exacVariant.getKeyVal().put(VEPimpactCategories.IMPACT, impact);
 				found = true;
@@ -289,6 +284,11 @@ public class Step4_Helper
 	public static List<EntityPlus> shapeExACvariantsByImpactRatios(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
 	{
 		
+		List<EntityPlus> highImpactVariants = new ArrayList<EntityPlus>();
+		List<EntityPlus> modrImpactVariants = new ArrayList<EntityPlus>();
+		List<EntityPlus> lowImpactVariants = new ArrayList<EntityPlus>();
+		List<EntityPlus> modfImpactVariants = new ArrayList<EntityPlus>();
+		
 		//first, just count the impact categories like we do for clinvar
 		int nrOfHigh = 0;
 		int nrOfModerate = 0;
@@ -296,22 +296,26 @@ public class Step4_Helper
 		int nrOfModifier = 0;
 		for(EntityPlus e : exacFilteredByMAF)
 		{
-			System.out.println(e.getKeyVal().toString());
+	//		System.out.println(e.getKeyVal().toString());
 			String impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
 			if(impact.equals("HIGH"))
 			{
+				highImpactVariants.add(e);
 				nrOfHigh++;
 			}
 			else if(impact.equals("MODERATE"))
 			{
+				modrImpactVariants.add(e);
 				nrOfModerate++;
 			}
 			else if(impact.equals("LOW"))
 			{
+				lowImpactVariants.add(e);
 				nrOfLow++;
 			}
 			else if(impact.equals("MODIFIER"))
 			{
+				modfImpactVariants.add(e);
 				nrOfModifier++;
 			}
 			else
@@ -359,30 +363,44 @@ public class Step4_Helper
 		int modfScaleModrDiff = (int)Math.round(-(nrOfModerate-(nrOfModifier*(irModr/irModf))));
 		int modfScaleLowDiff = (int)Math.round(-(nrOfLow-(nrOfModifier*(irLow/irModf))));
 		
-		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low" + highScaleLowDiff + ", modifier" + highScaleModfDiff);
-		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
-		System.out.println("scaling subtractions for LOW: high=" + lowScaleHighDiff + ", moderate=" + lowScaleModrDiff + ", modifier=" + lowScaleModfDiff);
-		System.out.println("scaling subtractions for MODIFIER: high=" + modfScaleHighDiff + ", moderate=" + modfScaleModrDiff + ", low=" + modfScaleLowDiff);
+//		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low" + highScaleLowDiff + ", modifier" + highScaleModfDiff);
+//		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
+//		System.out.println("scaling subtractions for LOW: high=" + lowScaleHighDiff + ", moderate=" + lowScaleModrDiff + ", modifier=" + lowScaleModfDiff);
+//		System.out.println("scaling subtractions for MODIFIER: high=" + modfScaleHighDiff + ", moderate=" + modfScaleModrDiff + ", low=" + modfScaleLowDiff);
+		
+		int removeFromHigh = 0;
+		int removeFromModerate = 0;
+		int removeFromLow = 0;
+		int removeFromModifier = 0;
 		
 		if(highScaleModrDiff < 0 && highScaleLowDiff < 0 && highScaleModfDiff < 0)
 		{
-			System.out.println("we must scale on HIGH impact using " + highScaleModrDiff + ", " + highScaleLowDiff + ", " + highScaleModfDiff);
+//			System.out.println("we must scale on HIGH impact using " + highScaleModrDiff + ", " + highScaleLowDiff + ", " + highScaleModfDiff);
+			removeFromModerate = -highScaleModrDiff;
+			removeFromLow = -highScaleLowDiff;
+			removeFromModifier = -highScaleModfDiff;
 			
 		}
 		else if(modrScaleHighDiff < 0 && modrScaleLowDiff < 0 && modrScaleModfDiff < 0)
 		{
-			System.out.println("we must scale on MODERATE impact using " + modrScaleHighDiff + ", " + modrScaleLowDiff + ", " + modrScaleModfDiff);
-			
+//			System.out.println("we must scale on MODERATE impact using " + modrScaleHighDiff + ", " + modrScaleLowDiff + ", " + modrScaleModfDiff);
+			removeFromHigh = -modrScaleHighDiff;
+			removeFromLow = -modrScaleLowDiff;
+			removeFromModifier = -modrScaleModfDiff;
 		}
 		else if(lowScaleHighDiff < 0 && lowScaleModrDiff < 0 && lowScaleModfDiff < 0)
 		{
-			System.out.println("we must scale on LOW impact using " + lowScaleHighDiff + ", " + lowScaleModrDiff + ", " + lowScaleModfDiff);
-			
+//			System.out.println("we must scale on LOW impact using " + lowScaleHighDiff + ", " + lowScaleModrDiff + ", " + lowScaleModfDiff);
+			removeFromHigh = -lowScaleHighDiff;
+			removeFromModerate = -lowScaleModrDiff;
+			removeFromModifier = -lowScaleModfDiff;
 		}
 		else if(modfScaleHighDiff < 0 && modfScaleModrDiff < 0 && modfScaleLowDiff < 0)
 		{
-			System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
-			
+//			System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
+			removeFromHigh = -modfScaleHighDiff;
+			removeFromModerate = -modfScaleModrDiff;
+			removeFromLow = -modfScaleLowDiff;
 		}
 		else
 		{
@@ -390,9 +408,55 @@ public class Step4_Helper
 		}
 		
 		
+		System.out.println("removing from high: " + removeFromHigh + ", moderate: " + removeFromModerate + ", low: " + removeFromLow + ", modf: " + removeFromModifier);
 		
+		List<EntityPlus> highScaledDown = scaledownVariantList(highImpactVariants, removeFromHigh);
+		List<EntityPlus> modrScaledDown = scaledownVariantList(modrImpactVariants, removeFromModerate);
+		List<EntityPlus> lowScaledDown = scaledownVariantList(lowImpactVariants, removeFromLow);
+		List<EntityPlus> modfScaledDown = scaledownVariantList(modfImpactVariants, removeFromModifier);
 		
+		List<EntityPlus> scaledDownExACvariants = new ArrayList<EntityPlus>();
+		scaledDownExACvariants.addAll(highScaledDown);
+		scaledDownExACvariants.addAll(modrScaledDown);
+		scaledDownExACvariants.addAll(lowScaledDown);
+		scaledDownExACvariants.addAll(modfScaledDown);
 		
-		return null;
+		return scaledDownExACvariants;
 	}
+	
+	
+	private static List<EntityPlus> scaledownVariantList(List<EntityPlus> variants, int amountToRemove) throws Exception
+	{
+		//remove nothing
+		if(amountToRemove == 0)
+		{
+			return variants;
+		}
+		
+		//remove all
+		int size = variants.size();
+		if(size-amountToRemove == 0)
+		{
+			return new ArrayList<EntityPlus>();
+		}
+
+		//'how often does the final size fit within the list of variants? e.g. want 20 out of 190 variants = 9x
+		//this means we will step through the variant list in steps of 9, to get 'even coverage'
+		int div = Math.floorDiv(size, size-amountToRemove);
+		List<EntityPlus> res = new ArrayList<EntityPlus>();
+		for(int step = 0; step < size; step += div)
+		{
+			res.add(variants.get(step));
+		}
+		
+	//	System.out.println("DIV: " + div);
+		
+		if(res.size() < size-amountToRemove)
+		{
+			throw new Exception("result too few! need" + (size-amountToRemove) + " variants, got " + res.size());
+		}
+		
+		return res;
+	}
+	
 }
