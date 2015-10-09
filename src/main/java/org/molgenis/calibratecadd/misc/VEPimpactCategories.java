@@ -19,6 +19,7 @@ public class VEPimpactCategories
 
 	//TODO these definitions seem slightly different than SnpEffs ?
 	//check and harmonize with http://snpeff.sourceforge.net/SnpEff_manual.html !
+	//also nice doc: http://gemini.readthedocs.org/en/stable/content/functional_annotation.html
 	public static String getImpact(String consequence) throws Exception
 	{
 		switch (consequence) {
@@ -59,6 +60,10 @@ public class VEPimpactCategories
 			case "regulatory_region_variant":  return "MODIFIER";
 			case "feature_truncation":  return "MODIFIER";
 			case "intergenic_variant":  return "MODIFIER";
+			
+			//added, not on website?
+			case "3_prime_UTR_variant":  return "MODIFIER"; //modifier according to snpeff, low according to gemini
+			case "initiator_codon_variant":  return "LOW"; //low according to snpeff, high according to gemini
 			
             default: throw new Exception("consequence unknown: " + consequence);
 		}

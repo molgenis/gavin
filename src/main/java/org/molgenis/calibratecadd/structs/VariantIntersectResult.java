@@ -6,13 +6,14 @@ import org.molgenis.data.Entity;
 
 public class VariantIntersectResult
 {
-	public List<Entity> inBoth_exac;
-	public List<Entity> inBoth_clinvar;
-	public List<Entity> inClinVarOnly;
-	public List<Entity> inExACOnly;
+	public List<EntityPlus> inBoth_exac;
+	public List<EntityPlus> inBoth_clinvar;
+	public List<EntityPlus> inClinVarOnly;
+	public List<EntityPlus> inExACOnly;
 	
-	public VariantIntersectResult(List<Entity> inBoth_exac, List<Entity> inBoth_clinvar, List<Entity> inClinVarOnly,
-			List<Entity> inExACOnly)
+	
+	public VariantIntersectResult(List<EntityPlus> inBoth_exac, List<EntityPlus> inBoth_clinvar,
+			List<EntityPlus> inClinVarOnly, List<EntityPlus> inExACOnly)
 	{
 		super();
 		this.inBoth_exac = inBoth_exac;
@@ -20,7 +21,7 @@ public class VariantIntersectResult
 		this.inClinVarOnly = inClinVarOnly;
 		this.inExACOnly = inExACOnly;
 	}
-	
+
 	
 	
 	

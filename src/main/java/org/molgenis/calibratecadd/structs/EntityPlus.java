@@ -1,6 +1,7 @@
 package org.molgenis.calibratecadd.structs;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.molgenis.data.Entity;
 
@@ -37,6 +38,17 @@ public class EntityPlus
 		return "EntityPlus [e=" + e + ", keyVal=" + keyVal + "]";
 	}
 	
-	
+
+	public static boolean contains(List<EntityPlus> list, Entity ep)
+	{
+		for(EntityPlus e : list)
+		{
+			if(e.getE().equals(ep))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 }

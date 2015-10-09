@@ -2,10 +2,10 @@ package org.molgenis.calibratecadd;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import org.molgenis.calibratecadd.structs.ChrPosRefAltUniqueVariants;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 
@@ -13,6 +13,8 @@ public class Step2_FixIndelNotation
 {
 
 	/**
+	 * TODO: after all curation, there are about 156 duplicate lines - must keep track and don't write them out
+	 * 
 	 * Uses:
 	 * [0] file produced in step 1
 	 * [1] ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz
@@ -43,7 +45,7 @@ public class Step2_FixIndelNotation
 		
 		String line = null;
 		
-		HashMap<String, String> posToLine = new HashMap<String, String>();
+		ChrPosRefAltUniqueVariants lines = new ChrPosRefAltUniqueVariants();
 		
 		while(s.hasNextLine())
 		{
@@ -64,7 +66,7 @@ public class Step2_FixIndelNotation
 			if(!(lineSplit[3].equals("na") || lineSplit[4].equals("na") || lineSplit[3].equals("-") || lineSplit[4].equals("-") || lineSplit[3].equals(lineSplit[4])))
 			{
 				totalPassedVariants++;
-				pw.println(line);
+				lines.add(line);
 				continue;
 			}
 			
@@ -122,7 +124,7 @@ public class Step2_FixIndelNotation
 //						}
 					}
 					fixedLine.deleteCharAt(fixedLine.length()-1);
-					pw.println(fixedLine.toString());
+					lines.add(fixedLine.toString());
 					match = true;
 					fixes++;
 					totalPassedVariants++;
@@ -136,17 +138,23 @@ public class Step2_FixIndelNotation
 			
 		}
 		
+		for(String writeLine : lines.getLines().values())
+		{
+			pw.println(writeLine);
+		}
+		
 		pw.flush();
 		pw.close();
 		
-		System.out.println("total variants seen:" + (totalPassedVariants+lost+failedFixes));
+		System.out.println("total variants seen: " + (totalPassedVariants+lost+failedFixes));
 		System.out.println("total passed variants after checking & fixing: " + totalPassedVariants);
 		System.out.println("total variants dropped (not fixable/fixed): " + (lost+failedFixes));
 		System.out.println("variants dropped without attempting to fix (not possible): " + lost);
 		System.out.println("total fixed attempted: " + (fixes+failedFixes));
 		System.out.println("fixes succeeded: " + fixes);
 		System.out.println("fixes failed: " + failedFixes);
-
+		System.out.println("total unique variants written out: " + lines.getLines().size());
+		System.out.println("total duplicate variants dropped out: " + lines.getDuplicateLines().size());
 	}
 
 }

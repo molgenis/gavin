@@ -117,6 +117,12 @@ public class Step4_MatchingVariantsFromExAC
 		int index = 0;
 		for (String gene : clinvarPatho.keySet())
 		{
+			/** DEV **/
+//			if(!gene.equals("LOXHD1"))
+//			{
+//				continue;
+//			}
+			
 			index++;
 			if (index % 100 == 0)
 			{
@@ -169,6 +175,7 @@ public class Step4_MatchingVariantsFromExAC
 				// no chrom in tabix or so
 			}
 
+			System.out.println("\n#####\n");
 			System.out.println(gene + " " + leftMostPos + " " + rightMostPos + " " + " has " + " " + exacVariants.size());
 
 			if (exacVariants.size() > 0)
@@ -219,8 +226,8 @@ public class Step4_MatchingVariantsFromExAC
 	
 	private void printVariantsToFile(String file) throws FileNotFoundException
 	{
-		PrintWriter pw_forR = new PrintWriter("forR_" + file);
-		PrintWriter pw_forCADD = new PrintWriter("forCADD_" + file);
+		PrintWriter pw_forR = new PrintWriter(file + ".R");
+		PrintWriter pw_forCADD = new PrintWriter(file + ".cadd");
 		
 		for(String gene : clinvarPatho.keySet())
 		{

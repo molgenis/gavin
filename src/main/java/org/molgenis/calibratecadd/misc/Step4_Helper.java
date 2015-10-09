@@ -1,5 +1,10 @@
 package org.molgenis.calibratecadd.misc;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,82 +15,105 @@ import org.molgenis.calibratecadd.structs.EntityPlus;
 import org.molgenis.calibratecadd.structs.ImpactRatios;
 import org.molgenis.calibratecadd.structs.VariantIntersectResult;
 import org.molgenis.data.Entity;
-import org.molgenis.data.support.DefaultEntityMetaData;
 
 public class Step4_Helper
 {
 
-	public static VariantIntersectResult intersectVariants(List<Entity> exac, List<Entity> clinvar) throws Exception
+	public static VariantIntersectResult intersectVariants(List<Entity> exacMultiAllelic, List<Entity> clinvar) throws Exception
 	{
-		List<Entity> inExAConly = new ArrayList<Entity>();
-		List<Entity> inClinVarOnly = new ArrayList<Entity>();
-		List<Entity> inBoth_exac = new ArrayList<Entity>();
-		List<Entity> inBoth_clinvar = new ArrayList<Entity>();
+		List<EntityPlus> inExAConly = new ArrayList<EntityPlus>();
+		List<EntityPlus> inClinVarOnly = new ArrayList<EntityPlus>();
+		List<EntityPlus> inBoth_exac = new ArrayList<EntityPlus>();
+		List<EntityPlus> inBoth_clinvar = new ArrayList<EntityPlus>();
+		// TODO also merge data instead of 2 lists?
 		
-		for (Entity exacVariant : exac)
+		//preprocess: expand multiallelic ExaC variants into seperate variants, for 'easy of looping'
+		//update the alt allele and AF. This only goes for ExAC variants because they can be multi-allelic, whereas ClinVar variants are not.
+		//example of where this goes wrong if we don't do this: 6:32007887 . Here, there is an ExAC variant G -> T,A and ClinVar G -> C and G -> T.
+		//move ALT and AF fields to keyVal map
+		List<EntityPlus> exac = new ArrayList<EntityPlus>();
+		for (Entity exacVariant : exacMultiAllelic)
+		{
+			String[] altSplit = exacVariant.getString("ALT").split(",", -1);
+			for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
+			{
+				String alt = altSplit[altIndex];
+				EntityPlus exacVariantCopy = new EntityPlus(exacVariant);
+				exacVariantCopy.getKeyVal().put("ALT", alt);
+				exacVariantCopy.getKeyVal().put("AF", Double.parseDouble(exacVariant.getString("AF").split(",", -1)[altIndex]));
+				exac.add(exacVariantCopy);
+			}
+			//set original to null so we don't accidentally use it somewhere
+			exacVariant.set("ALT", null);
+			exacVariant.set("AF", null);
+		}
+		
+//		System.out.println("expanded exac from " + exacMultiAllelic.size() + " to " + exac.size());
+		
+//		System.out.println("### BEFORE: ");
+//		for(EntityPlus e : exac)
+//		{
+//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getKeyVal().get("ALT").toString());
+//		}
+//		for(Entity e : clinvar)
+//		{
+//			System.out.println(e.getString("#CHROM") + "_" + e.getString("POS") + "_" + e.getString("REF") + "_" + e.get("ALT").toString());
+//		}
+		
+		for (EntityPlus exacVariant : exac)
 		{
 			boolean exacVariantInClinVar = false;
-			
-			checkClinVarVariants:
 			for (Entity clinvarVariant : clinvar)
 			{
-
 				// TODO
 				// for now, we accept that we will miss *some* variants due to 2 reasons:
 				// 1) offset positions due to complex indels
 				// 2) alternative notation of indels, e.g.: consider this variant: 1 6529182 . TTCCTCC TTCC
 				// you will find that it is seen in ExAC: 1 6529182 . TTCCTCCTCC TTCCTCC,TTCC,T,TTCCTCCTCCTCC,TTCCTCCTCCTCCTCC,TTCCTCCTCCTCCTCCTCCTCC
 				// but there denoted as "TTCCTCCTCC/TTCCTCC"...
-				if (exacVariant.getString("#CHROM").equals(clinvarVariant.getString("#CHROM"))
-						&& exacVariant.getString("POS").equals(clinvarVariant.getString("POS")) && exacVariant.getString("REF").equals(clinvarVariant.getString("REF")))
+				if (exacVariant.getE().getString("#CHROM").equals(clinvarVariant.getString("#CHROM"))
+						&& exacVariant.getE().getString("POS").equals(clinvarVariant.getString("POS"))
+						&& exacVariant.getE().getString("REF").equals(clinvarVariant.getString("REF"))
+						&& exacVariant.getKeyVal().get("ALT").toString().equals(clinvarVariant.getString("ALT")))
 				{
-					String[] altSplit = exacVariant.getString("ALT").split(",", -1);
-					for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
-					{
-						String alt = altSplit[altIndex];
-						if (alt.equals(clinvarVariant.getString("ALT")))
-						{
-//							System.out.println("MATCH ON chrom/pos/ref/alt:");
-//							System.out.println(exacVariant.toString());
-//							System.out.println(clinvarVariant.toString());
-							
-							//edit the variant if we have >1 alt so we only keep this particular alt allele and matching AF field
-							if(altSplit.length > 1)
-							{
-								exacVariant.set("ALT", alt);
-								exacVariant.set("AF", exacVariant.getString("AF").split(",", -1)[altIndex]);
-//								System.out.println("CHANGED TO: ");
-//								System.out.println(exacVariant.toString());
-							}
-							
-							// TODO also merge data instead of 2 lists?
-							inBoth_exac.add(exacVariant);
-							inBoth_clinvar.add(clinvarVariant);
-							exacVariantInClinVar = true;
-							break checkClinVarVariants;
-						}
-						
-					}
+					inBoth_exac.add(exacVariant);
+					inBoth_clinvar.add(new EntityPlus(clinvarVariant));
+					exacVariantInClinVar = true;
 				}
 			}
-			
 			if(!exacVariantInClinVar)
 			{
 				inExAConly.add(exacVariant);
 			}
-			
 		}
-		
 		
 		// now have have the list of variants that are shared
 		// do a pass of clinvar variants and find out which are not shared
 		for (Entity clinVarVariant : clinvar)
 		{
-			if(!inBoth_clinvar.contains(clinVarVariant))
+			if(!EntityPlus.contains(inBoth_clinvar, clinVarVariant))
 			{
-				inClinVarOnly.add(clinVarVariant);
+				inClinVarOnly.add(new EntityPlus(clinVarVariant));
 			}
 		}
+		
+//		System.out.println("### AFTER: ");
+//		for(EntityPlus e : inExAConly)
+//		{
+//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getKeyVal().get("ALT"));
+//		}
+//		for(EntityPlus e : inClinVarOnly)
+//		{
+//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getE().getString("ALT"));
+//		}
+//		for(EntityPlus e : inBoth_exac)
+//		{
+//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getKeyVal().get("ALT"));
+//		}
+//		for(EntityPlus e : inBoth_clinvar)
+//		{
+//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getE().getString("ALT"));
+//		}
 		
 		//sanity checks
 		if(inBoth_clinvar.size() != inBoth_exac.size())
@@ -102,7 +130,7 @@ public class Step4_Helper
 	
 	
 	
-	public static double calculateMedianMAF(List<Entity> exacVariants)
+	public static double calculateMedianMAF(List<EntityPlus> exacVariants)
 	{
 		if(exacVariants.size() == 0)
 		{
@@ -111,7 +139,7 @@ public class Step4_Helper
 		double[] mafs = new double[exacVariants.size()];
 		for(int i = 0; i < exacVariants.size(); i++)
 		{
-			mafs[i] = exacVariants.get(i).getDouble("AF");
+			mafs[i] = (double) exacVariants.get(i).getKeyVal().get("AF");
 		}
 		Median m = new Median();
 		return m.evaluate(mafs);
@@ -119,22 +147,21 @@ public class Step4_Helper
 
 
 
-	public static List<EntityPlus> filterExACvariantsByMAF(List<Entity> inExACOnly, double MAFthreshold) throws Exception
+	public static List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold) throws Exception
 	{
 		List<EntityPlus> res = new ArrayList<EntityPlus>();
 		
 		filterVariants:
-		for(Entity exacVariant : inExACOnly)
+		for(EntityPlus exacVariantPlus : inExACOnly)
 		{
-			EntityPlus exacVariantPlus = new EntityPlus(exacVariant);
-			
-			String[] altSplit = exacVariantPlus.getE().getString("ALT").split(",", -1);
+	
+			String[] altSplit = exacVariantPlus.getKeyVal().get("ALT").toString().split(",", -1);
 			for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
 			{
 				String alt = altSplit[altIndex];
 				//System.out.println("AF field: " + exacVariantPlus.getE().getString("AF"));
 			
-				double maf = Double.parseDouble(exacVariantPlus.getE().getString("AF").split(",",-1)[altIndex]);				
+				double maf = Double.parseDouble(exacVariantPlus.getKeyVal().get("AF").toString().split(",",-1)[altIndex]);				
 				int AC_Adj = Integer.parseInt(exacVariantPlus.getE().getString("AC_Adj").split(",",-1)[altIndex]);
 		
 				//we consider each alt allele as a possible 'keep' or 'ditch'
@@ -142,7 +169,7 @@ public class Step4_Helper
 				boolean keep = false;
 				
 				//the clinvar variants were all 'singletons', so we only select singletons from exac
-				if(maf == 0.0 && AC_Adj == 1)
+				if(MAFthreshold == 0.0 && AC_Adj == 1)
 				{
 					keep = true;
 				}
@@ -234,16 +261,16 @@ public class Step4_Helper
 		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
 	}
 
-	public static ImpactRatios calculateImpactRatios(List<Entity> inClinVarOnly, List<Entity> inBoth) throws Exception
+	public static ImpactRatios calculateImpactRatios(List<EntityPlus> inClinVarOnly, List<EntityPlus> inBoth) throws Exception
 	{
 		int nrOfHigh = 0;
 		int nrOfModerate = 0;
 		int nrOfLow = 0;
 		int nrOfModifier = 0;
 		
-		for(Entity e : Stream.concat(inClinVarOnly.stream(), inBoth.stream()).collect(Collectors.toList()))
+		for(EntityPlus e : Stream.concat(inClinVarOnly.stream(), inBoth.stream()).collect(Collectors.toList()))
 		{
-			String impact = e.getString("ANN").split("\\|")[2];
+			String impact = e.getE().getString("ANN").split("\\|")[2];
 			if(impact.equals("HIGH"))
 			{
 				nrOfHigh++;
@@ -336,32 +363,43 @@ public class Step4_Helper
 		//so! little bit tricky: we must get the difference between 'initial' vs 'scaled' for 3 categories, using 1 as 'scaling reference'
 		//if all 3 are negative, it means this is the correct 'scaling reference' because we can remove variants but not add variants!
 		
-		//we don't want to divide by zero.. add a little correction (causes big positive numbers for scaling subtractions but thats ok)
-		double correctForZero = 0.0000000001;
-		double irHigh = ir.high == 0 ? correctForZero : ir.high;
-		double irModr = ir.moderate == 0 ? correctForZero : ir.moderate;
-		double irLow = ir.low == 0 ? correctForZero : ir.low;
-		double irModf = ir.modifier == 0 ? correctForZero : ir.modifier;
-		
 		//alright.. let's test if 'high' is our scaling reference:
-		int highScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfHigh*(irModr/irHigh)));
-		int highScaleLowDiff = (int)Math.round(nrOfLow-(nrOfHigh*(irLow/irHigh)));
-		int highScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfHigh*(irModf/irHigh)));
+		int highScaleModrDiff = -1, highScaleLowDiff = -1, highScaleModfDiff = -1;
+		if(ir.high != 0)
+		{
+			highScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfHigh*(ir.moderate/ir.high)));
+			highScaleLowDiff = (int)Math.round(nrOfLow-(nrOfHigh*(ir.low/ir.high)));
+			highScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfHigh*(ir.modifier/ir.high)));
+		}
+		
 		
 		//no? then check if we should scale on 'moderate'
-		int modrScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfModerate*(irHigh/irModr)));
-		int modrScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModerate*(irLow/irModr)));
-		int modrScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfModerate*(irModf/irModr)));
+		int modrScaleHighDiff = -1, modrScaleLowDiff = -1, modrScaleModfDiff = -1;
+		if(ir.moderate != 0)
+		{
+			modrScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfModerate*(ir.high/ir.moderate)));
+			modrScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModerate*(ir.low/ir.moderate)));
+			modrScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfModerate*(ir.modifier/ir.moderate)));
+		}
 		
 		//no? then check if we should scale on 'low'
-		int lowScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfLow*(irHigh/irLow)));
-		int lowScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfLow*(irModr/irLow)));
-		int lowScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfLow*(irModf/irLow)));
+		int lowScaleHighDiff = -1, lowScaleModrDiff = -1, lowScaleModfDiff = -1;
+		if(ir.low != 0)
+		{
+			lowScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfLow*(ir.high/ir.low)));
+			lowScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfLow*(ir.moderate/ir.low)));
+			lowScaleModfDiff = (int)Math.round(nrOfModifier-(nrOfLow*(ir.modifier/ir.low)));
+		}
 		
 		//no? then check if we should scale on 'modifier'
-		int modfScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfModifier*(irHigh/irModf)));
-		int modfScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfModifier*(irModr/irModf)));
-		int modfScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModifier*(irLow/irModf)));
+		int modfScaleHighDiff = -1, modfScaleModrDiff = -1, modfScaleLowDiff = -1;
+		if(ir.modifier != 0)
+		{
+			modfScaleHighDiff = (int)Math.round(nrOfHigh-(nrOfModifier*(ir.high/ir.modifier)));
+			modfScaleModrDiff = (int)Math.round(nrOfModerate-(nrOfModifier*(ir.moderate/ir.modifier)));
+			modfScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModifier*(ir.low/ir.modifier)));
+		}
+		
 		
 		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low=" + highScaleLowDiff + ", modifier=" + highScaleModfDiff);
 		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
@@ -374,15 +412,18 @@ public class Step4_Helper
 		int removeFromModifier = 0;
 		
 		//TODO: multiple solutions? pick one with LEAST amount of deleted elements!
-		int leastLossSoFar = 0;
+		//this happens when a category has 0 variants, the other categories all get scaled to 0 as well.. (e.g. from 10% to 50% of 0 is still 0)
+		//however, this will result in a much bigger loss because all variants get deleted this way
+		int leastLossSoFar = -1;
 		
 		if(highScaleModrDiff >= 0 && highScaleLowDiff >= 0 && highScaleModfDiff >= 0)
 		{
 		//	System.out.println("we must scale on HIGH impact using " + highScaleModrDiff + ", " + highScaleLowDiff + ", " + highScaleModfDiff);	
-			int loss = highScaleModrDiff - highScaleLowDiff - highScaleModfDiff;
-			if(leastLossSoFar == 0 || loss < leastLossSoFar)
+			int loss = highScaleModrDiff + highScaleLowDiff + highScaleModfDiff;
+			if(leastLossSoFar == -1 || loss < leastLossSoFar)
 			{
 				leastLossSoFar = loss;
+				removeFromHigh = 0;
 				removeFromModerate = highScaleModrDiff;
 				removeFromLow = highScaleLowDiff;
 				removeFromModifier = highScaleModfDiff;
@@ -392,33 +433,49 @@ public class Step4_Helper
 		
 		if(modrScaleHighDiff >= 0 && modrScaleLowDiff >= 0 && modrScaleModfDiff >= 0)
 		{
-			int loss = highScaleModrDiff - highScaleLowDiff - highScaleModfDiff;
-			if(leastLossSoFar == 0 || loss < leastLossSoFar)
+			int loss = modrScaleHighDiff + modrScaleLowDiff + modrScaleModfDiff;
+			if(leastLossSoFar == -1 || loss < leastLossSoFar)
 			{
 				leastLossSoFar = loss;
 				removeFromHigh = modrScaleHighDiff;
+				removeFromModerate = 0;
 				removeFromLow = modrScaleLowDiff;
 				removeFromModifier = modrScaleModfDiff;
-				System.out.println("scaling on MODERATE is a BETTER option, with loss = " + loss);
+				System.out.println("scaling on MODERATE is a (better) option, with loss = " + loss);
 			}
 //			System.out.println("we must scale on MODERATE impact using " + modrScaleHighDiff + ", " + modrScaleLowDiff + ", " + modrScaleModfDiff);
 			
 		}
 		if(lowScaleHighDiff >= 0 && lowScaleModrDiff >= 0 && lowScaleModfDiff >= 0)
 		{
-			System.out.println("we must scale on LOW impact using " + lowScaleHighDiff + ", " + lowScaleModrDiff + ", " + lowScaleModfDiff);
-			removeFromHigh = lowScaleHighDiff;
-			removeFromModerate = lowScaleModrDiff;
-			removeFromModifier = lowScaleModfDiff;
+			int loss = lowScaleHighDiff + lowScaleModrDiff + lowScaleModfDiff;
+			if(leastLossSoFar == -1 || loss < leastLossSoFar)
+			{
+				leastLossSoFar = loss;
+				removeFromHigh = lowScaleHighDiff;
+				removeFromModerate = lowScaleModrDiff;
+				removeFromLow = 0;
+				removeFromModifier = lowScaleModfDiff;
+				System.out.println("scaling on LOW is a (better) option, with loss = " + loss);
+			}
+			
 		}
 		if(modfScaleHighDiff >= 0 && modfScaleModrDiff >= 0 && modfScaleLowDiff >= 0)
 		{
-			System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
-			removeFromHigh = modfScaleHighDiff;
-			removeFromModerate = modfScaleModrDiff;
-			removeFromLow = modfScaleLowDiff;
+			int loss = modfScaleHighDiff + modfScaleModrDiff + modfScaleLowDiff;
+			if(leastLossSoFar == -1 || loss < leastLossSoFar)
+			{
+				leastLossSoFar = loss;
+				removeFromHigh = modfScaleHighDiff;
+				removeFromModerate = modfScaleModrDiff;
+				removeFromLow = modfScaleLowDiff;
+				removeFromModifier = 0;
+				System.out.println("scaling on MODIFIER is a (better) option, with loss = " + loss);
+			}
+		//	System.out.println("we must scale on MODIFIER impact using " + modfScaleHighDiff + ", " + modfScaleModrDiff + ", " + modfScaleLowDiff);
+			
 		}
-		else
+		if(leastLossSoFar == -1)
 		{
 			throw new Exception("could not figure out scaling!");
 		}
@@ -473,6 +530,16 @@ public class Step4_Helper
 		}
 		
 		return res;
+	}
+	
+	public static Entity deepCloneEntity(Entity cloneMe) throws IOException, ClassNotFoundException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(cloneMe);
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		ObjectInputStream ois = new ObjectInputStream(bais);
+		return (Entity) ois.readObject();
 	}
 	
 }

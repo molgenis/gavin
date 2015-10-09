@@ -20,7 +20,24 @@ public class ImpactRatios
 	
 	public void check() throws Exception
 	{
-		if(high+moderate+low+modifier != 100)
+		int total = high+moderate+low+modifier;
+		//if we have 33+33+33+0 or so, add 1 to 'moderate'
+		if(total == 99)
+		{
+			moderate++;
+		}
+		else if(total == 101)
+		{
+			if(moderate > 0)
+			{
+				moderate--;
+			}
+			else
+			{
+				throw new Exception("total is 101 and could not fix by subtracting from moderate");
+			}
+		}
+		else if(total != 100)
 		{
 			throw new Exception("Impact rations should add up to 100, but instead: " + high + "+" + moderate + "+" + low + "+"+modifier +"=" + (high+moderate+low+modifier));
 		}
