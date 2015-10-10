@@ -245,8 +245,10 @@ public class Step4_MatchingVariantsFromExAC
 	
 	private void printVariantsToFile(String file) throws FileNotFoundException
 	{
-		PrintWriter pw_forR = new PrintWriter(file + ".R");
+		PrintWriter pw_variantInfo = new PrintWriter(file + ".info");
 		PrintWriter pw_forCADD = new PrintWriter(file + ".cadd");
+		
+		pw_variantInfo.println( "gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group");
 		
 		for(String gene : clinvarPatho.keySet())
 		{
@@ -256,16 +258,21 @@ public class Step4_MatchingVariantsFromExAC
 				for(Entity variant : clinvarPatho.get(gene))
 				{
 					pw_forCADD.println(variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + "." + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT"));
+					pw_variantInfo.println(gene + "\t" + variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT") + "\t" + "PATHOGENIC");
 				}
 				for(EntityPlus variant : matchedExACvariants.get(gene))
 				{
 					pw_forCADD.println(variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + "." + "\t"+ variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString());
+					pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION");
 				}
 			}
 		}
 		
-		pw_forR.flush();
-		pw_forR.close();
+		
+		
+		
+		pw_variantInfo.flush();
+		pw_variantInfo.close();
 		pw_forCADD.flush();
 		pw_forCADD.close();
 	}

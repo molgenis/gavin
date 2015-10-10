@@ -6,6 +6,7 @@ Work flow
 4) load clinvar-snpeff vcf and from ExAC, get similar variants
 5) write combined set to VCF and run though CADD web service
 6) combine CADD output with original file and write data frame for R
-7) run R script to perform statistics and pictures
+7) basic results in the form of a table per gene
+8) run R script to perform advanced statistics and pictures
 
 
