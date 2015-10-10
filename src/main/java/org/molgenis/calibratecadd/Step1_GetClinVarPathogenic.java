@@ -13,6 +13,11 @@ import org.molgenis.calibratecadd.structs.ClinVarVariant;
 public class Step1_GetClinVarPathogenic
 {
 
+	/**
+	 * Program arguments, example:
+	 * E:\Data\clinvarcadd\variant_summary.txt
+	 * E:\Data\clinvarcadd\clinvar.patho.vcf
+	 */
 	public static String CLINVAR_INFO = "CLINVAR";
 	
 	// download @ ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz

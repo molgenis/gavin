@@ -294,10 +294,10 @@ public class Step4_Helper
 		}
 		
 		double total = nrOfHigh + nrOfModerate + nrOfLow + nrOfModifier;
-		int highPerc = nrOfHigh == 0 ? 0 : (int)Math.round(((double)nrOfHigh/total)*100.0);
-		int modrPerc = nrOfModerate == 0 ? 0 : (int)Math.round(((double)nrOfModerate/total)*100.0);
-		int lowPerc = nrOfLow == 0 ? 0 : (int)Math.round(((double)nrOfLow/total)*100.0);
-		int modfPerc = nrOfModifier == 0 ? 0 : (int)Math.round(((double)nrOfModifier/total)*100);
+		double highPerc = nrOfHigh == 0 ? 0 :((double)nrOfHigh/total)*100.0;
+		double modrPerc = nrOfModerate == 0 ? 0 : ((double)nrOfModerate/total)*100.0;
+		double lowPerc = nrOfLow == 0 ? 0 : ((double)nrOfLow/total)*100.0;
+		double modfPerc = nrOfModifier == 0 ? 0 : ((double)nrOfModifier/total)*100;
 		
 		ImpactRatios ir = new ImpactRatios(highPerc, modrPerc, lowPerc, modfPerc);
 		
@@ -307,7 +307,11 @@ public class Step4_Helper
 	}
 
 
-
+	/**
+	 * TODO: this function has an interesting side effect: when there are (only) HIGH effect variants in clinvar, but only MODERATE (or LOW/MODF) variants in ExAC, the matching fails..
+	 * However, we do learn that apparently a HIGH impact variant is pathogenic, whereas non-HIGH are tolerated to some point. Even though we cannot calibrate CADD, this knowledge is
+	 * just as useful and we should capture and report it :)
+	 */
 	public static List<EntityPlus> shapeExACvariantsByImpactRatios(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
 	{
 		
@@ -400,16 +404,12 @@ public class Step4_Helper
 			modfScaleLowDiff = (int)Math.round(nrOfLow-(nrOfModifier*(ir.low/ir.modifier)));
 		}
 		
-		
 		System.out.println("scaling subtractions for HIGH: moderate=" + highScaleModrDiff + ", low=" + highScaleLowDiff + ", modifier=" + highScaleModfDiff);
 		System.out.println("scaling subtractions for MODERATE: high=" + modrScaleHighDiff + ", low=" + modrScaleLowDiff + ", modifier=" + modrScaleModfDiff);
 		System.out.println("scaling subtractions for LOW: high=" + lowScaleHighDiff + ", moderate=" + lowScaleModrDiff + ", modifier=" + lowScaleModfDiff);
 		System.out.println("scaling subtractions for MODIFIER: high=" + modfScaleHighDiff + ", moderate=" + modfScaleModrDiff + ", low=" + modfScaleLowDiff);
 		
-		int removeFromHigh = 0;
-		int removeFromModerate = 0;
-		int removeFromLow = 0;
-		int removeFromModifier = 0;
+		int removeFromHigh = 0, removeFromModerate = 0, removeFromLow = 0, removeFromModifier = 0;
 		
 		//TODO: multiple solutions? pick one with LEAST amount of deleted elements!
 		//this happens when a category has 0 variants, the other categories all get scaled to 0 as well.. (e.g. from 10% to 50% of 0 is still 0)

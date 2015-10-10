@@ -20,6 +20,11 @@ public class Step2_FixIndelNotation
 	 * [1] ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz
 	 * [2] output file
 	 * 
+	 * Example:
+	 * E:\Data\clinvarcadd\clinvar.patho.vcf
+	 * E:\Data\clinvarcadd\clinvar.vcf.gz
+	 * E:\Data\clinvarcadd\clinvar.patho.fix.vcf
+	 * 
 	 * try to fix 'na' and '-'
 	 * 
 	 * note: http://www.ncbi.nlm.nih.gov/clinvar/docs/ftp_primer/

@@ -25,6 +25,12 @@ public class Step4_MatchingVariantsFromExAC
 	 * [0] file produced in step 3
 	 * [1] ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz (+ in the same folder ExAC.r0.3.sites.vep.vcf.gz.tbi )
 	 * [2] output file
+	 * 
+	 * Example:
+	 * E:\Data\clinvarcadd\clinvar.patho.fix.snpeff.vcf
+	 * E:\Data\clinvarcadd\ExAC.r0.3.sites.vep.vcf.gz
+	 * E:\Data\clinvarcadd\clinvar.patho.fix.snpeff.exac.vcf
+	 * 
 	 */
 	public static void main(String[] args) throws Exception
 	{
@@ -113,6 +119,7 @@ public class Step4_MatchingVariantsFromExAC
 		int matchedVariants = 0;
 		int droppedGenesClinVarTooFew = 0;
 		int droppedGenesExACtooFew = 0;
+		int droppedGenesNoMatchedVariants = 0;
 
 		int index = 0;
 		for (String gene : clinvarPatho.keySet())
@@ -203,8 +210,17 @@ public class Step4_MatchingVariantsFromExAC
 				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
 				System.out.println("exaconly filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
 				
-				matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
-				matchedVariants += exacFilteredByMAFandImpact.size();
+				if (exacFilteredByMAFandImpact.size() > 0)
+				{
+					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
+					matchedVariants += exacFilteredByMAFandImpact.size();
+				}
+				else
+				{
+					droppedGenesNoMatchedVariants++;
+				}
+				
+				
 
 			}
 			else
@@ -213,6 +229,8 @@ public class Step4_MatchingVariantsFromExAC
 			}
 
 		}
+		
+		
 
 		// oct 2015: 2638 pass, 960040 variants, 393 dropped
 		System.out.println("passed genes (>0 interval exac variants): " + passedGenes);
@@ -220,6 +238,7 @@ public class Step4_MatchingVariantsFromExAC
 		System.out.println("matched variants (total variants used for final calibration): " + matchedVariants);
 		System.out.println("dropped genes (less than 2 clinvar variants): " + droppedGenesClinVarTooFew);
 		System.out.println("dropped genes (2+ clinvar, but 0 interval exac variants): " + droppedGenesExACtooFew);
+		System.out.println("dropped genes (2+ clinvar, but >0 interval exac variants, but 0 matched variants left after filtering): " + droppedGenesNoMatchedVariants);
 		
 	}
 	
@@ -234,8 +253,17 @@ public class Step4_MatchingVariantsFromExAC
 			if(matchedExACvariants.containsKey(gene))
 			{
 				//print data from clinvarPatho and matchedExACvariants to file
+				for(Entity variant : clinvarPatho.get(gene))
+				{
+					pw_forCADD.println(variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + "." + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT"));
+				}
+				for(EntityPlus variant : matchedExACvariants.get(gene))
+				{
+					pw_forCADD.println(variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + "." + "\t"+ variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString());
+				}
 			}
 		}
+		
 		pw_forR.flush();
 		pw_forR.close();
 		pw_forCADD.flush();
