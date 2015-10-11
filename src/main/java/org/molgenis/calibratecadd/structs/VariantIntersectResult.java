@@ -2,8 +2,6 @@ package org.molgenis.calibratecadd.structs;
 
 import java.util.List;
 
-import org.molgenis.data.Entity;
-
 public class VariantIntersectResult
 {
 	public List<EntityPlus> inBoth_exac;

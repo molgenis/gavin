@@ -8,12 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.molgenis.calibratecadd.misc.Step4_Helper;
-import org.molgenis.calibratecadd.misc.VEPimpactCategories;
 import org.molgenis.calibratecadd.structs.EntityPlus;
 import org.molgenis.calibratecadd.structs.ImpactRatios;
 import org.molgenis.calibratecadd.structs.VariantIntersectResult;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotator.tabix.TabixReader.Iterator;
 import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 import org.molgenis.data.vcf.VcfRepository;
 
@@ -115,7 +113,6 @@ public class Step4_MatchingVariantsFromExAC
 		System.out.println("loading matching exac variants..");
 
 		int passedGenes = 0;
-		int passedVariants = 0;
 		int matchedVariants = 0;
 		int droppedGenesClinVarTooFew = 0;
 		int droppedGenesExACtooFew = 0;
@@ -168,9 +165,6 @@ public class Step4_MatchingVariantsFromExAC
 
 			TabixVcfRepository tr = new TabixVcfRepository(new File(exacLoc), "exac");
 
-			// TabixReader tr = new TabixReader(exacLoc);
-			Iterator it = null;
-
 			List<Entity> exacVariants = new ArrayList<Entity>();
 
 			try
@@ -187,8 +181,6 @@ public class Step4_MatchingVariantsFromExAC
 
 			if (exacVariants.size() > 0)
 			{
-				passedGenes++;
-				passedVariants += exacVariants.size();
 				
 				//found out: which variants are only in ExAC, which only in ClinVar, which in both
 				VariantIntersectResult vir = Step4_Helper.intersectVariants(exacVariants, clinvarPatho.get(gene));
@@ -212,6 +204,7 @@ public class Step4_MatchingVariantsFromExAC
 				
 				if (exacFilteredByMAFandImpact.size() > 0)
 				{
+					passedGenes++;
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
 				}
@@ -227,14 +220,15 @@ public class Step4_MatchingVariantsFromExAC
 			{
 				droppedGenesExACtooFew++;
 			}
-
+			
+			tr.close();
+			
 		}
 		
 		
 
 		// oct 2015: 2638 pass, 960040 variants, 393 dropped
-		System.out.println("passed genes (>0 interval exac variants): " + passedGenes);
-		System.out.println("passed variants (total count in all passed genes): " + passedVariants);
+		System.out.println("passed genes (>0 properly matched interval exac variants): " + passedGenes);
 		System.out.println("matched variants (total variants used for final calibration): " + matchedVariants);
 		System.out.println("dropped genes (less than 2 clinvar variants): " + droppedGenesClinVarTooFew);
 		System.out.println("dropped genes (2+ clinvar, but 0 interval exac variants): " + droppedGenesExACtooFew);

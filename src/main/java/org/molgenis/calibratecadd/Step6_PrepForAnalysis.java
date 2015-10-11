@@ -5,8 +5,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Scanner;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
-
 /**
  * Example usage:
  * E:\Data\clinvarcadd\cadd_output.txt
@@ -89,6 +87,7 @@ public class Step6_PrepForAnalysis
 			}
 		}
 		
+		info.close();
 		pw.flush();
 		pw.close();
 		

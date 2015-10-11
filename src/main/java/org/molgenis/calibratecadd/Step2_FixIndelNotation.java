@@ -101,6 +101,9 @@ public class Step2_FixIndelNotation
 				{
 					if(match == true)
 					{
+						pw.close();
+						s.close();
+						clinvarVcf.close();
 						throw new Exception("double match?? " + line);
 					}
 					StringBuffer fixedLine = new StringBuffer();
@@ -150,6 +153,8 @@ public class Step2_FixIndelNotation
 		
 		pw.flush();
 		pw.close();
+		s.close();
+		clinvarVcf.close();
 		
 		System.out.println("total variants seen: " + (totalPassedVariants+lost+failedFixes));
 		System.out.println("total passed variants after checking & fixing: " + totalPassedVariants);

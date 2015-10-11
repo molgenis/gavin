@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 
 /**
  * 
@@ -36,10 +37,12 @@ import org.apache.commons.math3.stat.descriptive.rank.Median;
 public class Step7_BasicResults {
 
 	public static void main(String[] args) throws Exception {
+		System.out.println("starting..");
+		
 		Scanner res = new Scanner(new File(args[0]));
 		PrintWriter pw = new PrintWriter(new File(args[1]));
 		
-		pw.println("gene" + "\t" + "nPath" + "\t" + "nPopul" + "\t" + "medianPatho" + "\t" + "medianPopul" + "\t" + "medianDiff" + "\t" + "meanPatho" + "\t" + "meanPopul" + "\t" + "meanDiff");
+		pw.println("gene" + "\t" + "nPath" + "\t" + "nPopul" + "\t" + "medianPatho" + "\t" + "medianPopul" + "\t" + "medianDiff" + "\t" + "meanPatho" + "\t" + "meanPopul" + "\t" + "meanDiff" + "\t" + "uTestPval");
 		
 		NumberFormat f = new DecimalFormat("#0.00");     
 		
@@ -62,6 +65,8 @@ public class Step7_BasicResults {
 			}
 		}
 		
+		int nrOfGenesPathGtPopPval_5perc = 0;
+		int nrOfGenesPathGtPopPval_1perc = 0;
 		
 		for(String gene : geneToLines.keySet())
 		{
@@ -82,6 +87,8 @@ public class Step7_BasicResults {
 				}
 				else
 				{
+					pw.close();
+					res.close();
 					throw new Exception("unknown group " + group);
 				}
 			}
@@ -108,12 +115,28 @@ public class Step7_BasicResults {
 			double populMean = mean.evaluate(caddPopulPrim);
 			double meanDiff = pathoMean-populMean;
 			
-			pw.println(gene + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMedian) + "\t" + f.format(populMedian) + "\t" + f.format(medianDiff) + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff));
+			MannWhitneyUTest utest = new MannWhitneyUTest();
+			double pval = utest.mannWhitneyUTest(caddPathoPrim, caddPopulPrim);
+			if(pval < 0.05 && pathoMean > populMean)
+			{
+				nrOfGenesPathGtPopPval_5perc ++;
+				if(pval < 0.01)
+				{
+					nrOfGenesPathGtPopPval_1perc++;
+				}
+			}
+			pw.println(gene + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMedian) + "\t" + f.format(populMedian) + "\t" + f.format(medianDiff) + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff) + "\t" + pval);
 		
 		}
 		
+		System.out.println("total nr of genes: " + geneToLines.keySet().size());
+		System.out.println("nr of genes where patho > pop, pval < 0.05: " + nrOfGenesPathGtPopPval_5perc);
+		System.out.println("nr of genes where patho > pop, pval < 0.01: " + nrOfGenesPathGtPopPval_1perc);
+		
 		pw.flush();
 		pw.close();
+		
+		res.close();
 
 	}
 

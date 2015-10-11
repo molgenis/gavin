@@ -25,7 +25,6 @@ public class Step4_Helper
 		List<EntityPlus> inClinVarOnly = new ArrayList<EntityPlus>();
 		List<EntityPlus> inBoth_exac = new ArrayList<EntityPlus>();
 		List<EntityPlus> inBoth_clinvar = new ArrayList<EntityPlus>();
-		// TODO also merge data instead of 2 lists?
 		
 		//preprocess: expand multiallelic ExaC variants into seperate variants, for 'easy of looping'
 		//update the alt allele and AF. This only goes for ExAC variants because they can be multi-allelic, whereas ClinVar variants are not.
@@ -411,7 +410,7 @@ public class Step4_Helper
 		
 		int removeFromHigh = 0, removeFromModerate = 0, removeFromLow = 0, removeFromModifier = 0;
 		
-		//TODO: multiple solutions? pick one with LEAST amount of deleted elements!
+		//multiple solutions? pick one with LEAST amount of deleted elements
 		//this happens when a category has 0 variants, the other categories all get scaled to 0 as well.. (e.g. from 10% to 50% of 0 is still 0)
 		//however, this will result in a much bigger loss because all variants get deleted this way
 		int leastLossSoFar = -1;

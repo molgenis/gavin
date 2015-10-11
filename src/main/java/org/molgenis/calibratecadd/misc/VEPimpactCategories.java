@@ -17,7 +17,7 @@ public class VEPimpactCategories
 		}
 	}
 
-	//TODO these definitions seem slightly different than SnpEffs ?
+	//list checked, same as SnpEff definitions
 	//check and harmonize with http://snpeff.sourceforge.net/SnpEff_manual.html !
 	//also nice doc: http://gemini.readthedocs.org/en/stable/content/functional_annotation.html
 	public static String getImpact(String consequence) throws Exception

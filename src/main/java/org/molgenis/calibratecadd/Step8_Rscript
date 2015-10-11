@@ -1,6 +1,31 @@
 
 
 
+
+### summary gene plots (uses output of Step 7)
+calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+plot(calibcaddGenes$meanPopul, col="blue")
+points(calibcaddGenes$meanPath, col="red")
+plot(density((calibcaddGenes$meanDiff)))
+abline(v = mean(calibcaddGenes$meanDiff)))
+
+## single gene plots
+calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+selectGene <- "ATM"
+calibcaddVariants.selectedGene.path <- subset(calibcaddVariants, gene == selectGene & group == "PATHOGENIC")
+calibcaddVariants.selectedGene.popul <- subset(calibcaddVariants, gene == selectGene & group == "POPULATION")
+plot(sort(calibcaddVariants.selectedGene.popul$cadd), col="blue")
+points(sort(calibcaddVariants.selectedGene.path$cadd), col="red")
+abline(h = mean(calibcaddVariants.selectedGene.popul$cadd), col="blue")
+abline(h = mean(calibcaddVariants.selectedGene.path$cadd), col="red")
+
+
+
+
+
+#### previous work ####
+
+
 install.packages("plyr")
 install.packages("OptimalCutpoints")
 
@@ -80,6 +105,7 @@ for (geneName in unique(caddcalib.wilcox$gene)) {
 	#p
 	ggsave(paste("E:\\Data\\clinvarcadd\\geneplots\\",geneName,".png", sep=""))
 }
+
 
 
 
