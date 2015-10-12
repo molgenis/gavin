@@ -72,5 +72,10 @@
 			<artifactId>commons-math3</artifactId>
 			<version>3.5</version>
 		</dependency>
+		<dependency>
+			<groupId>net.mintern</groupId>
+			<artifactId>primitive</artifactId>
+		<version>1.2.1</version>
+</dependency>
 	</dependencies>
 </project>
