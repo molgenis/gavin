@@ -5,12 +5,15 @@ import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
+
+import net.mintern.primitive.Primitive;
 
 /**
  * 
@@ -42,7 +45,7 @@ public class Step7_BasicResults {
 		Scanner res = new Scanner(new File(args[0]));
 		PrintWriter pw = new PrintWriter(new File(args[1]));
 		
-		pw.println("gene" + "\t" + "nPath" + "\t" + "nPopul" + "\t" + "medianPatho" + "\t" + "medianPopul" + "\t" + "medianDiff" + "\t" + "meanPatho" + "\t" + "meanPopul" + "\t" + "meanDiff" + "\t" + "uTestPval");
+		pw.println("gene" + "\t" + "nPath" + "\t" + "nPopul" + "\t" + "medianPatho" + "\t" + "medianPopul" + "\t" + "medianDiff" + "\t" + "meanPatho" + "\t" + "meanPopul" + "\t" + "meanDiff" + "\t" + "uTestPval" + "\t" + "caddPercConfThreshold" + "\t" + "nrOfPopulAbove95PercThreshold" + "\t" + "nrOfPathoAbove95PercThreshold");
 		
 		NumberFormat f = new DecimalFormat("#0.00");     
 		
@@ -117,6 +120,52 @@ public class Step7_BasicResults {
 			
 			MannWhitneyUTest utest = new MannWhitneyUTest();
 			double pval = utest.mannWhitneyUTest(caddPathoPrim, caddPopulPrim);
+			
+			/**
+			 * Get 95% confidence of pathogenicity CADD thresholds, as best we can
+			 */
+			double cadd95PercConfThreshold = -1;
+			int nrOfPopAbove95PercThreshold = -1;
+			int nrOfPathAbove95PercThreshold = -1;
+			Primitive.sort(caddPathoPrim, (d1, d2) -> Double.compare(d1, d2), false);
+			
+			for(int i = 0; i < caddPathoPrim.length; i++)
+			{
+				double threshold = caddPathoPrim[i];
+				int nrOfPopAboveThreshold = 0;
+				for(int n = 0; n < caddPopulPrim.length; n++)
+				{
+					if(caddPopulPrim[n] > threshold)
+					{
+						nrOfPopAboveThreshold++;
+					}
+				}
+				
+				int nrOfPathAboveThreshold = caddPathoPrim.length-i;
+				double ratio = (double)nrOfPopAboveThreshold/(double)nrOfPathAboveThreshold;
+		
+				//happens when either we truly have 95% confidence (a 1:20 ratio), or we run out of population variants
+				//while there are still 1+ pathogenic variants left
+				//FIXME: not quite okay yet, some artifacts due to low population variants in e.g. MECP2
+				if(ratio <= 0.05)
+				{
+					cadd95PercConfThreshold = threshold;
+					nrOfPopAbove95PercThreshold = nrOfPopAboveThreshold;
+					nrOfPathAbove95PercThreshold = nrOfPathAboveThreshold;
+					break;
+				}
+			}
+			
+			//if we have no threshold (population variants have full overlap with pathogenic, and not enough samples to get 1:20 ratio)
+			//we assign the maximum value of the population.. not ideal but better than nothing. Just show this in the final table (counts of 0).
+			if(cadd95PercConfThreshold == -1)
+			{
+				cadd95PercConfThreshold = Collections.max(caddPopul);
+				nrOfPopAbove95PercThreshold = 0;
+				nrOfPathAbove95PercThreshold = 0;
+			}
+			
+			//to show some stats in the sysout
 			if(pval < 0.05 && pathoMean > populMean)
 			{
 				nrOfGenesPathGtPopPval_5perc ++;
@@ -125,7 +174,9 @@ public class Step7_BasicResults {
 					nrOfGenesPathGtPopPval_1perc++;
 				}
 			}
-			pw.println(gene + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMedian) + "\t" + f.format(populMedian) + "\t" + f.format(medianDiff) + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff) + "\t" + pval);
+			
+			//write table
+			pw.println(gene + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMedian) + "\t" + f.format(populMedian) + "\t" + f.format(medianDiff) + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + cadd95PercConfThreshold + "\t" + nrOfPopAbove95PercThreshold + "\t" + nrOfPathAbove95PercThreshold);
 		
 		}
 		
