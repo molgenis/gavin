@@ -46,7 +46,7 @@ public class Step7_BasicResults {
 		Scanner res = new Scanner(new File(args[0]));
 		PrintWriter pw = new PrintWriter(new File(args[1]));
 		
-		pw.println("gene" + "\t" + "nPath" + "\t" + "nPopul" + "\t" + "meanPatho" + "\t" + "meanPopul" + "\t" + "meanDiff" + "\t" + "uTestPval" + "\t" + "sens95perc" +"\t" + "spec95perc");
+		pw.println("Gene" + "\t" + "NrOfPathoVars" + "\t" + "NrOfPopulVars" + "\t" + "MeanPathoCADD" + "\t" + "MeanPopulCADD" + "\t" + "MeanDiff" + "\t" + "UTestPvalue" + "\t" + "Sens95perCADDthresh" +"\t" + "Spec95perCADDthresh");
 		
 		NumberFormat f = new DecimalFormat("#0.00");     
 		
