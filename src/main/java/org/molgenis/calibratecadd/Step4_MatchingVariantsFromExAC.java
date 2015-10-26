@@ -225,8 +225,10 @@ public class Step4_MatchingVariantsFromExAC
 			
 		}
 		
+		System.out.println();
+		System.out.println("#### done ####");
+		System.out.println();
 		
-
 		// oct 2015: 2638 pass, 960040 variants, 393 dropped
 		System.out.println("passed genes (>0 properly matched interval exac variants): " + passedGenes);
 		System.out.println("matched variants (total variants used for final calibration): " + matchedVariants);

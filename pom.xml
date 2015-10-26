@@ -4,9 +4,9 @@
 	<parent>
 		<groupId>org.molgenis</groupId>
 		<artifactId>molgenis</artifactId>
-		<version>1.12.0-SNAPSHOT</version>
+		<version>1.11.0</version>
 	</parent>
-	<artifactId>molgenis-data-caddtlmapping</artifactId>
+	<artifactId>molgenis-data-cadd</artifactId>
 
 	<dependencies>
 		<dependency>
