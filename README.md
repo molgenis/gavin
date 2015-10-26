@@ -1,2 +1,2 @@
-# caddtl-mapping
-CADDTL mapping
+# molgenis-data-cadd.git
+Tools for CADD scores and others
