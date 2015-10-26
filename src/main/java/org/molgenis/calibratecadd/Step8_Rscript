@@ -3,19 +3,21 @@
 
 
 ### summary gene plots (uses output of Step 7)
-calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+#calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 plot(calibcaddGenes$meanPopul, col="blue")
 points(calibcaddGenes$meanPath, col="red")
 plot(density((calibcaddGenes$meanDiff)))
 abline(v = mean(calibcaddGenes$meanDiff)))
 
 ## single gene plots
-calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-selectGene <- "ATM"
+#calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddVariants <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+selectGene <- "MYH7"
 calibcaddVariants.selectedGene.path <- subset(calibcaddVariants, gene == selectGene & group == "PATHOGENIC")
 calibcaddVariants.selectedGene.popul <- subset(calibcaddVariants, gene == selectGene & group == "POPULATION")
-plot(sort(calibcaddVariants.selectedGene.popul$cadd), col="blue")
-points(sort(calibcaddVariants.selectedGene.path$cadd), col="red")
+plot(calibcaddVariants.selectedGene.popul$pos, calibcaddVariants.selectedGene.popul$cadd, col="blue", pch="o")
+points(calibcaddVariants.selectedGene.path$pos, calibcaddVariants.selectedGene.path$cadd, col="red", pch="o")
 abline(h = mean(calibcaddVariants.selectedGene.popul$cadd), col="blue")
 abline(h = mean(calibcaddVariants.selectedGene.path$cadd), col="red")
 
