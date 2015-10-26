@@ -5,10 +5,10 @@
 ### summary gene plots (uses output of Step 7)
 #calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-plot(calibcaddGenes$meanPopul, col="blue")
-points(calibcaddGenes$meanPath, col="red")
-plot(density((calibcaddGenes$meanDiff)))
-abline(v = mean(calibcaddGenes$meanDiff)))
+plot(calibcaddGenes$MeanPopulCADD, col="blue")
+points(calibcaddGenes$MeanPathoCADD, col="red")
+plot(density(calibcaddGenes$MeanDiff))
+abline(v = mean(calibcaddGenes$MeanDiff))
 
 ## single gene plots
 #calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
