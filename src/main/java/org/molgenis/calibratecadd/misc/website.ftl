@@ -44,7 +44,7 @@
 </head>
 
 <body>
-<div style="margin: 0px auto; display: table; text-align: center;">
+<div style="margin: 0px auto; display: table; text-align: center; font-family: 'Helvetica', 'Arial', sans-serif;">
 
 <h1>Calibrated CADD Gene Guide - BETA 1</h1>
 <img src="umcg.jpg" height="50" alt="UMCG" />
@@ -54,46 +54,46 @@
 
 <br>
 
-<h2>How to use:</h2>
+<h2>How to use</h2>
 <table style="width: 80%; margin: 0 auto;"><tr><td style="border: 0px solid black; text-align: left;">
 	<ol>
 		<li>Hit CTRL+F or CMD+F to enable your browser search and find your gene of interest.</li>
-		<li>Check the U-test p-value find out if an association between CADD score and pathogenic vs. population variants has been detected:
+		<li>Check the p-value find out if an association between CADD score and pathogenic vs. population variants has been detected:
 		<ul>
-			<li>If the p-value is <div style="background-color:#99ff9c; display: inline;">green</div>, the results are significant at p-val <0.01 and usually quite meaningful.</li>
-			<li>If the p-value is <div style="background-color:#fff599; display: inline;">yellow</div>, the results are at p-val <0.05, useful but not very convincing.</li>
+			<li>If the p-value is <div style="background-color:#99ff9c; display: inline;">green</div>, the results are significant at p-val &lt; 0.01 and usually quite meaningful.</li>
+			<li>If the p-value is <div style="background-color:#fff599; display: inline;">yellow</div>, the results are at p-val 0.01 to 0.05, still useful but not very convincing.</li>
 			<li>If the p-value is <div style="background-color:#dddddd; display: inline;">gray</div>, there is no proven association, usually due to low sample size.</li>
 		</ul>
 		</li>
-		<li>Open the plot by clicking on the gene name. Inspect the optimal group separation made by Youden's cutpoint.</li>
-		<li>A high Youden's index make the cutpoint more reliable. Other properties (e.g. PPV and NPV at cutpoint) may also help you decide to trust it.</li>
-		<li>You can always eyeball the plot to find a different (e.g. more stringent) cutpoint that you trust more.</li>
+		<li>Use the group means or sensitivity/specificity thresholds as a means to interpret your variants.</li>
+		<li>Inspect the plots to get a better feel for the genomic context. Perhaps the CADD scores are more informative for one part of a gene than for another.</li>
+		<li>Batch downloads are available for <a href="downloads/clinvar.patho.fix.snpeff.exac.genesumm.tsv">gene summary</a> and <a href="downloads/clinvar.patho.fix.snpeff.exac.withcadd.tsv">variant level</a> data. Analysis source code is available on <a href="https://github.com/molgenis/molgenis-data-cadd" target="_blank">GitHub</a>.</li>
 	</ol>
 </td></tr></table>
 
 <br>
 
-<h3>Legend</h3>
-<table style="font-size: 14px; width: 80%; margin: 0 auto;"><tr><td style="border: 0px solid black; text-align: left;">
-	<b>Gene</b> = The HGNC symbol of the gene being tested in this row. Click to view plot. <a href="http://www.genenames.org/">more info</a><br>
-	<b>P-value</b> = Mann-Whitney <i>U</i> test p-value. Probability of population variants being a different from pathogenic variants. <a href="https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test">more info</a><br>
-	<b>nPatho</b> = Number of pathogenic variants used (ClinVar). <a href="http://www.ncbi.nlm.nih.gov/clinvar/">more info</a><br>
-	<b>nPop</b> = Number of matched population variants used (ExAC). <a href="http://exac.broadinstitute.org/">more info</a><br>
-	<b>MeanPatho</b> = xx<br>
-	<b>MeanPop</b> = xx<br>
-	<b>95% sens</b> = xx<br>
-	<b>95% spec</b> = xx<br>
-	<b>Variants</b> = Click link to download the pathogenic and population variants with their CADD scores used in the assessment. <a href="http://cadd.gs.washington.edu/">more info</a><br>
+<h2>Legend</h3>
+<table style="font-size: 12px; width: 80%; margin: 0 auto;"><tr><td style="border: 0px solid black; text-align: left;">
+	<b>Gene</b> = The HGNC symbol of the gene being tested in this row. Click to view plot. <a href="http://www.genenames.org/" target="_blank">more info</a><br>
+	<b>P-value</b> = Mann-Whitney <i>U</i> test p-value. Probability of population variants being a different from pathogenic variants. <a href="https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test" target="_blank">more info</a><br>
+	<b>nPatho</b> = Number of pathogenic variants used (ClinVar). <a href="http://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">more info</a><br>
+	<b>nPop</b> = Number of matched population variants used (ExAC). <a href="http://exac.broadinstitute.org/" target="_blank">more info</a><br>
+	<b>MeanPatho</b> = Mean CADD score of all variants considered pathogenic. These variants are obtained from ClinVar sources.<br>
+	<b>MeanPop</b> = Mean CADD score of all population variants. These variants are closely matched to the properties of known pathogenic variants.<br>
+	<b>95% sens</b> = Threshold for 95% sensitivity, set at the 5th percentile of pathogenic variants. Use this to filter out false positives ('benign'), because you will only remove a few true positives (pathogenic) below this threshold.<br>
+	<b>95% spec</b> = Threshold for 95% specificity, set at the 95th percentile of population variants. Use this to identify true positives (pathogenic), because you will only find a few false positives ('benign') above this threshold.<br>
+	<b>Variants</b> = Click link to download the pathogenic and population variants with their CADD scores used in the assessment. <a href="http://cadd.gs.washington.edu/" target="_blank">more info</a><br>
 </td></tr></table>
 
 <br><br>
 
-<table style="text-align: left;">
-<tr style="text-align: center;"><th>Gene</th><th>P-value</th><th>nPatho</th><th>nPop</th><th>MeanPatho><th>MeanPop</th><th>95% sens</th><th>95% spec</th><th>Variants</th></tr>
+<table style="text-align: center; width: 80%; margin: 0 auto;">
+<tr style="text-align: center;"><th>Gene</th><th>P-value</th><th>nPatho</th><th>nPop</th><th>MeanPatho<th>MeanPop</th><th>95% sens</th><th>95% spec</th><th>Variants</th></tr>
 
 <#list genes as gene>
 <#--tr><td><a href="plots/BRCA2.png" target="_blank">BRCA2</a></td><td>6.45630831985457e-68</td><td>2964</td><td>0.7735326157</td><td>16.12</td><td>0.856502242152466</td><td>0.911347517730497</td><td>0.952518262206844</td><td>289</td><td>216</td><td><a href="data/BRCA2.tsv">download</a></td></tr-->
-<tr><td><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</td><td>${gene[6]}</td><td>${gene[1]}</td><td>${gene[2]}</td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[7]}</td><td>${gene[8]}</td><td><a href="data/${gene[0]}.tsv">download</a></td></tr>
+<tr><td><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></td><td>${gene[6]?number?string["0.####"]}</td><td>${gene[1]}</td><td>${gene[2]}</td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[7]}</td><td>${gene[8]}</td><td><a href="data/${gene[0]}.tsv">download</a></td></tr>
 </#list>
 </table>
 
