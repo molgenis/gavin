@@ -41,6 +41,7 @@ public class Step4_MatchingVariantsFromExAC
 
 	HashMap<String, List<Entity>> clinvarPatho = new HashMap<String, List<Entity>>();
 	HashMap<String, List<EntityPlus>> matchedExACvariants = new HashMap<String, List<EntityPlus>>();
+	HashMap<String, String> geneInfo = new HashMap<String, String>();
 
 	private void loadClinvarPatho(String clinvarPathoLoc) throws Exception
 	{
@@ -141,6 +142,7 @@ public class Step4_MatchingVariantsFromExAC
 			if(clinvarPatho.get(gene).size() < 2)
 			{
 				droppedGenesClinVarTooFew++;
+				geneInfo.put(gene, "dropped; less than 2 clinvar variants available");
 				continue;
 			}
 
@@ -190,15 +192,22 @@ public class Step4_MatchingVariantsFromExAC
 				//calculate MAF for shared variants, and use them to filter the other ExAC variants
 				//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
 				//if we have nothing to go on, we will set this to 0 and only select singleton variants
-				double medianMAF = Step4_Helper.calculateMedianMAF(vir.inBoth_exac);
-				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, medianMAF);
-				
-				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using MAF " + medianMAF);
+				double clinVarMAF = Step4_Helper.calculateClinVarMAF(vir.inBoth_exac, vir.inClinVarOnly.size());
+				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, clinVarMAF);
+
+				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using MAF " + clinVarMAF);
 
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
 				ImpactRatios ir = Step4_Helper.calculateImpactRatios(vir.inClinVarOnly, vir.inBoth_clinvar);
 				System.out.println("impact ratio from clinvar variants: " + ir.toString());
+				
+				if(exacFilteredByMAF.size() == 0)
+				{
+					geneInfo.put(gene, "dropped; no exac variants below MAF " + clinVarMAF + " known impacts: " + ir.toString());
+					continue;
+				}
+				
 				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
 				System.out.println("exaconly filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
 				
@@ -207,9 +216,12 @@ public class Step4_MatchingVariantsFromExAC
 					passedGenes++;
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
+					geneInfo.put(gene, "ready for cadd calibration with " + exacFilteredByMAFandImpact.size() + " variants");
 				}
 				else
 				{
+					String impactFilter = Step4_Helper.determineImpactFilter(exacFilteredByMAF, ir);
+					geneInfo.put(gene, "dropped; no matched exac variants based on impact (used MAF="+clinVarMAF+"), but found out that: " + impactFilter);
 					droppedGenesNoMatchedVariants++;
 				}
 				
@@ -219,6 +231,7 @@ public class Step4_MatchingVariantsFromExAC
 			else
 			{
 				droppedGenesExACtooFew++;
+				geneInfo.put(gene, "dropped; 0 exac variants in range " + chrom + ":" + leftMostPos + "-" + rightMostPos);
 			}
 			
 			tr.close();
@@ -241,8 +254,9 @@ public class Step4_MatchingVariantsFromExAC
 	
 	private void printVariantsToFile(String file) throws FileNotFoundException
 	{
-		PrintWriter pw_variantInfo = new PrintWriter(file + ".info");
-		PrintWriter pw_forCADD = new PrintWriter(file + ".cadd");
+		PrintWriter pw_variantInfo = new PrintWriter(file + ".variants.tsv");
+		PrintWriter pw_forCADD = new PrintWriter(file + ".cadd.tsv");
+		PrintWriter pw_geneInfo = new PrintWriter(file + ".genes.tsv");
 		
 		pw_variantInfo.println( "gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group");
 		
@@ -262,13 +276,15 @@ public class Step4_MatchingVariantsFromExAC
 					pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION");
 				}
 			}
+			pw_geneInfo.println(gene + "\t" + geneInfo.get(gene));
 		}
-		
-		
-		
 		
 		pw_variantInfo.flush();
 		pw_variantInfo.close();
+		
+		pw_geneInfo.flush();
+		pw_geneInfo.close();
+		
 		pw_forCADD.flush();
 		pw_forCADD.close();
 	}

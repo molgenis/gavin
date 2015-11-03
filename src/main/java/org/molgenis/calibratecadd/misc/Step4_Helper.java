@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.molgenis.calibratecadd.structs.EntityPlus;
 import org.molgenis.calibratecadd.structs.ImpactRatios;
 import org.molgenis.calibratecadd.structs.VariantIntersectResult;
@@ -129,19 +129,23 @@ public class Step4_Helper
 	
 	
 	
-	public static double calculateMedianMAF(List<EntityPlus> exacVariants)
+	public static double calculateClinVarMAF(List<EntityPlus> exacVariants, int nrOfClinVarOnly)
 	{
 		if(exacVariants.size() == 0)
 		{
 			return 0.0;
 		}
-		double[] mafs = new double[exacVariants.size()];
+		double[] mafs = new double[exacVariants.size() + nrOfClinVarOnly];
 		for(int i = 0; i < exacVariants.size(); i++)
 		{
 			mafs[i] = (double) exacVariants.get(i).getKeyVal().get("AF");
 		}
-		Median m = new Median();
-		return m.evaluate(mafs);
+		for(int i = exacVariants.size(); i < exacVariants.size() + nrOfClinVarOnly; i++)
+		{
+			mafs[i] = 0.0;
+		}
+		Percentile perc = new Percentile();
+		return perc.evaluate(mafs, 95);
 	}
 
 
@@ -305,7 +309,6 @@ public class Step4_Helper
 		return ir;
 	}
 
-
 	/**
 	 * TODO: this function has an interesting side effect: when there are (only) HIGH effect variants in clinvar, but only MODERATE (or LOW/MODF) variants in ExAC, the matching fails..
 	 * However, we do learn that apparently a HIGH impact variant is pathogenic, whereas non-HIGH are tolerated to some point. Even though we cannot calibrate CADD, this knowledge is
@@ -313,7 +316,6 @@ public class Step4_Helper
 	 */
 	public static List<EntityPlus> shapeExACvariantsByImpactRatios(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
 	{
-		
 		List<EntityPlus> highImpactVariants = new ArrayList<EntityPlus>();
 		List<EntityPlus> modrImpactVariants = new ArrayList<EntityPlus>();
 		List<EntityPlus> lowImpactVariants = new ArrayList<EntityPlus>();
@@ -539,6 +541,67 @@ public class Step4_Helper
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 		ObjectInputStream ois = new ObjectInputStream(bais);
 		return (Entity) ois.readObject();
+	}
+
+
+
+	public static String determineImpactFilter(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
+	{
+		
+		//first, just count the impact categories like we do for clinvar
+		int nrOfHigh = 0;
+		int nrOfModerate = 0;
+		int nrOfLow = 0;
+		int nrOfModifier = 0;
+		
+		for(EntityPlus e : exacFilteredByMAF)
+		{
+			String impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
+			if(impact.equals("HIGH"))
+			{
+				nrOfHigh++;
+			}
+			else if(impact.equals("MODERATE"))
+			{
+				nrOfModerate++;
+			}
+			else if(impact.equals("LOW"))
+			{
+				nrOfLow++;
+			}
+			else if(impact.equals("MODIFIER"))
+			{
+				nrOfModifier++;
+			}
+			else
+			{
+				throw new Exception("unrecognized impact: " + impact);
+			}
+		}
+
+		String allCounts = "clinvar impact ratio: " + ir.toString() + ", absolute exac impacts: high="+nrOfHigh+", modr="+nrOfModerate+", low="+nrOfLow + ", modf="+nrOfModifier;
+		
+		if(nrOfHigh == 0 && ir.high > 0)
+		{
+			return ir.high + "% of pathogenic variants HIGH impact, but 0 in ExAC, ("+allCounts+")";
+		}
+		else if(nrOfModerate == 0 && ir.moderate > 0)
+		{
+			return ir.moderate + "% of pathogenic variants MODERATE impact, but 0 in ExAC, ("+allCounts+")";
+		}
+		else if(nrOfLow == 0 && ir.low > 0)
+		{
+			return ir.low + "% of pathogenic variants LOW impact, but 0 in ExAC, ("+allCounts+")";
+		}
+		
+		//doesn't seem to happen
+		else if(nrOfModifier == 0 && ir.modifier > 0)
+		{
+			return ir.modifier + "% of pathogenic variants MODIFIER impact, but 0 in ExAC, ("+allCounts+")";
+		}
+		
+		
+		return "something may have gone wrong";
 	}
 	
 }
