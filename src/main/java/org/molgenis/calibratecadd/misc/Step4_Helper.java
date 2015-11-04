@@ -1,16 +1,13 @@
 package org.molgenis.calibratecadd.misc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.molgenis.calibratecadd.structs.EntityPlus;
 import org.molgenis.calibratecadd.structs.ImpactRatios;
 import org.molgenis.calibratecadd.structs.VariantIntersectResult;
@@ -129,7 +126,7 @@ public class Step4_Helper
 	
 	
 	
-	public static double calculateClinVarMAF(List<EntityPlus> exacVariants, int nrOfClinVarOnly)
+	public static double calculatePathogenicMAF(List<EntityPlus> exacVariants, int nrOfClinVarOnly)
 	{
 		if(exacVariants.size() == 0)
 		{
@@ -144,7 +141,9 @@ public class Step4_Helper
 		{
 			mafs[i] = 0.0;
 		}
-		Percentile perc = new Percentile();
+		System.out.println("mafs: " + Arrays.toString(mafs));
+		//R7 is the one used by R and Excel as default
+		Percentile perc = new Percentile().withEstimationType(EstimationType.R_7);
 		return perc.evaluate(mafs, 95);
 	}
 
@@ -204,7 +203,7 @@ public class Step4_Helper
 		return res;
 	}
 
-	public static boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
+	private static boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
 	{
 		String csq = exacVariant.getE().getString("CSQ");	
 //		System.out.println("LOOKING FOR ALT " + altAllele);
@@ -245,7 +244,7 @@ public class Step4_Helper
 	}
 
 	//e.g. "splice_acceptor_variant&non_coding_transcript_variant"
-	public static String getHighestImpact(String csqConsequences) throws Exception
+	private static String getHighestImpact(String csqConsequences) throws Exception
 	{
 		int highestImpactRank = -1;
 		for(String consequence : csqConsequences.split("&", -1))
@@ -532,46 +531,34 @@ public class Step4_Helper
 		
 		return res;
 	}
-	
-	public static Entity deepCloneEntity(Entity cloneMe) throws IOException, ClassNotFoundException
-	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		oos.writeObject(cloneMe);
-		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		ObjectInputStream ois = new ObjectInputStream(bais);
-		return (Entity) ois.readObject();
-	}
 
-
-
-	public static String determineImpactFilter(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
+	public static String determineImpactFilterCat(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir, double pathoMAF) throws Exception
 	{
 		
 		//first, just count the impact categories like we do for clinvar
-		int nrOfHigh = 0;
-		int nrOfModerate = 0;
-		int nrOfLow = 0;
-		int nrOfModifier = 0;
+		int nrOfHighInExAC = 0;
+		int nrOfModerateInExAC = 0;
+		int nrOfLowInExAC = 0;
+		int nrOfModifierInExAC = 0;
 		
 		for(EntityPlus e : exacFilteredByMAF)
 		{
 			String impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
 			if(impact.equals("HIGH"))
 			{
-				nrOfHigh++;
+				nrOfHighInExAC++;
 			}
 			else if(impact.equals("MODERATE"))
 			{
-				nrOfModerate++;
+				nrOfModerateInExAC++;
 			}
 			else if(impact.equals("LOW"))
 			{
-				nrOfLow++;
+				nrOfLowInExAC++;
 			}
 			else if(impact.equals("MODIFIER"))
 			{
-				nrOfModifier++;
+				nrOfModifierInExAC++;
 			}
 			else
 			{
@@ -579,29 +566,25 @@ public class Step4_Helper
 			}
 		}
 
-		String allCounts = "clinvar impact ratio: " + ir.toString() + ", absolute exac impacts: high="+nrOfHigh+", modr="+nrOfModerate+", low="+nrOfLow + ", modf="+nrOfModifier;
+		String details = "\t" + "pathogenic MAF: " + pathoMAF + ", pathogenic impact ratio: " + ir.toString() + ", exac impact counts: high="+nrOfHighInExAC+", modr="+nrOfModerateInExAC+", low="+nrOfLowInExAC + ", modf="+nrOfModifierInExAC;
 		
-		if(nrOfHigh == 0 && ir.high > 0)
+		if(ir.high > 0 && nrOfHighInExAC == 0)
 		{
-			return ir.high + "% of pathogenic variants HIGH impact, but 0 in ExAC, ("+allCounts+")";
+			return "I1" + details;
 		}
-		else if(nrOfModerate == 0 && ir.moderate > 0)
+		else if(ir.moderate > 0 && nrOfHighInExAC == 0 && nrOfModerateInExAC == 0)
 		{
-			return ir.moderate + "% of pathogenic variants MODERATE impact, but 0 in ExAC, ("+allCounts+")";
+			return "I2" + details;
 		}
-		else if(nrOfLow == 0 && ir.low > 0)
+		else if(ir.low > 0 && nrOfHighInExAC == 0 && nrOfModerateInExAC == 0 && nrOfLowInExAC == 0)
 		{
-			return ir.low + "% of pathogenic variants LOW impact, but 0 in ExAC, ("+allCounts+")";
+			return "I3" + details;
 		}
-		
-		//doesn't seem to happen
-		else if(nrOfModifier == 0 && ir.modifier > 0)
+		else
 		{
-			return ir.modifier + "% of pathogenic variants MODIFIER impact, but 0 in ExAC, ("+allCounts+")";
+			return "T2" + details;
 		}
-		
-		
-		return "something may have gone wrong";
+
 	}
 	
 }

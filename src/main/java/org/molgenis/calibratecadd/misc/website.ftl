@@ -6,18 +6,29 @@
 		<script>
 		
 		$(document).ready(function() {
+		
 			$('table td:nth-child(2)').each(function() {
+				var val = $(this).text();
+				
+				if (val == 'N1' || val == 'N2' || val == 'N3') { 											$(this).css('backgroundColor', '#ff0000'); }
+				else if (val == 'T1' || val == 'T2' || val == 'C3' || val == 'C4' || val == 'C5') { 		$(this).css('backgroundColor', '#ffff00'); }
+				else if (val == 'I1' || val == 'I2'  || val == 'I3' ) { 									$(this).css('backgroundColor', '#00ffff'); }
+				else if (val == 'C1' || val == 'C2' ) { 													$(this).css('backgroundColor', '#00ff00'); }
+			});
+			$('table td:nth-child(4)').each(function() {
 				var pval = $(this).text();
+				
 				if ((pval >= 0) && (pval < (0.01))) {		$(this).css('backgroundColor', '#99ff9c'); }
 				else if((pval >= 0.01) && (pval < 0.05)) {	$(this).css('backgroundColor', '#fff599'); }
 				else if((pval >= 0.05) && (pval <= 1)) {	$(this).css('backgroundColor', '#dddddd'); }
 				else {										$(this).css('backgroundColor', '#ffffff'); }
 			});
-			$('table td').filter(':nth-child(5), :nth-child(6), :nth-child(7), :nth-child(8)').each(function() {
+			$('table td').filter(':nth-child(7), :nth-child(8), :nth-child(9), :nth-child(10)').each(function() {
 				//use: http://www.bretttolbert.com/projects/colorscale/  max/min hue: 0 - 135, max/min sat: 0.4, max/min val: 1
 				var val = $(this).text();
 				
-				if ((val >= 0) && (val < 5)) { 			$(this).css('backgroundColor', '#ffffff'); }
+				if (val == 'n/a') { 					$(this).css('backgroundColor', '#ffffff'); }
+				else if ((val >= 0) && (val < 5)) { 	$(this).css('backgroundColor', '#ffffff'); }
 				else if((val >= 5) && (val < 10)) {		$(this).css('backgroundColor', '#99ff9c'); }
 				else if((val >= 10) && (val < 15)) {	$(this).css('backgroundColor', '#adff99'); }
 				else if((val >= 15) && (val < 20)) {	$(this).css('backgroundColor', '#c4ff99'); }
@@ -29,7 +40,6 @@
 				else if((val >= 45) && (val <= 50)) {	$(this).css('backgroundColor', '#ffb099'); }
 				else {									$(this).css('backgroundColor', '#ff9999'); }
 			});
-			event.preventDefault();
 		});
 
 		</script>
@@ -89,11 +99,11 @@
 <br><br>
 
 <table style="text-align: center; width: 80%; margin: 0 auto;">
-<tr style="text-align: center;"><th>Gene</th><th>P-value</th><th>nPatho</th><th>nPop</th><th>MeanPatho<th>MeanPop</th><th>95% sens</th><th>95% spec</th><th>Variants</th></tr>
+<tr style="text-align: center;"><th>Gene</th><th>Category</th><th>Info</th><th>P-value</th><th>nPatho</th><th>nPop</th><th>MeanPatho<th>MeanPop</th><th>95% sens</th><th>95% spec</th><th>Variants</th></tr>
 
 <#list genes as gene>
 <#--tr><td><a href="plots/BRCA2.png" target="_blank">BRCA2</a></td><td>6.45630831985457e-68</td><td>2964</td><td>0.7735326157</td><td>16.12</td><td>0.856502242152466</td><td>0.911347517730497</td><td>0.952518262206844</td><td>289</td><td>216</td><td><a href="data/BRCA2.tsv">download</a></td></tr-->
-<tr><td><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></td><td>${gene[6]?number?string["0.####"]}</td><td>${gene[1]}</td><td>${gene[2]}</td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[7]}</td><td>${gene[8]}</td><td><a href="data/${gene[0]}.tsv">download</a></td></tr>
+<tr><td><#if gene[8] == 'n/a'>${gene[0]}<#else><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></#if></td><td>${gene[1]}</td><td>info</td><td><#if gene[8] == 'n/a'>n/a<#else>${gene[8]?number?string["0.####"]}</#if></td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[5]}</td><td>${gene[6]}</td><td>${gene[9]}</td><td>${gene[10]}</td><td><#if gene[8] == 'n/a'>n/a<#else><a href="data/${gene[0]}.tsv">download</a></#if></td></tr>
 </#list>
 </table>
 

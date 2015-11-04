@@ -129,10 +129,6 @@ public class Step4_MatchingVariantsFromExAC
 //			}
 			
 			index++;
-			if (index % 100 == 0)
-			{
-				System.out.println("Seen " + index + " of " + clinvarPatho.keySet().size() + " genes..");
-			}
 
 			String chrom = null;
 			long leftMostPos = -1;
@@ -142,7 +138,7 @@ public class Step4_MatchingVariantsFromExAC
 			if(clinvarPatho.get(gene).size() < 2)
 			{
 				droppedGenesClinVarTooFew++;
-				geneInfo.put(gene, "dropped; less than 2 clinvar variants available");
+				geneInfo.put(gene, "N1" + "\t" + "less than 2 clinvar variants available");
 				continue;
 			}
 
@@ -179,7 +175,7 @@ public class Step4_MatchingVariantsFromExAC
 			}
 
 			System.out.println("\n#####\n");
-			System.out.println(gene + " " + leftMostPos + " " + rightMostPos + " " + " has " + " " + exacVariants.size());
+			System.out.println(gene + " (" + index + " of " + clinvarPatho.keySet().size() + ") " + leftMostPos + " " + rightMostPos + " " + " has " + exacVariants.size());
 
 			if (exacVariants.size() > 0)
 			{
@@ -192,10 +188,10 @@ public class Step4_MatchingVariantsFromExAC
 				//calculate MAF for shared variants, and use them to filter the other ExAC variants
 				//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
 				//if we have nothing to go on, we will set this to 0 and only select singleton variants
-				double clinVarMAF = Step4_Helper.calculateClinVarMAF(vir.inBoth_exac, vir.inClinVarOnly.size());
-				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, clinVarMAF);
+				double pathogenicMAF = Step4_Helper.calculatePathogenicMAF(vir.inBoth_exac, vir.inClinVarOnly.size());
+				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, pathogenicMAF);
 
-				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using MAF " + clinVarMAF);
+				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using pathogenic MAF " + pathogenicMAF);
 
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
@@ -204,7 +200,7 @@ public class Step4_MatchingVariantsFromExAC
 				
 				if(exacFilteredByMAF.size() == 0)
 				{
-					geneInfo.put(gene, "dropped; no exac variants below MAF " + clinVarMAF + " known impacts: " + ir.toString());
+					geneInfo.put(gene, "T1" + "\t" + "no exac variants below MAF " + pathogenicMAF + " known impacts: " + ir.toString());
 					continue;
 				}
 				
@@ -216,12 +212,12 @@ public class Step4_MatchingVariantsFromExAC
 					passedGenes++;
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
-					geneInfo.put(gene, "ready for cadd calibration with " + exacFilteredByMAFandImpact.size() + " variants");
+					geneInfo.put(gene, "Cx" + "\t" + "ready for cadd calibration with " + exacFilteredByMAFandImpact.size() + " variants");
 				}
 				else
 				{
-					String impactFilter = Step4_Helper.determineImpactFilter(exacFilteredByMAF, ir);
-					geneInfo.put(gene, "dropped; no matched exac variants based on impact (used MAF="+clinVarMAF+"), but found out that: " + impactFilter);
+					String impactFilterResults = Step4_Helper.determineImpactFilterCat(exacFilteredByMAF, ir, pathogenicMAF);
+					geneInfo.put(gene, impactFilterResults);
 					droppedGenesNoMatchedVariants++;
 				}
 				
@@ -231,7 +227,7 @@ public class Step4_MatchingVariantsFromExAC
 			else
 			{
 				droppedGenesExACtooFew++;
-				geneInfo.put(gene, "dropped; 0 exac variants in range " + chrom + ":" + leftMostPos + "-" + rightMostPos);
+				geneInfo.put(gene, "N2" + "\t" + "0 exac variants in range " + chrom + ":" + leftMostPos + "-" + rightMostPos);
 			}
 			
 			tr.close();
@@ -259,6 +255,7 @@ public class Step4_MatchingVariantsFromExAC
 		PrintWriter pw_geneInfo = new PrintWriter(file + ".genes.tsv");
 		
 		pw_variantInfo.println( "gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group");
+		pw_geneInfo.println( "gene" + "\t" + "category" + "\t" + "info");
 		
 		for(String gene : clinvarPatho.keySet())
 		{
@@ -276,7 +273,8 @@ public class Step4_MatchingVariantsFromExAC
 					pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION");
 				}
 			}
-			pw_geneInfo.println(gene + "\t" + geneInfo.get(gene));
+			//replace "/" by "_" because R should not write output files with "/" in them, for obvious reasons.
+			pw_geneInfo.println(gene.replace("/", "_") + "\t" + geneInfo.get(gene));
 		}
 		
 		pw_variantInfo.flush();
