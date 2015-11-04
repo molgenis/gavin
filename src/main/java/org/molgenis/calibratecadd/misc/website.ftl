@@ -56,7 +56,7 @@
 <body>
 <div style="margin: 0px auto; display: table; text-align: center; font-family: 'Helvetica', 'Arial', sans-serif;">
 
-<h1>Calibrated CADD Gene Guide - BETA 1</h1>
+<h1>Calibrated CADD Gene Guide - ALPHA 3</h1>
 <img src="umcg.jpg" height="50" alt="UMCG" />
 <img src="rug.jpg" height="50" alt="RUG" />
 <img src="5gpm.png" height="50" alt="5GPM" />
@@ -94,16 +94,48 @@
 	<b>95% sens</b> = Threshold for 95% sensitivity, set at the 5th percentile of pathogenic variants. Use this to filter out false positives ('benign'), because you will only remove a few true positives (pathogenic) below this threshold.<br>
 	<b>95% spec</b> = Threshold for 95% specificity, set at the 95th percentile of population variants. Use this to identify true positives (pathogenic), because you will only find a few false positives ('benign') above this threshold.<br>
 	<b>Variants</b> = Click link to download the pathogenic and population variants with their CADD scores used in the assessment. <a href="http://cadd.gs.washington.edu/" target="_blank">more info</a><br>
+	<b>Category</b> =
+	
+	<p><i>Not enough data:</i>
+	<ul>
+		<li><b>N1</b> = Not enough ClinVar variants available for calibration (less than 2).</li>
+		<li><b>N2</b> = No ExAC variants available in ClinVar variant interval.</li>
+		<li><b>N3</b> = CADD calibration failed, e.g. due to being unable to score variants.</li>
+	</ul></p>
+	
+	
+	<p><i>Pathogenic MAF threshold available:</i>
+	<ul>
+		<li><b>T1</b> = Pathogenic MAF could be established and >0 ExAC variants in ClinVar interval, but no there are no ExAC variants found below this threshold.</li>
+		<li><b>T2</b> = Pathogenic MAF established and >0 ExAC variants in ClinVar interval that are below this threshold, but protein impact distributions could not be equalized. There is also no impact seperation point that can be used as a threshold.</li>
+	</ul></p>
+
+	<p><i>Pathogenic MAF and 'protein impact' threshold available:</i>
+	<ul>
+		<li><b>I1</b> = Like T2, but there is a separation point: pathogenic variants have >0 HIGH, while ExAC has MODERATE or less.</li>
+		<li><b>I2</b> = Like T2, but there is a separation point: pathogenic variants have >0 MODERATE, while ExAC has LOW or less.</li>
+		<li><b>I3</b> = Like T2, but there is a separation point: pathogenic variants have >0 LOW, while ExAC only has MODIFIER.</li>
+	</ul></p>
+
+	<p><i>Results of CADD calibration on pathogenic MAF-filtered, 'protein impact equalized' variants sets. Pathogenic MAF is available, CADD scores may not be informative.</i>
+	<ul>
+		<li><b>C1</b> = CADD scores are highly informative for this gene (patho > popul , P < 0.01).</li>
+		<li><b>C2</b> = CADD scores are somewhat informative for this gene (patho > popul , 0.01 ≤ P ≤ 0.05).</li>
+		<li><b>C3</b> = We don't know if CADD scores are informative. (P > 0.05 and < 5 samples in one or both groups)</li>
+		<li><b>C4</b> = Enough samples (> 5 in each group), but CADD scores are not informative for this gene (P > 0.05)</li>
+		<li><b>C5</b> = Artifact, e.g. P ≤ 0.05 but patho mean greather than population mean.</li>
+	</ul></p>
 </td></tr></table>
 
 <br><br>
+
 
 <table style="text-align: center; width: 80%; margin: 0 auto;">
 <tr style="text-align: center;"><th>Gene</th><th>Category</th><th>Info</th><th>P-value</th><th>nPatho</th><th>nPop</th><th>MeanPatho<th>MeanPop</th><th>95% sens</th><th>95% spec</th><th>Variants</th></tr>
 
 <#list genes as gene>
 <#--tr><td><a href="plots/BRCA2.png" target="_blank">BRCA2</a></td><td>6.45630831985457e-68</td><td>2964</td><td>0.7735326157</td><td>16.12</td><td>0.856502242152466</td><td>0.911347517730497</td><td>0.952518262206844</td><td>289</td><td>216</td><td><a href="data/BRCA2.tsv">download</a></td></tr-->
-<tr><td><#if gene[8] == 'n/a'>${gene[0]}<#else><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></#if></td><td>${gene[1]}</td><td>info</td><td><#if gene[8] == 'n/a'>n/a<#else>${gene[8]?number?string["0.####"]}</#if></td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[5]}</td><td>${gene[6]}</td><td>${gene[9]}</td><td>${gene[10]}</td><td><#if gene[8] == 'n/a'>n/a<#else><a href="data/${gene[0]}.tsv">download</a></#if></td></tr>
+<tr><td><#if gene[8] == 'n/a'>${gene[0]}<#else><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></#if></td><td>${gene[1]}</td><td>todo</td><td><#if gene[8] == 'n/a'>n/a<#else>${gene[8]?number?string["0.####"]}</#if></td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[5]}</td><td>${gene[6]}</td><td>${gene[9]}</td><td>${gene[10]}</td><td><#if gene[8] == 'n/a'>n/a<#else><a href="data/${gene[0]}.tsv">download</a></#if></td></tr>
 </#list>
 </table>
 

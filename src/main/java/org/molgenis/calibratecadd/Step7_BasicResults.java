@@ -198,11 +198,10 @@ public class Step7_BasicResults {
 				if(cat == null)
 				{
 					cat = "C5";
-					System.out.println("C5: " + pval + " pathoMean=" + pathoMean + ", populMean=" + populMean);
 				}
 				
 				//write table
-				pw.println(gene + "\t" + cat + "\t" + "info" + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres));
+				pw.println(gene + "\t" + cat + "\t" + "todo" + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres));
 			}
 		}
 		

@@ -1,15 +1,17 @@
 
 ### summary gene plots (uses output of Step 7)
 #calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/4nov2015/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddGenes <- subset(calibcaddGenes, UTestPvalue != 'n/a')
 plot(calibcaddGenes$MeanPopulCADD, col="blue")
 points(calibcaddGenes$MeanPathoCADD, col="red")
+calibcaddGenes$MeanDiff <- as.numeric(calibcaddGenes$MeanDiff)
 plot(density(calibcaddGenes$MeanDiff))
 abline(v = mean(calibcaddGenes$MeanDiff))
 
 ## single gene plots
 #calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddVariants <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddVariants <- read.table('/Users/jvelde/Desktop/clinvarcadd/4nov2015/clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 selectGene <- "MYH7"
 calibcaddVariants.selectedGene.path <- subset(calibcaddVariants, gene == selectGene & group == "PATHOGENIC")
 calibcaddVariants.selectedGene.popul <- subset(calibcaddVariants, gene == selectGene & group == "POPULATION")
@@ -21,7 +23,7 @@ abline(h = mean(calibcaddVariants.selectedGene.path$cadd), col="red")
 ### new plot in gg ###
 library(ggplot2)
 
-for (selectGene in calibcaddGenes$Gene) {
+for (selectGene in unique(calibcaddVariants$gene)) {
 #selectGene <- "ATM"
 calibcaddVariants.selectedGene.path <- subset(calibcaddVariants, gene == selectGene & group == "PATHOGENIC")
 calibcaddVariants.selectedGene.popul <- subset(calibcaddVariants, gene == selectGene & group == "POPULATION")
@@ -31,8 +33,8 @@ p <- ggplot() +
   geom_point(data = calibcaddVariants.selectedGene.path, aes(x=pos, y=cadd), colour="red", pch=19, alpha = .5) +
   geom_abline(intercept = mean(calibcaddVariants.selectedGene.popul$cadd), slope = 0, colour = "blue", size = 2, alpha = .5) +
   geom_abline(intercept = mean(calibcaddVariants.selectedGene.path$cadd), slope = 0, colour = "red", size = 2, alpha = .5) +
-  geom_abline(intercept = calibcaddGenes.selectedGene$Sens95perCADDthresh, slope = 0, colour = "green", size = 2, alpha = .5) +
-  geom_abline(intercept = calibcaddGenes.selectedGene$Spec95perCADDthresh, slope = 0, colour = "orange", size = 2, alpha = .5) +
+  #geom_abline(intercept = calibcaddGenes.selectedGene$Sens95perCADDthresh, slope = 0, colour = "green", size = 2, alpha = .5) +
+  #geom_abline(intercept = calibcaddGenes.selectedGene$Spec95perCADDthresh, slope = 0, colour = "orange", size = 2, alpha = .5) +
   theme_bw() +
   theme(axis.line = element_line(colour = "black"),
         panel.grid.major = element_line(colour = "black"),
@@ -45,7 +47,7 @@ p <- ggplot() +
   xlab(paste("Genomic position [",selectGene,", chr. ",sort(unique(calibcaddVariants.selectedGene.popul$chr)),"]", sep="")) +
   theme(legend.position = "none")
 #p
-ggsave(paste("/Users/jvelde/Desktop/clinvarcadd/plots/",selectGene,".png", sep=""))
+ggsave(paste("/Users/jvelde/Desktop/clinvarcadd/website/plots/",selectGene,".png", sep=""))
 }
 
 #### split variant level data for website downloads
