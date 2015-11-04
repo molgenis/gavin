@@ -56,7 +56,7 @@
 <body>
 <div style="margin: 0px auto; display: table; text-align: center; font-family: 'Helvetica', 'Arial', sans-serif;">
 
-<h1>Calibrated CADD Gene Guide - ALPHA 3</h1>
+<h1>Comprehensive Calibrated Gene Guide - ALPHA 3</h1>
 <img src="umcg.jpg" height="50" alt="UMCG" />
 <img src="rug.jpg" height="50" alt="RUG" />
 <img src="5gpm.png" height="50" alt="5GPM" />
