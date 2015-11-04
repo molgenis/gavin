@@ -50,7 +50,7 @@
 			td {padding: 4px; margin: 0; border: 1px solid black;}
 		</style>
 		
-		<title>Calibrated CADD Gene Guide</title>
+		<title>Comprehensive Calibrated Gene Guide</title>
 </head>
 
 <body>
