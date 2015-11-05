@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.molgenis.calibratecadd.misc.Step4_Helper;
 import org.molgenis.calibratecadd.structs.EntityPlus;
@@ -39,6 +41,7 @@ public class Step4_MatchingVariantsFromExAC
 
 	}
 
+	public static String NA = "";
 	HashMap<String, List<Entity>> clinvarPatho = new HashMap<String, List<Entity>>();
 	HashMap<String, List<EntityPlus>> matchedExACvariants = new HashMap<String, List<EntityPlus>>();
 	HashMap<String, String> geneInfo = new HashMap<String, String>();
@@ -129,6 +132,11 @@ public class Step4_MatchingVariantsFromExAC
 //			}
 			
 			index++;
+			
+//			if(index % 100 == 0)
+//			{
+//				break;
+//			}
 
 			String chrom = null;
 			long leftMostPos = -1;
@@ -138,7 +146,7 @@ public class Step4_MatchingVariantsFromExAC
 			if(clinvarPatho.get(gene).size() < 2)
 			{
 				droppedGenesClinVarTooFew++;
-				geneInfo.put(gene, "N1" + "\t" + "less than 2 clinvar variants available");
+				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + NA + "\t" + 0 + "\t" + 1 + "\t" + NA + "\t" + NA);
 				continue;
 			}
 
@@ -195,29 +203,34 @@ public class Step4_MatchingVariantsFromExAC
 
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
-				ImpactRatios ir = Step4_Helper.calculateImpactRatios(vir.inClinVarOnly, vir.inBoth_clinvar);
-				System.out.println("impact ratio from clinvar variants: " + ir.toString());
+				ImpactRatios pathoImpactRatio = Step4_Helper.calculateImpactRatios(Stream.concat(vir.inClinVarOnly.stream(), vir.inBoth_clinvar.stream()).collect(Collectors.toList()));
+				System.out.println("impact ratio from clinvar variants: " + pathoImpactRatio.toString());
 				
 				if(exacFilteredByMAF.size() == 0)
 				{
-					geneInfo.put(gene, "T1" + "\t" + "no exac variants below MAF " + pathogenicMAF + " known impacts: " + ir.toString());
+					geneInfo.put(gene, "T1" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + pathogenicMAF + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + pathoImpactRatio.toString() + "\t" + NA);
 					continue;
 				}
 				
-				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, ir);
+				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, pathoImpactRatio);
 				System.out.println("exaconly filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
+				
 				
 				if (exacFilteredByMAFandImpact.size() > 0)
 				{
 					passedGenes++;
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
-					geneInfo.put(gene, "Cx" + "\t" + "ready for cadd calibration with " + exacFilteredByMAFandImpact.size() + " variants");
+					//impacts AFTER correction
+					ImpactRatios exacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAFandImpact);
+					geneInfo.put(gene, "Cx" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + pathogenicMAF + "\t" + exacFilteredByMAFandImpact.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathoImpactRatio.toString().toString() + "\t" + exacImpactRatio.toString());
 				}
 				else
 				{
-					String impactFilterResults = Step4_Helper.determineImpactFilterCat(exacFilteredByMAF, ir, pathogenicMAF);
-					geneInfo.put(gene, impactFilterResults);
+					//impacts BEFORE correction (which set it to 0)
+					ImpactRatios exacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAF);
+					String cat = Step4_Helper.determineImpactFilterCat(exacImpactRatio, pathoImpactRatio, pathogenicMAF);
+					geneInfo.put(gene, cat + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + pathogenicMAF + "\t" + exacFilteredByMAF.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathoImpactRatio.toString().toString() + "\t" + exacImpactRatio.toString());
 					droppedGenesNoMatchedVariants++;
 				}
 				
@@ -227,7 +240,7 @@ public class Step4_MatchingVariantsFromExAC
 			else
 			{
 				droppedGenesExACtooFew++;
-				geneInfo.put(gene, "N2" + "\t" + "0 exac variants in range " + chrom + ":" + leftMostPos + "-" + rightMostPos);
+				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + NA +  "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + NA + "\t" + NA);
 			}
 			
 			tr.close();
@@ -255,7 +268,7 @@ public class Step4_MatchingVariantsFromExAC
 		PrintWriter pw_geneInfo = new PrintWriter(file + ".genes.tsv");
 		
 		pw_variantInfo.println( "gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group");
-		pw_geneInfo.println( "gene" + "\t" + "category" + "\t" + "info");
+		pw_geneInfo.println( "Gene" + "\t" + "Category" + "\t" + "Chrom" + "\t" + "Start" + "\t" + "Stop" + "\t" + "MAFthreshold" + "\t" + "nPop" + "\t" + "nPatho" + "\t" + "PathoImpact"+ "\t" + "ExACImpact");
 		
 		for(String gene : clinvarPatho.keySet())
 		{

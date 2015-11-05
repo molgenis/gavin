@@ -1,5 +1,8 @@
 package org.molgenis.calibratecadd.structs;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 public class ImpactRatios
 {
 
@@ -7,6 +10,8 @@ public class ImpactRatios
 	public double moderate;
 	public double low;
 	public double modifier;
+	
+	NumberFormat f = new DecimalFormat("#0.00");  
 	
 	public ImpactRatios(double high, double moderate, double low, double modifier) throws Exception
 	{
@@ -21,7 +26,6 @@ public class ImpactRatios
 	public void check() throws Exception
 	{
 		double total = high+moderate+low+modifier;
-		//if we have 33+33+33+0 or so, add 1 to 'moderate'
 		if(Math.round(total) != 100)
 		{
 			throw new Exception("Impact rations should add up to ~100, but instead: " + high + "+" + moderate + "+" + low + "+"+modifier +"=" + (high+moderate+low+modifier));
@@ -31,8 +35,7 @@ public class ImpactRatios
 	@Override
 	public String toString()
 	{
-		return "ImpactRatios [high=" + high + ", moderate=" + moderate + ", low=" + low + ", modifier=" + modifier
-				+ "]";
+		return "high: " + f.format(high) + "%, moderate: " + f.format(moderate) + "%, low: " + f.format(low) + "%, modifier: " + f.format(modifier)+ "%";
 	}
 	
 	

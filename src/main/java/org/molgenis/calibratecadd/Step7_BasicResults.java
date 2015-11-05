@@ -5,14 +5,11 @@ import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 
-import net.mintern.primitive.Primitive;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 
@@ -67,7 +64,8 @@ public class Step7_BasicResults {
 		{
 			line = geneInfoScanner.nextLine();
 			String[] split = line.split("\t", -1);
-			geneToInfo.put(split[0], split[1] + "\t" + split[2]);
+			line = line.substring(line.indexOf('\t')+1, line.length());
+			geneToInfo.put(split[0], line);
 		}
 		geneInfoScanner.close();
 		
@@ -99,7 +97,7 @@ public class Step7_BasicResults {
 		 * process everything and write out
 		 */
 		PrintWriter pw = new PrintWriter(new File(args[2]));
-		pw.println("Gene" + "\t" + "Category" + "\t" + "Info" + "\t" + "NrOfPathoVars" + "\t" + "NrOfPopulVars" + "\t" + "MeanPathoCADD" + "\t" + "MeanPopulCADD" + "\t" + "MeanDiff" + "\t" + "UTestPvalue" + "\t" + "Sens95perCADDthresh" +"\t" + "Spec95perCADDthresh");
+		pw.println("Gene" + "\t" + "Category" + "\t" + "Chrom" + "\t" + "Start" + "\t" + "Stop" + "\t" + "MAFthreshold" + "\t" + "nPop" + "\t" + "nPatho" + "\t" + "PathoImpact" + "\t" + "ExACImpact" + "\t" + "nrPopWithCADD" + "\t" + "nrPathoWithCADD" + "\t" + "MeanPopulCADD" + "\t" + "MeanPathoCADD" + "\t" + "MeanDiff" + "\t" + "UTestPvalue" + "\t" + "Sens95perCADDthresh" +"\t" + "Spec95perCADDthresh");
 		NumberFormat f = new DecimalFormat("#0.00");     
 		
 		int nrOfGenesPathGtPopPval_5perc = 0;
@@ -109,7 +107,7 @@ public class Step7_BasicResults {
 		{
 			if(!geneToVariantAndCADD.containsKey(gene))
 			{
-				pw.println(gene + "\t" + geneToInfo.get(gene) + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a");
+				pw.println(gene + "\t" + geneToInfo.get(gene) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8));
 			}
 			else
 			{
@@ -138,7 +136,7 @@ public class Step7_BasicResults {
 				//it can happen that variants for one group did not pass CADD webservice, e.g. for PRRT2 we have only 1 population variant and when that fails, we have cannot assess...
 				if(caddPatho.size() == 0 || caddPopul.size() == 0)
 				{
-					pw.println(gene + "\t" + "N3" + "\t" + "cadd calibration failed!" + geneToInfo.get(gene).split("\t")[1] + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a" + "\t" + "n/a");
+					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8));
 					continue;
 				}
 				
@@ -201,7 +199,7 @@ public class Step7_BasicResults {
 				}
 				
 				//write table
-				pw.println(gene + "\t" + cat + "\t" + "todo" + "\t" + caddPathoPrim.length + "\t" + caddPopulPrim.length + "\t" + f.format(pathoMean) + "\t" + f.format(populMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres));
+				pw.println(gene + "\t" + cat + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopulPrim.length + "\t" + caddPathoPrim.length + "\t" + f.format(populMean) + "\t" + f.format(pathoMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres));
 			}
 		}
 		

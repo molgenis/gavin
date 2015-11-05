@@ -263,16 +263,26 @@ public class Step4_Helper
 		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
 	}
 
-	public static ImpactRatios calculateImpactRatios(List<EntityPlus> inClinVarOnly, List<EntityPlus> inBoth) throws Exception
+	public static ImpactRatios calculateImpactRatios(List<EntityPlus> entities) throws Exception
 	{
 		int nrOfHigh = 0;
 		int nrOfModerate = 0;
 		int nrOfLow = 0;
 		int nrOfModifier = 0;
 		
-		for(EntityPlus e : Stream.concat(inClinVarOnly.stream(), inBoth.stream()).collect(Collectors.toList()))
+		for(EntityPlus e : entities)
 		{
-			String impact = e.getE().getString("ANN").split("\\|")[2];
+			String impact;
+			if(e.getE().getString("ANN") != null)
+			{
+				//clinvar
+				impact = e.getE().getString("ANN").split("\\|")[2];
+			}
+			else
+			{
+				//exac
+				impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
+			}
 			if(impact.equals("HIGH"))
 			{
 				nrOfHigh++;
@@ -532,57 +542,24 @@ public class Step4_Helper
 		return res;
 	}
 
-	public static String determineImpactFilterCat(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir, double pathoMAF) throws Exception
+	public static String determineImpactFilterCat(ImpactRatios exacImpactRatio, ImpactRatios pathoImpactRatio, double pathoMAF) throws Exception
 	{
 		
-		//first, just count the impact categories like we do for clinvar
-		int nrOfHighInExAC = 0;
-		int nrOfModerateInExAC = 0;
-		int nrOfLowInExAC = 0;
-		int nrOfModifierInExAC = 0;
-		
-		for(EntityPlus e : exacFilteredByMAF)
+		if(pathoImpactRatio.high > 0 && exacImpactRatio.high == 0)
 		{
-			String impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
-			if(impact.equals("HIGH"))
-			{
-				nrOfHighInExAC++;
-			}
-			else if(impact.equals("MODERATE"))
-			{
-				nrOfModerateInExAC++;
-			}
-			else if(impact.equals("LOW"))
-			{
-				nrOfLowInExAC++;
-			}
-			else if(impact.equals("MODIFIER"))
-			{
-				nrOfModifierInExAC++;
-			}
-			else
-			{
-				throw new Exception("unrecognized impact: " + impact);
-			}
+			return "I1";
 		}
-
-		String details = "\t" + "pathogenic MAF: " + pathoMAF + ", pathogenic impact ratio: " + ir.toString() + ", exac impact counts: high="+nrOfHighInExAC+", modr="+nrOfModerateInExAC+", low="+nrOfLowInExAC + ", modf="+nrOfModifierInExAC;
-		
-		if(ir.high > 0 && nrOfHighInExAC == 0)
+		else if(pathoImpactRatio.moderate > 0 && exacImpactRatio.high == 0 && exacImpactRatio.moderate == 0)
 		{
-			return "I1" + details;
+			return "I2";
 		}
-		else if(ir.moderate > 0 && nrOfHighInExAC == 0 && nrOfModerateInExAC == 0)
+		else if(pathoImpactRatio.low > 0 && exacImpactRatio.high == 0 && exacImpactRatio.moderate == 0 && exacImpactRatio.low == 0)
 		{
-			return "I2" + details;
-		}
-		else if(ir.low > 0 && nrOfHighInExAC == 0 && nrOfModerateInExAC == 0 && nrOfLowInExAC == 0)
-		{
-			return "I3" + details;
+			return "I3";
 		}
 		else
 		{
-			return "T2" + details;
+			return "T2";
 		}
 
 	}
