@@ -1,4 +1,4 @@
-package org.molgenis.calibratecadd.misc;
+package org.molgenis.calibratecadd.support;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,9 +8,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.molgenis.calibratecadd.structs.EntityPlus;
-import org.molgenis.calibratecadd.structs.ImpactRatios;
-import org.molgenis.calibratecadd.structs.VariantIntersectResult;
 import org.molgenis.data.Entity;
 
 public class Step4_Helper

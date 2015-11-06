@@ -1,4 +1,4 @@
-package org.molgenis.calibratecadd.misc;
+package org.molgenis.calibratecadd.publish.legacy;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -1,4 +1,4 @@
-package org.molgenis.calibratecadd.misc;
+package org.molgenis.calibratecadd.support;
 
 
 public class VEPimpactCategories

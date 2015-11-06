@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Scanner;
 
-import org.molgenis.calibratecadd.structs.ChrPosRefAltUniqueVariants;
+import org.molgenis.calibratecadd.support.ChrPosRefAltUniqueVariants;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 

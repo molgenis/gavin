@@ -1,0 +1,38 @@
+<div class="row">
+	<div class="col-md-12">
+		<div id="plugin-container">
+			<div class="row">
+				<div class="col-md-12">
+					<h3>Comprehensive Calibrated Gene Guide</h3>
+
+						<div class="row">
+						<div class="col-lg-6">
+						<div class="input-group"><input id="direct-repository-query" class="form-control" type="text" placeholder="Search for a gene, position, category, etc" /> <span class="input-group-btn"> <button id="direct-repository-query-button" class="btn btn-default" type="button"><span class="glyphicon glyphicon-search">&nbsp;</span></button></span></div>
+						</div>
+						</div>
+						</div>
+
+					<script language="javascript">// <![CDATA[
+					(function($, molgenis) {
+					"use strict";
+					$(function() {
+						$("#direct-repository-query").keyup(function(event){
+						if(event.keyCode == 13){
+                              $("#direct-repository-query-button").click();
+                       }
+					});
+					$("#direct-repository-query-button").on('click', function(){
+					var queryValue = $("#direct-repository-query").val();
+					window.location= "/menu/main/dataexplorer?entity=ccgg&hideselect=true&query%5Bq%5D%5B0%5D%5Boperator%5D=SEARCH&query%5Bq%5D%5B0%5D%5Bvalue%5D="+queryValue;
+					});
+					});
+
+					}($, window.top.molgenis = window.top.molgenis || {}));
+					// ]]></script>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

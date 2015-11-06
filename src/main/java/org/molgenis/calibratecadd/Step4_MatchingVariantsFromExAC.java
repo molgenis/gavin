@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.molgenis.calibratecadd.misc.Step4_Helper;
-import org.molgenis.calibratecadd.structs.EntityPlus;
-import org.molgenis.calibratecadd.structs.ImpactRatios;
-import org.molgenis.calibratecadd.structs.VariantIntersectResult;
+import org.molgenis.calibratecadd.support.EntityPlus;
+import org.molgenis.calibratecadd.support.ImpactRatios;
+import org.molgenis.calibratecadd.support.Step4_Helper;
+import org.molgenis.calibratecadd.support.VariantIntersectResult;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 import org.molgenis.data.vcf.VcfRepository;

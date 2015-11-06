@@ -1,4 +1,4 @@
-package org.molgenis.calibratecadd.structs;
+package org.molgenis.calibratecadd.support;
 
 import java.util.ArrayList;
 import java.util.HashMap;

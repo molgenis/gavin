@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import org.molgenis.calibratecadd.structs.ClinVarVariant;
+import org.molgenis.calibratecadd.support.ClinVarVariant;
 
 public class Step1_GetClinVarPathogenic
 {

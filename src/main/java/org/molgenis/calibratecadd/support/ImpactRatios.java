@@ -1,4 +1,4 @@
-package org.molgenis.calibratecadd.structs;
+package org.molgenis.calibratecadd.support;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
