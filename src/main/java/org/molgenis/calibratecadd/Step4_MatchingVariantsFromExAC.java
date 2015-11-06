@@ -143,10 +143,11 @@ public class Step4_MatchingVariantsFromExAC
 			long rightMostPos = -1;
 			
 			//we want at least 2 variants in order to get the interval for exac
+			//we expect clinvarPatho.get(gene).size() == 1, but lets print anyway to check
 			if(clinvarPatho.get(gene).size() < 2)
 			{
 				droppedGenesClinVarTooFew++;
-				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + NA + "\t" + 0 + "\t" + 1 + "\t" + NA + "\t" + NA);
+				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + NA + "\t" + clinvarPatho.get(gene).size() + "\t" + NA + "\t" + NA + "\t" + NA);
 				continue;
 			}
 
@@ -208,7 +209,9 @@ public class Step4_MatchingVariantsFromExAC
 				
 				if(exacFilteredByMAF.size() == 0)
 				{
-					geneInfo.put(gene, "T1" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + pathogenicMAF + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + pathoImpactRatio.toString() + "\t" + NA);
+					//TODO: ExAC impact ratio not possible in current implementation since we only update CSQ field for variants below MAF thresholds...
+					//ImpactRatios unfilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(vir.inExACOnly);
+					geneInfo.put(gene, "T1" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + vir.inExACOnly.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + NA + "\t" + pathoImpactRatio.toString());
 					continue;
 				}
 				
@@ -222,15 +225,15 @@ public class Step4_MatchingVariantsFromExAC
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
 					//impacts AFTER correction
-					ImpactRatios exacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAFandImpact);
-					geneInfo.put(gene, "Cx" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + pathogenicMAF + "\t" + exacFilteredByMAFandImpact.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathoImpactRatio.toString().toString() + "\t" + exacImpactRatio.toString());
+					ImpactRatios MAFandImpactFilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAFandImpact);
+					geneInfo.put(gene, "Cx" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + exacFilteredByMAFandImpact.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + MAFandImpactFilteredExacImpactRatio.toString() + "\t" + pathoImpactRatio.toString().toString());
 				}
 				else
 				{
 					//impacts BEFORE correction (which set it to 0)
-					ImpactRatios exacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAF);
-					String cat = Step4_Helper.determineImpactFilterCat(exacImpactRatio, pathoImpactRatio, pathogenicMAF);
-					geneInfo.put(gene, cat + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + pathogenicMAF + "\t" + exacFilteredByMAF.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathoImpactRatio.toString().toString() + "\t" + exacImpactRatio.toString());
+					ImpactRatios MAFfilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAF);
+					String cat = Step4_Helper.determineImpactFilterCat(MAFfilteredExacImpactRatio, pathoImpactRatio, pathogenicMAF);
+					geneInfo.put(gene, cat + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + exacFilteredByMAF.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + MAFfilteredExacImpactRatio.toString() + "\t" + pathoImpactRatio.toString().toString());
 					droppedGenesNoMatchedVariants++;
 				}
 				
@@ -240,7 +243,8 @@ public class Step4_MatchingVariantsFromExAC
 			else
 			{
 				droppedGenesExACtooFew++;
-				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + NA +  "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + NA + "\t" + NA);
+				//can happen: 2+ ClinVar variants on same position, so we query an interval of size 1... so be it
+				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + NA + "\t" + NA + "\t" + NA);
 			}
 			
 			tr.close();
@@ -268,7 +272,7 @@ public class Step4_MatchingVariantsFromExAC
 		PrintWriter pw_geneInfo = new PrintWriter(file + ".genes.tsv");
 		
 		pw_variantInfo.println( "gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group");
-		pw_geneInfo.println( "Gene" + "\t" + "Category" + "\t" + "Chrom" + "\t" + "Start" + "\t" + "Stop" + "\t" + "MAFthreshold" + "\t" + "nPop" + "\t" + "nPatho" + "\t" + "PathoImpact"+ "\t" + "ExACImpact");
+		pw_geneInfo.println( "Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopulationImpactDistribution"+ "\t" + "PathogenicImpactDistribution");
 		
 		for(String gene : clinvarPatho.keySet())
 		{

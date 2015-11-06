@@ -94,12 +94,13 @@
 	<b>95% sens</b> = Threshold for 95% sensitivity, set at the 5th percentile of pathogenic variants. Use this to filter out false positives ('benign'), because you will only remove a few true positives (pathogenic) below this threshold.<br>
 	<b>95% spec</b> = Threshold for 95% specificity, set at the 95th percentile of population variants. Use this to identify true positives (pathogenic), because you will only find a few false positives ('benign') above this threshold.<br>
 	<b>Variants</b> = Click link to download the pathogenic and population variants with their CADD scores used in the assessment. <a href="http://cadd.gs.washington.edu/" target="_blank">more info</a><br>
+	<b>MAFs</b> = When MAF = 0, we filter on singleton variants. (AC_Adj = 1)
 	<b>Category</b> =
 	
 	<p><i>Not enough data:</i>
 	<ul>
 		<li><b>N1</b> = Not enough ClinVar variants available for calibration (less than 2).</li>
-		<li><b>N2</b> = No ExAC variants available in ClinVar variant interval.</li>
+		<li><b>N2</b> = No ExAC variants available in ClinVar variant interval (which may include 2+ ClinVar variants on same genomic position).</li>
 		<li><b>N3</b> = CADD calibration failed, e.g. due to being unable to score variants.</li>
 	</ul></p>
 	

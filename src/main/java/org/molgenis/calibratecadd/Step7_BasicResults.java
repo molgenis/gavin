@@ -97,7 +97,7 @@ public class Step7_BasicResults {
 		 * process everything and write out
 		 */
 		PrintWriter pw = new PrintWriter(new File(args[2]));
-		pw.println("Gene" + "\t" + "Category" + "\t" + "Chrom" + "\t" + "Start" + "\t" + "Stop" + "\t" + "MAFthreshold" + "\t" + "nPop" + "\t" + "nPatho" + "\t" + "PathoImpact" + "\t" + "ExACImpact" + "\t" + "nrPopWithCADD" + "\t" + "nrPathoWithCADD" + "\t" + "MeanPopulCADD" + "\t" + "MeanPathoCADD" + "\t" + "MeanDiff" + "\t" + "UTestPvalue" + "\t" + "Sens95perCADDthresh" +"\t" + "Spec95perCADDthresh");
+		pw.println("Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopulationImpactDistrib" + "\t" + "PathogenicImpactDistrib" + "\t" + "NrOfCADDScoredPopulationVars" + "\t" + "NrOfCADDScoredPathogenicVars" + "\t" + "MeanPopulationCADDScore" + "\t" + "MeanPathogenicCADDScore" + "\t" + "MeanDifference" + "\t" + "UTestPvalue" + "\t" + "Sens95thPerCADDThreshold" +"\t" + "Spec95thPerCADDThreshold");
 		NumberFormat f = new DecimalFormat("#0.00");     
 		
 		int nrOfGenesPathGtPopPval_5perc = 0;
@@ -134,9 +134,10 @@ public class Step7_BasicResults {
 				}
 				
 				//it can happen that variants for one group did not pass CADD webservice, e.g. for PRRT2 we have only 1 population variant and when that fails, we have cannot assess...
+				//replace 'Cx' with 'N3'
 				if(caddPatho.size() == 0 || caddPopul.size() == 0)
 				{
-					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8));
+					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 6));
 					continue;
 				}
 				
