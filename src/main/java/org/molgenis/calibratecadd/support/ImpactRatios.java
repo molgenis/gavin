@@ -35,7 +35,8 @@ public class ImpactRatios
 	@Override
 	public String toString()
 	{
-		return "high: " + f.format(high) + "%, moderate: " + f.format(moderate) + "%, low: " + f.format(low) + "%, modifier: " + f.format(modifier)+ "%";
+	//	return "high: " + f.format(high) + "%, moderate: " + f.format(moderate) + "%, low: " + f.format(low) + "%, modifier: " + f.format(modifier)+ "%";
+		return f.format(high) + "\t" + f.format(moderate) + "\t" + f.format(low) + "\t" + f.format(modifier);
 	}
 	
 	

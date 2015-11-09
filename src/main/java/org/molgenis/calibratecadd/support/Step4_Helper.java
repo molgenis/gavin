@@ -259,60 +259,142 @@ public class Step4_Helper
 		}
 		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
 	}
-
+	
+	public static ImpactRatios calculateImpactRatiosFromClinVar(List<Entity> entities) throws Exception
+	{
+		//liftover entity to entityplus and count
+		List<EntityPlus> clinvarVariants = new ArrayList<EntityPlus>();
+		for(Entity e : entities)
+		{
+			clinvarVariants.add(new EntityPlus(e));
+		}
+		return calculateImpactRatios(clinvarVariants);
+	}
+	
+	/**
+	 * Pass existing counts by reference, and increment one value based on the impact:
+	 * counts[0] = "HIGH"
+	 * counts[1] = "MODERATE"
+	 * counts[2] = "LOW"
+	 * counts[3] = "MODIFIER"
+	 * @param counts
+	 * @param impact
+	 * @throws Exception
+	 *
+	 */
+	public static void countImpacts(Integer[] counts, String impact) throws Exception
+	{
+		if(impact.equals("HIGH"))
+		{
+			counts[0]++;
+		}
+		else if(impact.equals("MODERATE"))
+		{
+			counts[1]++;
+		}
+		else if(impact.equals("LOW"))
+		{
+			counts[2]++;
+		}
+		else if(impact.equals("MODIFIER"))
+		{
+			counts[3]++;
+		}
+		else
+		{
+			throw new Exception("unrecognized impact: " + impact);
+		}
+	}
+	
 	public static ImpactRatios calculateImpactRatios(List<EntityPlus> entities) throws Exception
 	{
-		int nrOfHigh = 0;
-		int nrOfModerate = 0;
-		int nrOfLow = 0;
-		int nrOfModifier = 0;
+		Integer[] impactCounts = new Integer[]{ 0, 0, 0, 0};
 		
 		for(EntityPlus e : entities)
 		{
-			String impact;
-			if(e.getE().getString("ANN") != null)
+			
+			if(e.getE().getString("ANN") != null || e.getKeyVal().get(VEPimpactCategories.IMPACT) != null)
 			{
+				String impact;
 				//clinvar
-				impact = e.getE().getString("ANN").split("\\|")[2];
-			}
-			else
-			{
+				if(e.getE().getString("ANN") != null)
+				{
+					impact = e.getE().getString("ANN").split("\\|")[2];
+					
+				}
 				//exac
-				impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
-			}
-			if(impact.equals("HIGH"))
-			{
-				nrOfHigh++;
-			}
-			else if(impact.equals("MODERATE"))
-			{
-				nrOfModerate++;
-			}
-			else if(impact.equals("LOW"))
-			{
-				nrOfLow++;
-			}
-			else if(impact.equals("MODIFIER"))
-			{
-				nrOfModifier++;
+				else if(e.getKeyVal().get(VEPimpactCategories.IMPACT) != null)
+				{
+					impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
+				}
+				else
+				{
+					throw new Exception("should not be reached");
+				}
+				
+				countImpacts(impactCounts, impact);
+				
 			}
 			else
 			{
-				throw new Exception("unrecognized impact: " + impact);
+				//we are looking at the 'raw' exac data, that does not have an updated CSQ line per allele
+				//so lets get impacts right now
+			
+				//get consequence field
+				String csq = e.getE().getString("CSQ");
+				
+				if(csq == null)
+				{
+					continue;
+				}
+				
+				//multiple transcripts, with each multiple alleles
+				boolean canonicalTranscriptFound = countImpactsInCSQ(csq, impactCounts, true);
+				
+				//for some genes, there are no annotated canonical transcripts (e.g. 'KIZ')
+				//re-count except now for any transcript
+				if(!canonicalTranscriptFound)
+				{
+					countImpactsInCSQ(csq, impactCounts, false);
+				}
 			}
 		}
 		
-		double total = nrOfHigh + nrOfModerate + nrOfLow + nrOfModifier;
-		double highPerc = nrOfHigh == 0 ? 0 :((double)nrOfHigh/total)*100.0;
-		double modrPerc = nrOfModerate == 0 ? 0 : ((double)nrOfModerate/total)*100.0;
-		double lowPerc = nrOfLow == 0 ? 0 : ((double)nrOfLow/total)*100.0;
-		double modfPerc = nrOfModifier == 0 ? 0 : ((double)nrOfModifier/total)*100;
+		double total = impactCounts[0] + impactCounts[1] + impactCounts[2] + impactCounts[3];
+		double highPerc = impactCounts[0] == 0 ? 0 :((double)impactCounts[0]/total)*100.0;
+		double modrPerc = impactCounts[1] == 0 ? 0 : ((double)impactCounts[1]/total)*100.0;
+		double lowPerc = impactCounts[2] == 0 ? 0 : ((double)impactCounts[2]/total)*100.0;
+		double modfPerc = impactCounts[3] == 0 ? 0 : ((double)impactCounts[3]/total)*100;
 		
 		ImpactRatios ir = new ImpactRatios(highPerc, modrPerc, lowPerc, modfPerc);
 		
 	//	System.out.println("counts: high=" + nrOfHigh + ", modr=" + nrOfModerate + ", low=" + nrOfLow + ", modf=" + nrOfModifier);
 
 		return ir;
+	}
+	
+	/**
+	 * Count protein impacts from all consequences (comma-separated). If countCanonicalOnly, the 'canonical' field must be 'YES'.
+	 * @param csq
+	 * @param countCanonicalOnly
+	 * @return
+	 * @throws Exception 
+	 */
+	public static boolean countImpactsInCSQ(String csq, Integer[] impactCounts, boolean countCanonicalOnly) throws Exception
+	{
+		boolean canonicalTranscriptFound = false;
+		for(String csqs : csq.split(",", -1))
+		{
+			String[] csqSplit = csqs.split("\\|", -1);
+	
+			if((countCanonicalOnly && csqSplit[18].equals("YES")) || !countCanonicalOnly)
+			{
+				canonicalTranscriptFound = true;
+				String csqImpact = getHighestImpact(csqSplit[4]);
+				countImpacts(impactCounts, csqImpact);
+			}
+		}
+		return canonicalTranscriptFound;
 	}
 
 	/**
