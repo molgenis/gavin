@@ -13,6 +13,20 @@ import org.molgenis.data.Entity;
 public class Step4_Helper
 {
 
+	public static String getExACMAFforUnprocessedClinvarVariant(Entity clinvarVariant, Entity exacVariant) throws Exception
+	{
+		String clinvarAlt = clinvarVariant.getString("ALT");
+		String[] altSplit = exacVariant.getString("ALT").split(",", -1);
+		for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
+		{
+			if(clinvarAlt.equals(altSplit[altIndex]))
+			{
+				return exacVariant.getString("AF").split(",", -1)[altIndex];
+			}
+		}
+		return "0";
+	}
+	
 	public static VariantIntersectResult intersectVariants(List<Entity> exacMultiAllelic, List<Entity> clinvar) throws Exception
 	{
 		List<EntityPlus> inExAConly = new ArrayList<EntityPlus>();
@@ -260,7 +274,7 @@ public class Step4_Helper
 		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
 	}
 	
-	public static ImpactRatios calculateImpactRatiosFromClinVar(List<Entity> entities) throws Exception
+	public static ImpactRatios calculateImpactRatiosFromUnprocessedVariants(List<Entity> entities) throws Exception
 	{
 		//liftover entity to entityplus and count
 		List<EntityPlus> clinvarVariants = new ArrayList<EntityPlus>();

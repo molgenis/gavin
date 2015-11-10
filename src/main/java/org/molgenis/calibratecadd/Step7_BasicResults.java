@@ -11,6 +11,7 @@ import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 
 /**
@@ -164,7 +165,7 @@ public class Step7_BasicResults {
 				//get thresholds for 95% sensitivity and 95% specificity
 				//sensitive: we catch 95% of the known pathogenic variants, no matter how many population variants we also include when using this threshold
 				//specific: we only allow a 'top 5%' error (=finding population variants) in finding pathogenic variants, no matter how many pathogenic variants we have above this threshold right now
-				Percentile perc = new Percentile();
+				Percentile perc = new Percentile().withEstimationType(EstimationType.R_7);
 				double sensThres = perc.evaluate(caddPathoPrim, 5);
 				double specThres = perc.evaluate(caddPopulPrim, 95);
 				

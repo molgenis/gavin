@@ -133,24 +133,15 @@ public class Step4_MatchingVariantsFromExAC
 //			{
 //				continue;
 //			}
-//			if(index % 100 == 0)
-//			{
-//				break;
-//			}
+			if(index % 100 == 0)
+			{
+				break;
+			}
 
 			String chrom = null;
 			long leftMostPos = -1;
 			long rightMostPos = -1;
 			
-			//we want at least 2 variants in order to get the interval for exac
-			//we expect clinvarPatho.get(gene).size() == 1, but lets print anyway to check
-			if(clinvarPatho.get(gene).size() < 2)
-			{
-				droppedGenesClinVarTooFew++;
-				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + NA + "\t" + clinvarPatho.get(gene).size() + StringUtils.repeat("\t" + NA, 5) + "\t" + Step4_Helper.calculateImpactRatiosFromClinVar(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
-				continue;
-			}
-
 			for (Entity cvv : clinvarPatho.get(gene))
 			{
 				long pos = cvv.getLong("POS");
@@ -181,6 +172,18 @@ public class Step4_MatchingVariantsFromExAC
 			catch (java.lang.ArrayIndexOutOfBoundsException e)
 			{
 				// no chrom in tabix or so
+			}
+			
+			//we want at least 2 variants in order to get the interval for exac
+			//we expect clinvarPatho.get(gene).size() == 1, but lets print anyway to check
+			if(clinvarPatho.get(gene).size() < 2)
+			{
+				droppedGenesClinVarTooFew++;
+				//should match clinvar impact 100%, so just as a control really
+				String exacImpact = exacVariants.size() > 0 ? "\t" + Step4_Helper.calculateImpactRatiosFromUnprocessedVariants(exacVariants).toString() : StringUtils.repeat("\t" + NA, 4);
+				String maf = exacVariants.size() > 0 ? Step4_Helper.getExACMAFforUnprocessedClinvarVariant(clinvarPatho.get(gene).get(0), exacVariants.get(0)) : NA;
+				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + exacVariants.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + maf + exacImpact + "\t" + Step4_Helper.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
+				continue;
 			}
 
 			System.out.println("\n#####\n");
@@ -222,13 +225,13 @@ public class Step4_MatchingVariantsFromExAC
 					passedGenes++;
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
-					//impacts AFTER correction
+					//impacts AFTER impact correction and MAF filter has been applied
 					ImpactRatios MAFandImpactFilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAFandImpact);
 					geneInfo.put(gene, "Cx" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + exacFilteredByMAFandImpact.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + unfilteredExacImpactRatio + "\t" + pathoImpactRatio.toString().toString() + "\t" + MAFandImpactFilteredExacImpactRatio.toString());
 				}
 				else
 				{
-					//impacts BEFORE correction (which set it to 0)
+					//impacts BEFORE impact correction (which whould have set it to 0) but AFTER the MAF filter has been applied
 					ImpactRatios MAFfilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAF);
 					String cat = Step4_Helper.determineImpactFilterCat(MAFfilteredExacImpactRatio, pathoImpactRatio, pathogenicMAF);
 					geneInfo.put(gene, cat + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + exacFilteredByMAF.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + unfilteredExacImpactRatio + "\t" + pathoImpactRatio.toString() + "\t" + MAFfilteredExacImpactRatio.toString());
@@ -242,7 +245,7 @@ public class Step4_MatchingVariantsFromExAC
 			{
 				droppedGenesExACtooFew++;
 				//can happen: 2+ ClinVar variants on same position, so we query an interval of size 1... so be it
-				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + StringUtils.repeat("\t" + NA, 5)  + "\t" + Step4_Helper.calculateImpactRatiosFromClinVar(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
+				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + 0 + StringUtils.repeat("\t" + NA, 4)  + "\t" + Step4_Helper.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
 			}
 			
 			tr.close();
