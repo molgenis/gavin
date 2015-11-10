@@ -2,9 +2,9 @@ package org.molgenis.calibratecadd.support;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
@@ -42,10 +42,17 @@ public class Step4_Helper
 		for (Entity exacVariant : exacMultiAllelic)
 		{
 			String[] altSplit = exacVariant.getString("ALT").split(",", -1);
+			Set<String> altsSeenForVariant = new HashSet<String>();
 			for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
 			{
 				String alt = altSplit[altIndex];
 				EntityPlus exacVariantCopy = new EntityPlus(exacVariant);
+				//sanity check
+				if(altsSeenForVariant.contains(alt))
+				{
+					throw new Exception("Same alt seen twice for " + exacVariant.toString());
+				}
+				altsSeenForVariant.add(alt);
 				exacVariantCopy.getKeyVal().put("ALT", alt);
 				exacVariantCopy.getKeyVal().put("AF", Double.parseDouble(exacVariant.getString("AF").split(",", -1)[altIndex]));
 				exac.add(exacVariantCopy);
@@ -72,6 +79,10 @@ public class Step4_Helper
 			boolean exacVariantInClinVar = false;
 			for (Entity clinvarVariant : clinvar)
 			{
+				if(clinvarVariant.getString("ANN").split(",", -1).length > 1)
+				{
+					throw new Exception("Multiple annotations for ClinVar variant " + clinvarVariant.toString());
+				}
 				// TODO
 				// for now, we accept that we will miss *some* variants due to 2 reasons:
 				// 1) offset positions due to complex indels

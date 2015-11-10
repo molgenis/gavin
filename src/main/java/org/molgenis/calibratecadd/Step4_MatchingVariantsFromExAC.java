@@ -133,10 +133,10 @@ public class Step4_MatchingVariantsFromExAC
 //			{
 //				continue;
 //			}
-			if(index % 100 == 0)
-			{
-				break;
-			}
+//			if(index % 100 == 0)
+//			{
+//				break;
+//			}
 
 			String chrom = null;
 			long leftMostPos = -1;
