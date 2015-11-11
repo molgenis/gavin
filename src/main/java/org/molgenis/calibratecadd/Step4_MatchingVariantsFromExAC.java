@@ -46,6 +46,10 @@ public class Step4_MatchingVariantsFromExAC
 	HashMap<String, List<Entity>> clinvarPatho = new HashMap<String, List<Entity>>();
 	HashMap<String, List<EntityPlus>> matchedExACvariants = new HashMap<String, List<EntityPlus>>();
 	HashMap<String, String> geneInfo = new HashMap<String, String>();
+	
+	// keep track of which 'ANN' field index was used to match the gene to ClinVar symbol
+	//e.g. if the matched gene is the second ANN field, we need to use that impact in the analysis
+	HashMap<String, Integer> variantToNonZeroSnpEffGeneIndex = new HashMap<String, Integer>();
 
 	private void loadClinvarPatho(String clinvarPathoLoc) throws Exception
 	{
@@ -72,49 +76,130 @@ public class Step4_MatchingVariantsFromExAC
 			}
 
 			String geneAccordingToClinVar = record.getString(Step1_GetClinVarPathogenic.CLINVAR_INFO).split("\\|", -1)[1];
-			String geneAccordingToSnpEff = record.getString("ANN").split("\\|")[3];
-
-			// if snpeff has no gene, use the clinvar one (difference solved!)
-			if (geneAccordingToSnpEff.isEmpty())
+			
+			//sanity check
+			if(geneAccordingToClinVar.length() == 0)
 			{
-				geneAccordingToSnpEff = geneAccordingToClinVar;
+				vcfRepo.close();
+				throw new Exception("geneAccordingToClinVar length 0");
 			}
-			// if snpeff gene contains the clinvar one, use the clinvar one (difference solved!)
-			else if (geneAccordingToSnpEff.contains(geneAccordingToClinVar))
+			
+			//add all gene symbols provided by SnpEff to a list
+			List<String> genesAccordingToSnpEff = new ArrayList<String>();
+			String[] annSplit = record.getString("ANN").split(",", -1);
+			for(String ann : annSplit)
 			{
-				geneAccordingToSnpEff = geneAccordingToClinVar;
+				String symbol = ann.split("\\|")[3];
+				if(!symbol.isEmpty())
+				{
+					genesAccordingToSnpEff.add(symbol);
+				}
 			}
-			// if clinvar gene contains the snpeff one, use the snpeff one (difference solved!)
-			else if (geneAccordingToSnpEff.contains(geneAccordingToClinVar))
+			
+			String finalGeneSymbol = null;
+
+			// if snpeff has no genes, use the clinvar one (difference solved!)
+			// happens a lot for mitochondrial genes (e.g. MT-ND6, MT-CYB, MT-RNR1 etc)
+			if (genesAccordingToSnpEff.isEmpty())
 			{
-				geneAccordingToClinVar = geneAccordingToSnpEff;
+				finalGeneSymbol = geneAccordingToClinVar;
 			}
 
-			// if there is still a difference, use both.. we have about 120 of these (oct 2015)
-
-			if (!geneAccordingToClinVar.equals(geneAccordingToSnpEff))
+			String chrPosRefAlt = record.getString("#CHROM") + "_" + record.getString("POS") + "_" + record.getString("REF") + "_" + record.getString("ALT");
+			
+			// no joy? then we check all SnpEff symbols vs ClinVar
+			if(finalGeneSymbol == null)
 			{
-				// System.out.println("Discrepancy detected! geneAccordingToClinVar="+geneAccordingToClinVar + ", " +
-				// "geneAccordingToSnpEff=" +geneAccordingToSnpEff);
-				geneAccordingToClinVar = geneAccordingToClinVar + "/" + geneAccordingToSnpEff;
+				int index = 0;
+				for(String snpEffGene : genesAccordingToSnpEff)
+				{
+					// if this snpeff gene equals the clinvar one, we're done
+					if (snpEffGene.equals(geneAccordingToClinVar))
+					{
+						finalGeneSymbol = geneAccordingToClinVar;
+					}
+
+					// sometimes, a SnpEff symbol 'contains' the ClinVar symbol
+					// happens quite often, e.g. TTN-AS1 contains TTN, INS-IGF2 contains INS etc.
+					// if this happens, assign the ClinVar symbol (ie. the smaller one) and we're done
+					else if (snpEffGene.contains(geneAccordingToClinVar))
+					{
+						finalGeneSymbol = geneAccordingToClinVar;
+					}
+					
+					// opposite scenario: clinvar gene contains the snpeff one, use the snpeff one
+					// seems to happen once: ClinVar CORO7-PAM16 contains SnpEff gene PAM16
+					else if(geneAccordingToClinVar.contains(snpEffGene))
+					{
+						finalGeneSymbol = snpEffGene;
+					}
+
+					if(finalGeneSymbol != null)
+					{
+						if(index > 0)
+						{
+							variantToNonZeroSnpEffGeneIndex.put(chrPosRefAlt, index);
+						}
+						break;
+					}
+					index++;
+				}
 			}
+			
 
-			if (clinvarPatho.containsKey(geneAccordingToClinVar))
+			// still no joy?
+			// there is a difference we cannot resolve nicely
+			// so we concatenate the symbols from both
+			if (finalGeneSymbol == null)
 			{
-				clinvarPatho.get(geneAccordingToClinVar).add(record);
+				// simple case: we have 1 + 1
+				if(genesAccordingToSnpEff.size() == 1)
+				{
+					finalGeneSymbol = geneAccordingToClinVar + "_" + genesAccordingToSnpEff.iterator().next();
+				}
+				
+				
+				//we make 1 exception for a mistake in clinvar: 'p.p.Arg801His' is actually gene 'RTEL1', but the notation is swapped
+				//hopefully this will be fixed in the future so this exception is no longer needed (and removed)
+				else if(geneAccordingToClinVar.equals("p.p.Arg801His"))
+				{
+					finalGeneSymbol = "RTEL1";
+				}
+				
+				// if still not solved, we have 1 clinvar and 2+ snpeff symbols, so simply add them all to 1 big symbol
+				// note 1: does not occur with clinvar november 2015 release
+				// note 2: this would be slightly problematic because we don't know which SnpEff ANN field to consider later on!
+				else
+				{
+					String snpEffGenes = "";
+					for(String snpEffGene : genesAccordingToSnpEff)
+					{
+						snpEffGenes +=  "_" + snpEffGene;
+					}
+					finalGeneSymbol = geneAccordingToClinVar + snpEffGenes;
+				}
+			}		
+
+			if (clinvarPatho.containsKey(finalGeneSymbol))
+			{
+				clinvarPatho.get(finalGeneSymbol).add(record);
 			}
 			else
 			{
 				List<Entity> variants = new ArrayList<Entity>();
 				variants.add(record);
-				clinvarPatho.put(geneAccordingToClinVar, variants);
+				clinvarPatho.put(finalGeneSymbol, variants);
 			}
 		}
+		
+		System.out.println("there are " + variantToNonZeroSnpEffGeneIndex.size() + " ClinVar variants for which the first SnpEff gene symbol is not the one matched to the ClinVar gene symbol");
+		
 		vcfRepo.close();
 	}
 
 	private void createMatchingExACsets(String exacLoc) throws Exception
 	{
+		Step4_Helper st4h = new Step4_Helper(variantToNonZeroSnpEffGeneIndex);
 		System.out.println("loading matching exac variants..");
 
 		int passedGenes = 0;
@@ -180,9 +265,9 @@ public class Step4_MatchingVariantsFromExAC
 			{
 				droppedGenesClinVarTooFew++;
 				//should match clinvar impact 100%, so just as a control really
-				String exacImpact = exacVariants.size() > 0 ? "\t" + Step4_Helper.calculateImpactRatiosFromUnprocessedVariants(exacVariants).toString() : StringUtils.repeat("\t" + NA, 4);
-				String maf = exacVariants.size() > 0 ? Step4_Helper.getExACMAFforUnprocessedClinvarVariant(clinvarPatho.get(gene).get(0), exacVariants.get(0)) : NA;
-				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + exacVariants.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + maf + exacImpact + "\t" + Step4_Helper.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
+				String exacImpact = exacVariants.size() > 0 ? "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(exacVariants).toString() : StringUtils.repeat("\t" + NA, 4);
+				String maf = exacVariants.size() > 0 ? st4h.getExACMAFforUnprocessedClinvarVariant(clinvarPatho.get(gene).get(0), exacVariants.get(0)) : NA;
+				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + exacVariants.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + maf + exacImpact + "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
 				continue;
 			}
 
@@ -193,22 +278,22 @@ public class Step4_MatchingVariantsFromExAC
 			{
 				
 				//found out: which variants are only in ExAC, which only in ClinVar, which in both
-				VariantIntersectResult vir = Step4_Helper.intersectVariants(exacVariants, clinvarPatho.get(gene));
+				VariantIntersectResult vir = st4h.intersectVariants(exacVariants, clinvarPatho.get(gene));
 				
 				System.out.println("VariantIntersectResult for '"+gene+"', clinvaronly: " + vir.inClinVarOnly.size() + ", exaconly: " + vir.inExACOnly.size() + ", both: " + vir.inBoth_exac.size());
 				
 				//calculate MAF for shared variants, and use them to filter the other ExAC variants
 				//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
 				//if we have nothing to go on, we will set this to 0 and only select singleton variants
-				double pathogenicMAF = Step4_Helper.calculatePathogenicMAF(vir.inBoth_exac, vir.inClinVarOnly.size());
-				List<EntityPlus> exacFilteredByMAF = Step4_Helper.filterExACvariantsByMAF(vir.inExACOnly, pathogenicMAF);
+				double pathogenicMAF = st4h.calculatePathogenicMAF(vir.inBoth_exac, vir.inClinVarOnly.size());
+				List<EntityPlus> exacFilteredByMAF = st4h.filterExACvariantsByMAF(vir.inExACOnly, pathogenicMAF);
 
 				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using pathogenic MAF " + pathogenicMAF);
 
 				//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 				//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
-				ImpactRatios pathoImpactRatio = Step4_Helper.calculateImpactRatios(Stream.concat(vir.inClinVarOnly.stream(), vir.inBoth_clinvar.stream()).collect(Collectors.toList()));
-				String unfilteredExacImpactRatio = vir.inExACOnly.size() > 0 ? Step4_Helper.calculateImpactRatios(vir.inExACOnly).toString() : NA;
+				ImpactRatios pathoImpactRatio = st4h.calculateImpactRatios(Stream.concat(vir.inClinVarOnly.stream(), vir.inBoth_clinvar.stream()).collect(Collectors.toList()));
+				String unfilteredExacImpactRatio = vir.inExACOnly.size() > 0 ? st4h.calculateImpactRatios(vir.inExACOnly).toString() : NA;
 				
 				if(exacFilteredByMAF.size() == 0)
 				{
@@ -216,7 +301,7 @@ public class Step4_MatchingVariantsFromExAC
 					continue;
 				}
 				
-				List<EntityPlus> exacFilteredByMAFandImpact = Step4_Helper.shapeExACvariantsByImpactRatios(exacFilteredByMAF, pathoImpactRatio);
+				List<EntityPlus> exacFilteredByMAFandImpact = st4h.shapeExACvariantsByImpactRatios(exacFilteredByMAF, pathoImpactRatio);
 				System.out.println("exaconly filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
 				
 				
@@ -226,14 +311,14 @@ public class Step4_MatchingVariantsFromExAC
 					matchedExACvariants.put(gene, exacFilteredByMAFandImpact);
 					matchedVariants += exacFilteredByMAFandImpact.size();
 					//impacts AFTER impact correction and MAF filter has been applied
-					ImpactRatios MAFandImpactFilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAFandImpact);
+					ImpactRatios MAFandImpactFilteredExacImpactRatio = st4h.calculateImpactRatios(exacFilteredByMAFandImpact);
 					geneInfo.put(gene, "Cx" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + exacFilteredByMAFandImpact.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + unfilteredExacImpactRatio + "\t" + pathoImpactRatio.toString().toString() + "\t" + MAFandImpactFilteredExacImpactRatio.toString());
 				}
 				else
 				{
 					//impacts BEFORE impact correction (which whould have set it to 0) but AFTER the MAF filter has been applied
-					ImpactRatios MAFfilteredExacImpactRatio = Step4_Helper.calculateImpactRatios(exacFilteredByMAF);
-					String cat = Step4_Helper.determineImpactFilterCat(MAFfilteredExacImpactRatio, pathoImpactRatio, pathogenicMAF);
+					ImpactRatios MAFfilteredExacImpactRatio = st4h.calculateImpactRatios(exacFilteredByMAF);
+					String cat = st4h.determineImpactFilterCat(MAFfilteredExacImpactRatio, pathoImpactRatio, pathogenicMAF);
 					geneInfo.put(gene, cat + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + exacFilteredByMAF.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + pathogenicMAF + "\t" + unfilteredExacImpactRatio + "\t" + pathoImpactRatio.toString() + "\t" + MAFfilteredExacImpactRatio.toString());
 					droppedGenesNoMatchedVariants++;
 				}
@@ -245,7 +330,7 @@ public class Step4_MatchingVariantsFromExAC
 			{
 				droppedGenesExACtooFew++;
 				//can happen: 2+ ClinVar variants on same position, so we query an interval of size 1... so be it
-				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + 0 + StringUtils.repeat("\t" + NA, 4)  + "\t" + Step4_Helper.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
+				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + 0 + StringUtils.repeat("\t" + NA, 4)  + "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
 			}
 			
 			tr.close();

@@ -1,7 +1,7 @@
 package org.molgenis.calibratecadd.support;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,8 +12,25 @@ import org.molgenis.data.Entity;
 
 public class Step4_Helper
 {
+	private HashMap<String, Integer> variantToNonZeroSnpEffGeneIndex;
+	
+	/**
+	 * Constructor
+	 * @param variantToNonZeroSnpEffGeneIndex
+	 */
+	public Step4_Helper(HashMap<String, Integer> variantToNonZeroSnpEffGeneIndex)
+	{
+		this.variantToNonZeroSnpEffGeneIndex = variantToNonZeroSnpEffGeneIndex;
+	}
 
-	public static String getExACMAFforUnprocessedClinvarVariant(Entity clinvarVariant, Entity exacVariant) throws Exception
+	/**
+	 * If these ExAC and ClinVar variants have a matching ALT allele, report the ExAC AF, else return 0
+	 * @param clinvarVariant
+	 * @param exacVariant
+	 * @return
+	 * @throws Exception
+	 */
+	public String getExACMAFforUnprocessedClinvarVariant(Entity clinvarVariant, Entity exacVariant) throws Exception
 	{
 		String clinvarAlt = clinvarVariant.getString("ALT");
 		String[] altSplit = exacVariant.getString("ALT").split(",", -1);
@@ -27,7 +44,14 @@ public class Step4_Helper
 		return "0";
 	}
 	
-	public static VariantIntersectResult intersectVariants(List<Entity> exacMultiAllelic, List<Entity> clinvar) throws Exception
+	/**
+	 * Take 2 lists and return 4: exac-only, clinvar-only, exac-inboth, clinvar-inboth.
+	 * @param exacMultiAllelic
+	 * @param clinvar
+	 * @return
+	 * @throws Exception
+	 */
+	public VariantIntersectResult intersectVariants(List<Entity> exacMultiAllelic, List<Entity> clinvar) throws Exception
 	{
 		List<EntityPlus> inExAConly = new ArrayList<EntityPlus>();
 		List<EntityPlus> inClinVarOnly = new ArrayList<EntityPlus>();
@@ -62,29 +86,13 @@ public class Step4_Helper
 			exacVariant.set("AF", null);
 		}
 		
-//		System.out.println("expanded exac from " + exacMultiAllelic.size() + " to " + exac.size());
-		
-//		System.out.println("### BEFORE: ");
-//		for(EntityPlus e : exac)
-//		{
-//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getKeyVal().get("ALT").toString());
-//		}
-//		for(Entity e : clinvar)
-//		{
-//			System.out.println(e.getString("#CHROM") + "_" + e.getString("POS") + "_" + e.getString("REF") + "_" + e.get("ALT").toString());
-//		}
-		
 		for (EntityPlus exacVariant : exac)
 		{
 			boolean exacVariantInClinVar = false;
 			for (Entity clinvarVariant : clinvar)
 			{
-				if(clinvarVariant.getString("ANN").split(",", -1).length > 1)
-				{
-					throw new Exception("Multiple annotations for ClinVar variant " + clinvarVariant.toString());
-				}
 				// TODO
-				// for now, we accept that we will miss *some* variants due to 2 reasons:
+				// for now, we accept that we might miss *some* variants due to 2 reasons:
 				// 1) offset positions due to complex indels
 				// 2) alternative notation of indels, e.g.: consider this variant: 1 6529182 . TTCCTCC TTCC
 				// you will find that it is seen in ExAC: 1 6529182 . TTCCTCCTCC TTCCTCC,TTCC,T,TTCCTCCTCCTCC,TTCCTCCTCCTCCTCC,TTCCTCCTCCTCCTCCTCCTCC
@@ -114,25 +122,7 @@ public class Step4_Helper
 				inClinVarOnly.add(new EntityPlus(clinVarVariant));
 			}
 		}
-		
-//		System.out.println("### AFTER: ");
-//		for(EntityPlus e : inExAConly)
-//		{
-//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getKeyVal().get("ALT"));
-//		}
-//		for(EntityPlus e : inClinVarOnly)
-//		{
-//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getE().getString("ALT"));
-//		}
-//		for(EntityPlus e : inBoth_exac)
-//		{
-//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getKeyVal().get("ALT"));
-//		}
-//		for(EntityPlus e : inBoth_clinvar)
-//		{
-//			System.out.println(e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getE().getString("ALT"));
-//		}
-		
+				
 		//sanity checks
 		if(inBoth_clinvar.size() != inBoth_exac.size())
 		{
@@ -146,9 +136,13 @@ public class Step4_Helper
 		return new VariantIntersectResult(inBoth_exac, inBoth_clinvar, inClinVarOnly, inExAConly);
 	}
 	
-	
-	
-	public static double calculatePathogenicMAF(List<EntityPlus> exacVariants, int nrOfClinVarOnly)
+	/**
+	 * Given a set of ExAC variants and a number of variants that was unique to ClinVar, calculate 95th percentile MAF
+	 * @param exacVariants
+	 * @param nrOfClinVarOnly
+	 * @return
+	 */
+	public double calculatePathogenicMAF(List<EntityPlus> exacVariants, int nrOfClinVarOnly)
 	{
 		if(exacVariants.size() == 0)
 		{
@@ -163,15 +157,21 @@ public class Step4_Helper
 		{
 			mafs[i] = 0.0;
 		}
-		System.out.println("mafs: " + Arrays.toString(mafs));
 		//R7 is the one used by R and Excel as default
 		Percentile perc = new Percentile().withEstimationType(EstimationType.R_7);
 		return perc.evaluate(mafs, 95);
 	}
 
 
-
-	public static List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold) throws Exception
+	/**
+	 * Given a MAF threshold, filter a set of ExAC variants
+	 * If MAF = 0, we only select singleton variants (AC_Adj = 1)
+	 * @param inExACOnly
+	 * @param MAFthreshold
+	 * @return
+	 * @throws Exception
+	 */
+	public List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold) throws Exception
 	{
 		List<EntityPlus> res = new ArrayList<EntityPlus>();
 		
@@ -225,7 +225,17 @@ public class Step4_Helper
 		return res;
 	}
 
-	private static boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
+	/**
+	 * Helper function to update CSQ (consequence) field to only contain the CSQ for the matching
+	 * alt allele, containing the highest impact effect, and for canonical transcripts only
+	 * @param exacVariant
+	 * @param altAllele
+	 * @param maf
+	 * @param AC_Adj
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
 	{
 		String csq = exacVariant.getE().getString("CSQ");	
 //		System.out.println("LOOKING FOR ALT " + altAllele);
@@ -265,8 +275,15 @@ public class Step4_Helper
 		
 	}
 
-	//e.g. "splice_acceptor_variant&non_coding_transcript_variant"
-	private static String getHighestImpact(String csqConsequences) throws Exception
+	/**
+	 * Helper function to get the highest impact type for a specific ref-alt combination in ExAC
+	 * e.g. "splice_acceptor_variant&non_coding_transcript_variant" is both HIGH and MODIFIER impact
+	 * we want to consider the HIGH impact in this case
+	 * @param csqConsequences
+	 * @return
+	 * @throws Exception
+	 */
+	private String getHighestImpact(String csqConsequences) throws Exception
 	{
 		int highestImpactRank = -1;
 		for(String consequence : csqConsequences.split("&", -1))
@@ -285,7 +302,7 @@ public class Step4_Helper
 		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
 	}
 	
-	public static ImpactRatios calculateImpactRatiosFromUnprocessedVariants(List<Entity> entities) throws Exception
+	public ImpactRatios calculateImpactRatiosFromUnprocessedVariants(List<Entity> entities) throws Exception
 	{
 		//liftover entity to entityplus and count
 		List<EntityPlus> clinvarVariants = new ArrayList<EntityPlus>();
@@ -307,7 +324,7 @@ public class Step4_Helper
 	 * @throws Exception
 	 *
 	 */
-	public static void countImpacts(Integer[] counts, String impact) throws Exception
+	public void countImpacts(Integer[] counts, String impact) throws Exception
 	{
 		if(impact.equals("HIGH"))
 		{
@@ -331,7 +348,13 @@ public class Step4_Helper
 		}
 	}
 	
-	public static ImpactRatios calculateImpactRatios(List<EntityPlus> entities) throws Exception
+	/**
+	 * Determine ratio of impacts for a list of variants
+	 * @param entities
+	 * @return
+	 * @throws Exception
+	 */
+	public ImpactRatios calculateImpactRatios(List<EntityPlus> entities) throws Exception
 	{
 		Integer[] impactCounts = new Integer[]{ 0, 0, 0, 0};
 		
@@ -340,11 +363,30 @@ public class Step4_Helper
 			
 			if(e.getE().getString("ANN") != null || e.getKeyVal().get(VEPimpactCategories.IMPACT) != null)
 			{
-				String impact;
+				String impact = null;
 				//clinvar
 				if(e.getE().getString("ANN") != null)
 				{
-					impact = e.getE().getString("ANN").split("\\|")[2];
+					String[] multiAnn = e.getE().getString("ANN").split(",", -1);
+					
+					if(multiAnn.length > 1)
+					{
+						//special: the ANN field for the gene symbol we mapped is not present on index 0
+						//get it from the list of 'exceptions' we stored earlier
+						String chrPosRefAlt = e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getE().getString("ALT");
+						if(variantToNonZeroSnpEffGeneIndex.containsKey(chrPosRefAlt))
+						{
+							impact = multiAnn[variantToNonZeroSnpEffGeneIndex.get(chrPosRefAlt)].split("\\|", -1)[2];
+						}
+						else
+						{
+							impact = multiAnn[0].split("\\|", -1)[2];
+						}
+					}
+					else
+					{
+						impact =  multiAnn[0].split("\\|", -1)[2];
+					}
 					
 				}
 				//exac
@@ -405,7 +447,7 @@ public class Step4_Helper
 	 * @return
 	 * @throws Exception 
 	 */
-	public static boolean countImpactsInCSQ(String csq, Integer[] impactCounts, boolean countCanonicalOnly) throws Exception
+	public boolean countImpactsInCSQ(String csq, Integer[] impactCounts, boolean countCanonicalOnly) throws Exception
 	{
 		boolean canonicalTranscriptFound = false;
 		for(String csqs : csq.split(",", -1))
@@ -427,7 +469,7 @@ public class Step4_Helper
 	 * However, we do learn that apparently a HIGH impact variant is pathogenic, whereas non-HIGH are tolerated to some point. Even though we cannot calibrate CADD, this knowledge is
 	 * just as useful and we should capture and report it :)
 	 */
-	public static List<EntityPlus> shapeExACvariantsByImpactRatios(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
+	public List<EntityPlus> shapeExACvariantsByImpactRatios(List<EntityPlus> exacFilteredByMAF, ImpactRatios ir) throws Exception
 	{
 		List<EntityPlus> highImpactVariants = new ArrayList<EntityPlus>();
 		List<EntityPlus> modrImpactVariants = new ArrayList<EntityPlus>();
@@ -612,7 +654,7 @@ public class Step4_Helper
 	}
 	
 	
-	private static List<EntityPlus> scaledownVariantList(List<EntityPlus> variants, int amountToRemove) throws Exception
+	private List<EntityPlus> scaledownVariantList(List<EntityPlus> variants, int amountToRemove) throws Exception
 	{
 		//remove nothing
 		if(amountToRemove == 0)
@@ -646,7 +688,7 @@ public class Step4_Helper
 		return res;
 	}
 
-	public static String determineImpactFilterCat(ImpactRatios exacImpactRatio, ImpactRatios pathoImpactRatio, double pathoMAF) throws Exception
+	public String determineImpactFilterCat(ImpactRatios exacImpactRatio, ImpactRatios pathoImpactRatio, double pathoMAF) throws Exception
 	{
 		
 		if(pathoImpactRatio.high > 0 && exacImpactRatio.high == 0)
