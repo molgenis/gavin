@@ -1,17 +1,17 @@
 
 ### summary gene plots (uses output of Step 7)
 #calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/4nov2015/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddGenes <- subset(calibcaddGenes, UTestPvalue != 'n/a')
-plot(calibcaddGenes$MeanPopulCADD, col="blue")
-points(calibcaddGenes$MeanPathoCADD, col="red")
-calibcaddGenes$MeanDiff <- as.numeric(calibcaddGenes$MeanDiff)
-plot(density(calibcaddGenes$MeanDiff))
-abline(v = mean(calibcaddGenes$MeanDiff))
+calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddGenes <- subset(calibcaddGenes, UTestPvalue != '')
+plot(calibcaddGenes$MeanPopulationCADDScore, col="blue")
+points(calibcaddGenes$MeanPathogenicCADDScore, col="red")
+calibcaddGenes$MeanDifference <- as.numeric(calibcaddGenes$MeanDifference)
+plot(density(calibcaddGenes$MeanDifference))
+abline(v = mean(calibcaddGenes$MeanDifference))
 
 ## single gene plots
 #calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddVariants <- read.table('/Users/jvelde/Desktop/clinvarcadd/4nov2015/clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddVariants <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 selectGene <- "MYH7"
 calibcaddVariants.selectedGene.path <- subset(calibcaddVariants, gene == selectGene & group == "PATHOGENIC")
 calibcaddVariants.selectedGene.popul <- subset(calibcaddVariants, gene == selectGene & group == "POPULATION")
@@ -33,8 +33,8 @@ p <- ggplot() +
   geom_point(data = calibcaddVariants.selectedGene.path, aes(x=pos, y=cadd), colour="red", pch=19, alpha = .5) +
   geom_abline(intercept = mean(calibcaddVariants.selectedGene.popul$cadd), slope = 0, colour = "blue", size = 2, alpha = .5) +
   geom_abline(intercept = mean(calibcaddVariants.selectedGene.path$cadd), slope = 0, colour = "red", size = 2, alpha = .5) +
-  #geom_abline(intercept = calibcaddGenes.selectedGene$Sens95perCADDthresh, slope = 0, colour = "green", size = 2, alpha = .5) +
-  #geom_abline(intercept = calibcaddGenes.selectedGene$Spec95perCADDthresh, slope = 0, colour = "orange", size = 2, alpha = .5) +
+  geom_abline(intercept = calibcaddGenes.selectedGene$Sens95thPerCADDThreshold, slope = 0, colour = "green", size = 2, alpha = .5) +
+  geom_abline(intercept = calibcaddGenes.selectedGene$Spec95thPerCADDThreshold, slope = 0, colour = "orange", size = 2, alpha = .5) +
   theme_bw() +
   theme(axis.line = element_line(colour = "black"),
         panel.grid.major = element_line(colour = "black"),
@@ -42,7 +42,7 @@ p <- ggplot() +
         panel.border = element_blank(),
         panel.background = element_blank()
   ) +
-  labs(title=paste(selectGene, " - pathogenic mean: ", calibcaddGenes.selectedGene$MeanPathoCADD, ", population mean: ", calibcaddGenes.selectedGene$MeanPopulCADD, ", p-value: ", signif(as.numeric(calibcaddGenes.selectedGene$UTestPvalue), digits=2), "\n95% sensitivity threshold (green): ", calibcaddGenes.selectedGene$Sens95perCADDthresh, ", 95% specificity threshold (orange): ", calibcaddGenes.selectedGene$Spec95perCADDthresh, "\nRed: ClinVar pathogenic variants - Blue: matched ExAC population variants", sep="")) +
+  labs(title=paste(selectGene, " - pathogenic mean: ", calibcaddGenes.selectedGene$MeanPathogenicCADDScore, ", population mean: ", calibcaddGenes.selectedGene$MeanPopulationCADDScore, ", p-value: ", signif(as.numeric(calibcaddGenes.selectedGene$UTestPvalue), digits=2), "\n95% sensitivity threshold (green): ", calibcaddGenes.selectedGene$Sens95thPerCADDThreshold, ", 95% specificity threshold (orange): ", calibcaddGenes.selectedGene$Spec95thPerCADDThreshold, "\nRed: ClinVar pathogenic variants - Blue: matched ExAC population variants", sep="")) +
   ylab("CADD scaled C-score") +
   xlab(paste("Genomic position [",selectGene,", chr. ",sort(unique(calibcaddVariants.selectedGene.popul$chr)),"]", sep="")) +
   theme(legend.position = "none")
@@ -51,10 +51,10 @@ ggsave(paste("/Users/jvelde/Desktop/clinvarcadd/website/plots/",selectGene,".png
 }
 
 #### split variant level data for website downloads
-for (selectGene in calibcaddGenes$Gene) {
+for (selectGene in unique(calibcaddVariants$gene)) {
   #geneName <- "BRCA1"
   gendata <- subset(calibcaddVariants, gene == selectGene)
-  write.table(gendata, quote=F, row.names=F, sep="\t", file=paste("/Users/jvelde/Desktop/clinvarcadd/data/",selectGene,".tsv", sep=""))
+  write.table(gendata, quote=F, row.names=F, sep="\t", file=paste("/Users/jvelde/Desktop/clinvarcadd/website/data/",selectGene,".tsv", sep=""))
 }
 
 

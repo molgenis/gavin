@@ -42,7 +42,7 @@ public class CreateWebsite
 		Configuration cfg = new Configuration();
 
 		// Load template from source folder
-		Template template = cfg.getTemplate("src/main/java/org/molgenis/calibratecadd/misc/website.ftl");
+		Template template = cfg.getTemplate("src/main/java/org/molgenis/calibratecadd/publish/legacy/website.ftl");
 
 		// Build the data-model
 		Map<String, Object> data = new HashMap<String, Object>();

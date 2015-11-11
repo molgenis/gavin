@@ -94,7 +94,7 @@
 	<b>95% sens</b> = Threshold for 95% sensitivity, set at the 5th percentile of pathogenic variants. Use this to filter out false positives ('benign'), because you will only remove a few true positives (pathogenic) below this threshold.<br>
 	<b>95% spec</b> = Threshold for 95% specificity, set at the 95th percentile of population variants. Use this to identify true positives (pathogenic), because you will only find a few false positives ('benign') above this threshold.<br>
 	<b>Variants</b> = Click link to download the pathogenic and population variants with their CADD scores used in the assessment. <a href="http://cadd.gs.washington.edu/" target="_blank">more info</a><br>
-	<b>MAFs</b> = When MAF = 0, we filter on singleton variants. (AC_Adj = 1)
+	<b>MAFs</b> = When the minor allele frequency is 0, we actually filter on singleton variants. (AC_Adj = 1)<br>
 	<b>Category</b> =
 	
 	<p><i>Not enough data:</i>
@@ -124,7 +124,7 @@
 		<li><b>C2</b> = CADD scores are somewhat informative for this gene (patho > popul , 0.01 ≤ P ≤ 0.05).</li>
 		<li><b>C3</b> = We don't know if CADD scores are informative. (P > 0.05 and < 5 samples in one or both groups)</li>
 		<li><b>C4</b> = Enough samples (> 5 in each group), but CADD scores are not informative for this gene (P > 0.05)</li>
-		<li><b>C5</b> = Artifact, e.g. P ≤ 0.05 but patho mean greather than population mean.</li>
+		<li><b>C5</b> = Artifact, e.g. P ≤ 0.05 but patho mean smaller than pulation mean.</li>
 	</ul></p>
 </td></tr></table>
 
@@ -132,11 +132,70 @@
 
 
 <table style="text-align: center; width: 80%; margin: 0 auto;">
-<tr style="text-align: center;"><th>Gene</th><th>Category</th><th>Info</th><th>P-value</th><th>nPatho</th><th>nPop</th><th>MeanPatho<th>MeanPop</th><th>95% sens</th><th>95% spec</th><th>Variants</th></tr>
+<tr style="text-align: center;"><th>Gene</th><th>Category</th><th>Recommendation</th></tr>
+
+<#--
+[0] Gene
+[1] Category
+[2] Chr
+[3] Start
+[4] End
+[5] NrOfPopulationVariants
+[6] NrOfPathogenicVariants
+[7] NrOfOverlappingVariants
+[8] NrOfFilteredPopVariants
+[9] PathoMAFThreshold
+[10] PopImpactHighPerc
+[11] PopImpactModeratePerc
+[12] PopImpactLowPerc
+[13] PopImpactModifierPerc
+[14] PathoImpactHighPerc
+[15] PathoImpactModeratePerc
+[16] PathoImpactLowPerc
+[17] PathoImpactModifierPerc
+[18] PopImpactHighEq
+[19] PopImpactModerateEq
+[20] PopImpactLowEq
+[21] PopImpactModifierEq
+[22] NrOfCADDScoredPopulationVars
+[23] NrOfCADDScoredPathogenicVars
+[24] MeanPopulationCADDScore
+[25] MeanPathogenicCADDScore
+[26] MeanDifference
+[27] UTestPvalue
+[28] Sens95thPerCADDThreshold
+[29] Spec95thPerCADDThreshold
+-->
 
 <#list genes as gene>
-<#--tr><td><a href="plots/BRCA2.png" target="_blank">BRCA2</a></td><td>6.45630831985457e-68</td><td>2964</td><td>0.7735326157</td><td>16.12</td><td>0.856502242152466</td><td>0.911347517730497</td><td>0.952518262206844</td><td>289</td><td>216</td><td><a href="data/BRCA2.tsv">download</a></td></tr-->
-<tr><td><#if gene[8] == 'n/a'>${gene[0]}<#else><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></#if></td><td>${gene[1]}</td><td>todo</td><td><#if gene[8] == 'n/a'>n/a<#else>${gene[8]?number?string["0.####"]}</#if></td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[5]}</td><td>${gene[6]}</td><td>${gene[9]}</td><td>${gene[10]}</td><td><#if gene[8] == 'n/a'>n/a<#else><a href="data/${gene[0]}.tsv">download</a></#if></td></tr>
+<#--
+<tr><td><#if gene[8] == 'n/a'>${gene[0]}<#else><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></#if></td><td>${gene[1]}</td><td>todo</td><td><#if gene[25]?length gt 0>${gene[25]?number?string["0.####"]}<#else>n/a</#if></td><td>${gene[3]}</td><td>${gene[4]}</td><td>${gene[5]}</td><td>${gene[6]}</td><td>${gene[9]}</td><td>${gene[10]}</td><td><#if gene[8] == 'n/a'>n/a<#else><a href="data/${gene[0]}.tsv">download</a></#if></td></tr>
+-->
+
+<tr>
+	<td><#if gene[25] == ''>${gene[0]}<#else><a href="plots/${gene[0]}.png" target="_blank">${gene[0]}</a></#if></td>
+	<td>${gene[1]}</td>
+
+	<td>
+		<#if gene[1] == 'N1' || gene[1] == 'N2'>
+			Not enough data for a recommendation.
+		<#elseif gene[1] == 'T1' || gene[1] == 'T2'>
+			Filter on ${gene[9]}
+		<#elseif gene[1] == 'I1'>
+			Filter on ${gene[9]}, any HIGH impact variants are pathogenic.
+		<#elseif gene[1] == 'I2'>
+			Filter on ${gene[9]}, any MODERATE (or HIGH) impact variants are pathogenic.
+		<#elseif gene[1] == 'I3'>
+			Filter on ${gene[9]}, any LOW (or MODERATE/HIGH) impact variants are pathogenic.
+		<#elseif gene[1] == 'C1' || gene[1] == 'C2'>
+			Variants probably pathogenic above CADD ${gene[29]} (mean: ${gene[25]}). Variants probably benign below CADD ${gene[28]} (mean: ${gene[24]}).
+		<#elseif gene[1] == 'C3'>
+			CADD scores may be informative to some degree, but we can't say for sure.
+		<#elseif gene[1] == 'C4' || gene[1] == 'C5'>
+			CADD scores are not informative.
+		</#if>
+	</td>
+</tr>
 </#list>
 </table>
 

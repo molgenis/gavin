@@ -1,6 +1,7 @@
 package org.molgenis.calibratecadd;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -49,16 +50,17 @@ import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
  * E:\Data\clinvarcadd\clinvar.patho.fix.snpeff.exac.genesumm.tsv
  *
  */
-public class Step7_BasicResults {
-
-	public static void main(String[] args) throws Exception {
-		System.out.println("starting..");
-		
+public class Step7_BasicResults
+{
+	HashMap<String, String> geneToInfo = new HashMap<String, String>();
+	HashMap<String, ArrayList<String>> geneToVariantAndCADD = new HashMap<String, ArrayList<String>>();
+	
+	public void loadGeneInfo(String geneInfoFile) throws FileNotFoundException
+	{
 		/**
 		 * read gene info and put in map
 		 */
-		HashMap<String, String> geneToInfo = new HashMap<String, String>();
-		Scanner geneInfoScanner = new Scanner(new File(args[0]));
+		Scanner geneInfoScanner = new Scanner(new File(geneInfoFile));
 		geneInfoScanner.nextLine(); //skip header
 		String line = null;
 		while(geneInfoScanner.hasNextLine())
@@ -69,14 +71,16 @@ public class Step7_BasicResults {
 			geneToInfo.put(split[0], line);
 		}
 		geneInfoScanner.close();
-		
+	}
+	
+	public void loadVariantInfo(String variantInfoFile) throws FileNotFoundException
+	{
 		/**
 		 * read variant + cadd data and put in map
 		 */
-		Scanner variantsWithCADDScanner = new Scanner(new File(args[1]));
-		HashMap<String, ArrayList<String>> geneToVariantAndCADD = new HashMap<String, ArrayList<String>>();
+		Scanner variantsWithCADDScanner = new Scanner(new File(variantInfoFile));
 		variantsWithCADDScanner.nextLine();
-		line = null;
+		String line = null;
 		while(variantsWithCADDScanner.hasNextLine())
 		{
 			line = variantsWithCADDScanner.nextLine();
@@ -93,12 +97,15 @@ public class Step7_BasicResults {
 			}
 		}
 		variantsWithCADDScanner.close();
-		
+	}
+	
+	public void processAndWriteOutput(String outputFile) throws Exception
+	{
 		/**
 		 * process everything and write out
 		 */
-		PrintWriter pw = new PrintWriter(new File(args[2]));
-		pw.println("Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopImpactHighPerc" + "\t" + "PopImpactModeratePerc" + "\t" + "PopImpactLowPerc" + "\t" + "PopImpactModifierPerc" + "\t" + "PathoImpactHighPerc" + "\t" + "PathoImpactModeratePerc" + "\t" + "PathoImpactLowPerc" + "\t" + "PathoImpactModifierPerc" + "\t" + "PopImpactHighEq" + "\t" + "PopImpactModerateEq" + "\t" + "PopImpactLowEq" + "\t" + "PopImpactModifierEq" + "\t" + "NrOfCADDScoredPopulationVars" + "\t" + "NrOfCADDScoredPathogenicVars" + "\t" + "MeanPopulationCADDScore" + "\t" + "MeanPathogenicCADDScore" + "\t" + "MeanDifference" + "\t" + "UTestPvalue" + "\t" + "Sens95thPerCADDThreshold" +"\t" + "Spec95thPerCADDThreshold");
+		PrintWriter pw = new PrintWriter(new File(outputFile));
+		pw.println("Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "NrOfOverlappingVariants" + "\t" + "NrOfFilteredPopVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopImpactHighPerc" + "\t" + "PopImpactModeratePerc" + "\t" + "PopImpactLowPerc" + "\t" + "PopImpactModifierPerc" + "\t" + "PathoImpactHighPerc" + "\t" + "PathoImpactModeratePerc" + "\t" + "PathoImpactLowPerc" + "\t" + "PathoImpactModifierPerc" + "\t" + "PopImpactHighEq" + "\t" + "PopImpactModerateEq" + "\t" + "PopImpactLowEq" + "\t" + "PopImpactModifierEq" + "\t" + "NrOfCADDScoredPopulationVars" + "\t" + "NrOfCADDScoredPathogenicVars" + "\t" + "MeanPopulationCADDScore" + "\t" + "MeanPathogenicCADDScore" + "\t" + "MeanDifference" + "\t" + "UTestPvalue" + "\t" + "Sens95thPerCADDThreshold" +"\t" + "Spec95thPerCADDThreshold" + "\t" + "Recommendation");
 		NumberFormat f = new DecimalFormat("#0.00");     
 		
 		int nrOfGenesPathGtPopPval_5perc = 0;
@@ -108,7 +115,22 @@ public class Step7_BasicResults {
 		{
 			if(!geneToVariantAndCADD.containsKey(gene))
 			{
-				pw.println(gene + "\t" + geneToInfo.get(gene) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8));
+				String recommendation = "Recommendation not available for this gene.";
+				String[] infoSplit = geneToInfo.get(gene).split("\t", -1);
+				if(infoSplit[0].equals("I1"))
+				{
+					recommendation = "Set MAF filter to " + (infoSplit[8].equals("0.0")?"singleton":infoSplit[8]) + ", any HIGH impact variants are pathogenic.";
+				}
+				else if(infoSplit[0].equals("I2"))
+				{
+					recommendation = "Set MAF filter to " + (infoSplit[8].equals("0.0")?"singleton":infoSplit[8]) + ", any MODERATE (or HIGH) impact variants are pathogenic.";
+				}
+				else if(infoSplit[0].equals("I3"))
+				{
+					recommendation = "Set MAF filter to " + (infoSplit[8].equals("0.0")?"singleton":infoSplit[8]) + ", any LOW (or MODERATE/HIGH) impact variants are pathogenic.";
+				}
+				
+				pw.println(gene + "\t" + geneToInfo.get(gene) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8) + "\t" + recommendation);
 			}
 			else
 			{
@@ -138,7 +160,8 @@ public class Step7_BasicResults {
 				//replace 'Cx' with 'N3'
 				if(caddPatho.size() == 0 || caddPopul.size() == 0)
 				{
-					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 6));
+					String recommendation = "Recommendation not available for this gene.";
+					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 6) + "\t" + recommendation);
 					continue;
 				}
 				
@@ -169,11 +192,14 @@ public class Step7_BasicResults {
 				double sensThres = perc.evaluate(caddPathoPrim, 5);
 				double specThres = perc.evaluate(caddPopulPrim, 95);
 				
+				String recommendation = "TODO";
+				
 				String cat = null;
 				//to show some stats in the sysout
 				if(pval <= 0.05 && pathoMean > populMean)
 				{
 					cat = "C2";
+					recommendation = "Variants probably pathogenic above CADD "+specThres+" (mean: "+pathoMean+"). Variants probably benign below CADD "+sensThres+" (mean: "+populMean+").";
 					nrOfGenesPathGtPopPval_5perc ++;
 					if(pval <= 0.01)
 					{
@@ -187,10 +213,12 @@ public class Step7_BasicResults {
 					if(caddPathoPrim.length < 5 || caddPopulPrim.length < 5)
 					{
 						cat = "C3";
+						recommendation = "CADD scores may be informative to some degree, but we can't say for sure. You must decide for yourself to use these thresholds: variants probably pathogenic above CADD "+specThres+" (mean: "+pathoMean+"), variants probably benign below CADD "+sensThres+" (mean: "+populMean+").";
 					}
 					else
 					{
 						cat = "C4";
+						recommendation = "CADD scores are not informative for this gene.";
 					}
 				}
 				
@@ -198,10 +226,11 @@ public class Step7_BasicResults {
 				if(cat == null)
 				{
 					cat = "C5";
+					recommendation = "CADD scores display unexpected behaviour for this gene.";
 				}
 				
 				//write table
-				pw.println(gene + "\t" + cat + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopulPrim.length + "\t" + caddPathoPrim.length + "\t" + f.format(populMean) + "\t" + f.format(pathoMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres));
+				pw.println(gene + "\t" + cat + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopulPrim.length + "\t" + caddPathoPrim.length + "\t" + f.format(populMean) + "\t" + f.format(pathoMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres) + "\t" + recommendation);
 			}
 		}
 		
@@ -211,7 +240,20 @@ public class Step7_BasicResults {
 		
 		pw.flush();
 		pw.close();
+	}
+	
+	public Step7_BasicResults(String geneInfoFile, String variantInfoFile, String outputFile) throws Exception
+	{
+		System.out.println("starting..");
+		loadGeneInfo(geneInfoFile);
+		loadVariantInfo(variantInfoFile);
+		processAndWriteOutput(outputFile);
+		System.out.println("..done");
+	}
 
+	public static void main(String[] args) throws Exception
+	{
+		new Step7_BasicResults(args[0], args[1], args[2]);
 	}
 
 }
