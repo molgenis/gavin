@@ -54,6 +54,7 @@ public class Step7_BasicResults
 {
 	HashMap<String, String> geneToInfo = new HashMap<String, String>();
 	HashMap<String, ArrayList<String>> geneToVariantAndCADD = new HashMap<String, ArrayList<String>>();
+	NumberFormat f = new DecimalFormat("#0.00");
 	
 	public void loadGeneInfo(String geneInfoFile) throws FileNotFoundException
 	{
@@ -71,6 +72,45 @@ public class Step7_BasicResults
 			geneToInfo.put(split[0], line);
 		}
 		geneInfoScanner.close();
+	}
+	
+	/**
+	 * Based on the category and contextual data, come up with a sensible recommendation
+	 * @param gene
+	 * @return
+	 * @throws Exception 
+	 */
+	public String getRecommendation(String gene, String category) throws Exception
+	{
+		String[] infoSplit = geneToInfo.get(gene).split("\t", -1);
+		String mafRec = null;
+		if(infoSplit[8].isEmpty())
+		{
+			mafRec = "";
+		}
+		else
+		{
+			Double maf = Double.parseDouble(infoSplit[8]);
+			mafRec = maf == 0 ? "Consider setting MAF threshold to singleton/very rare." : "Consider setting MAF threshold to "+maf + ".";
+		}
+		
+		switch (category)
+	      {
+	    	  case "N1" : return "Not enough data for a recommendation." + (mafRec.equals("")?"":" However, " + mafRec);
+	    	  case "N2" : return "Not enough data for a recommendation. " + (mafRec.equals("")?"":" However, " + mafRec);
+	    	  case "N3" : return "Not enough data for a recommendation because CADD calibration went wrong." + (mafRec.equals("")?"":" However, " + mafRec);
+	    	  case "T1" : return mafRec + " There are no known population variants below this threshold.";
+	    	  case "T2" : return mafRec + " Protein impact is not very informative, so it might be best to consider variants of HIGH/MODERATE protein impact.";
+	    	  case "I1" : return mafRec + " Any left over HIGH impact variants are probably pathogenic.";
+	    	  case "I2" : return mafRec + " Any left over MODERATE (or HIGH) impact variants are probably pathogenic.";
+	    	  case "I3" : return mafRec + " Any left over LOW (or MODERATE/HIGH) impact variants are probably pathogenic.";
+	    	  case "C1" : return "Variants pathogenic above CADD "+f.format(Double.parseDouble(infoSplit[28]))+" (mean: "+f.format(Double.parseDouble(infoSplit[24]))+"). Variants benign below CADD "+f.format(Double.parseDouble(infoSplit[27]))+" (mean: "+f.format(Double.parseDouble(infoSplit[23]))+")." + (mafRec.equals("")?"":" Additionally, " + mafRec);
+	    	  case "C2" : return "Variants probably pathogenic above CADD "+f.format(Double.parseDouble(infoSplit[28]))+" (mean: "+f.format(Double.parseDouble(infoSplit[24]))+"). Variants probably benign below CADD "+f.format(Double.parseDouble(infoSplit[27]))+" (mean: "+f.format(Double.parseDouble(infoSplit[23]))+")." + (mafRec.equals("")?"":" Additionally, " + mafRec);
+	    	  case "C3" : return "CADD scores may be informative to some degree, but we can't say for sure. You must decide for yourself to use these thresholds: variants probably pathogenic above CADD "+f.format(Double.parseDouble(infoSplit[28]))+" (mean: "+f.format(Double.parseDouble(infoSplit[24]))+"). Variants probably benign below CADD "+f.format(Double.parseDouble(infoSplit[27]))+" (mean: "+f.format(Double.parseDouble(infoSplit[23]))+")." + (mafRec.equals("")?"":" Additionally, " + mafRec);
+	    	  case "C4" : return "CADD scores are not informative for this gene." + (mafRec.equals("")?"":" However, " + mafRec);
+	    	  case "C5" : return "CADD scores display unexpected behaviour for this gene." + (mafRec.equals("")?"":" However, " + mafRec);
+	    	  default : throw new Exception("Category not recognized: " + category);
+	      }
 	}
 	
 	public void loadVariantInfo(String variantInfoFile) throws FileNotFoundException
@@ -106,7 +146,6 @@ public class Step7_BasicResults
 		 */
 		PrintWriter pw = new PrintWriter(new File(outputFile));
 		pw.println("Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "NrOfOverlappingVariants" + "\t" + "NrOfFilteredPopVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopImpactHighPerc" + "\t" + "PopImpactModeratePerc" + "\t" + "PopImpactLowPerc" + "\t" + "PopImpactModifierPerc" + "\t" + "PathoImpactHighPerc" + "\t" + "PathoImpactModeratePerc" + "\t" + "PathoImpactLowPerc" + "\t" + "PathoImpactModifierPerc" + "\t" + "PopImpactHighEq" + "\t" + "PopImpactModerateEq" + "\t" + "PopImpactLowEq" + "\t" + "PopImpactModifierEq" + "\t" + "NrOfCADDScoredPopulationVars" + "\t" + "NrOfCADDScoredPathogenicVars" + "\t" + "MeanPopulationCADDScore" + "\t" + "MeanPathogenicCADDScore" + "\t" + "MeanDifference" + "\t" + "UTestPvalue" + "\t" + "Sens95thPerCADDThreshold" +"\t" + "Spec95thPerCADDThreshold" + "\t" + "Recommendation");
-		NumberFormat f = new DecimalFormat("#0.00");     
 		
 		int nrOfGenesPathGtPopPval_5perc = 0;
 		int nrOfGenesPathGtPopPval_1perc = 0;
@@ -115,22 +154,7 @@ public class Step7_BasicResults
 		{
 			if(!geneToVariantAndCADD.containsKey(gene))
 			{
-				String recommendation = "Recommendation not available for this gene.";
-				String[] infoSplit = geneToInfo.get(gene).split("\t", -1);
-				if(infoSplit[0].equals("I1"))
-				{
-					recommendation = "Set MAF filter to " + (infoSplit[8].equals("0.0")?"singleton":infoSplit[8]) + ", any HIGH impact variants are pathogenic.";
-				}
-				else if(infoSplit[0].equals("I2"))
-				{
-					recommendation = "Set MAF filter to " + (infoSplit[8].equals("0.0")?"singleton":infoSplit[8]) + ", any MODERATE (or HIGH) impact variants are pathogenic.";
-				}
-				else if(infoSplit[0].equals("I3"))
-				{
-					recommendation = "Set MAF filter to " + (infoSplit[8].equals("0.0")?"singleton":infoSplit[8]) + ", any LOW (or MODERATE/HIGH) impact variants are pathogenic.";
-				}
-				
-				pw.println(gene + "\t" + geneToInfo.get(gene) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8) + "\t" + recommendation);
+				pw.println(gene + "\t" + geneToInfo.get(gene) + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 8) + "\t" + getRecommendation(gene, geneToInfo.get(gene).split("\t", -1)[0]));
 			}
 			else
 			{
@@ -160,8 +184,7 @@ public class Step7_BasicResults
 				//replace 'Cx' with 'N3'
 				if(caddPatho.size() == 0 || caddPopul.size() == 0)
 				{
-					String recommendation = "Recommendation not available for this gene.";
-					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 6) + "\t" + recommendation);
+					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + Step4_MatchingVariantsFromExAC.NA, 6) + "\t" + getRecommendation(gene, "N3"));
 					continue;
 				}
 				
@@ -192,14 +215,11 @@ public class Step7_BasicResults
 				double sensThres = perc.evaluate(caddPathoPrim, 5);
 				double specThres = perc.evaluate(caddPopulPrim, 95);
 				
-				String recommendation = "TODO";
-				
 				String cat = null;
 				//to show some stats in the sysout
 				if(pval <= 0.05 && pathoMean > populMean)
 				{
 					cat = "C2";
-					recommendation = "Variants probably pathogenic above CADD "+specThres+" (mean: "+pathoMean+"). Variants probably benign below CADD "+sensThres+" (mean: "+populMean+").";
 					nrOfGenesPathGtPopPval_5perc ++;
 					if(pval <= 0.01)
 					{
@@ -213,24 +233,23 @@ public class Step7_BasicResults
 					if(caddPathoPrim.length < 5 || caddPopulPrim.length < 5)
 					{
 						cat = "C3";
-						recommendation = "CADD scores may be informative to some degree, but we can't say for sure. You must decide for yourself to use these thresholds: variants probably pathogenic above CADD "+specThres+" (mean: "+pathoMean+"), variants probably benign below CADD "+sensThres+" (mean: "+populMean+").";
 					}
 					else
 					{
 						cat = "C4";
-						recommendation = "CADD scores are not informative for this gene.";
 					}
 				}
-				
 				
 				if(cat == null)
 				{
 					cat = "C5";
-					recommendation = "CADD scores display unexpected behaviour for this gene.";
 				}
 				
+				//add info to gene
+				geneToInfo.put(gene, geneToInfo.get(gene) + "\t" + caddPopulPrim.length + "\t" + caddPathoPrim.length + "\t" + f.format(populMean) + "\t" + f.format(pathoMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres));
+				
 				//write table
-				pw.println(gene + "\t" + cat + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopulPrim.length + "\t" + caddPathoPrim.length + "\t" + f.format(populMean) + "\t" + f.format(pathoMean) + "\t" + f.format(meanDiff) + "\t" + pval + "\t" + f.format(sensThres) + "\t" + f.format(specThres) + "\t" + recommendation);
+				pw.println(gene + "\t" + cat + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + getRecommendation(gene, cat));
 			}
 		}
 		

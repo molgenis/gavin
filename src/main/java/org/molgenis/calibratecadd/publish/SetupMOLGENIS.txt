@@ -5,8 +5,9 @@ todo
 
 2) Setup home screen
 Go to: Data Explorer -> StaticContent (select data set)
-Click 'pen' icon to edit the record names 'home'
-Enter as value: the content of frontpage.html (found in this directory)
+Click [+] to create a new record
+Enter as key: 'home'
+Enter as content: the content of frontpage.html (found in this directory)
 Press Save.
 
 3) Setup entity report
@@ -19,9 +20,9 @@ Press Save.
 2) Setup permissions
 Go to: Admin -> Permission Manager -> Plugin Permissions -> Users
 Select 'anonymous'
-Tick 'view' for dataexplorer and home & save
+Tick 'view' for 'dataexplorer' and 'home'. Press save.
 Go to: Entity Class Permissions -> Users
 Select 'anonymous'
-Tick 'view' for ccgg and settings_dataexplorer
+Tick 'view' for 'ccgg' and 'settings_dataexplorer'
 Press Save.
 
