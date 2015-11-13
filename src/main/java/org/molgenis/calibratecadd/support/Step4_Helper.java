@@ -30,15 +30,24 @@ public class Step4_Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public String getExACMAFforUnprocessedClinvarVariant(Entity clinvarVariant, Entity exacVariant) throws Exception
+	public String getExACMAFforUnprocessedClinvarVariant(Entity clinvarVariant, List<Entity> exacVariants) throws Exception
 	{
-		String clinvarAlt = clinvarVariant.getString("ALT");
-		String[] altSplit = exacVariant.getString("ALT").split(",", -1);
-		for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
+		for(Entity exacVar : exacVariants)
 		{
-			if(clinvarAlt.equals(altSplit[altIndex]))
+			if (exacVar.getString("#CHROM").equals(clinvarVariant.getString("#CHROM"))
+					&& exacVar.getString("POS").equals(clinvarVariant.getString("POS"))
+					&& exacVar.getString("REF").equals(clinvarVariant.getString("REF"))
+					)
 			{
-				return exacVariant.getString("AF").split(",", -1)[altIndex];
+				String clinvarAlt = clinvarVariant.getString("ALT");
+				String[] altSplit = exacVar.getString("ALT").split(",", -1);
+				for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
+				{
+					if(clinvarAlt.equals(altSplit[altIndex]))
+					{
+						return exacVar.getString("AF").split(",", -1)[altIndex];
+					}
+				}
 			}
 		}
 		return "0";
@@ -237,9 +246,14 @@ public class Step4_Helper
 	 */
 	private boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
 	{
-		String csq = exacVariant.getE().getString("CSQ");	
-//		System.out.println("LOOKING FOR ALT " + altAllele);
+		String csq = exacVariant.getE().getString("CSQ");
 		
+		//can be null when using +/- 100 bp window! e.g. for 19:36399198
+		if(csq == null)
+		{
+			return false;
+		}
+
 		boolean found = false;
 		
 		//multiple transcripts, with each multiple alleles

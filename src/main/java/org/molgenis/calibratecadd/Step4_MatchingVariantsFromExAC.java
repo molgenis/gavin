@@ -214,7 +214,7 @@ public class Step4_MatchingVariantsFromExAC
 			index++;
 			
 			/** DEV **/
-//			if(!gene.equals("IDH2"))
+//			if(!gene.equals("TYROBP"))
 //			{
 //				continue;
 //			}
@@ -245,6 +245,11 @@ public class Step4_MatchingVariantsFromExAC
 					chrom = cvvchrom;
 				}
 			}
+			
+			// include (biggest) part of exon the variant(s) are in, typical exon is 147 nt
+			// http://nar.oxfordjournals.org/content/early/2012/07/11/nar.gks652.full
+			leftMostPos = leftMostPos - 100;
+			rightMostPos = rightMostPos + 100;
 
 			TabixVcfRepository tr = new TabixVcfRepository(new File(exacLoc), "exac");
 
@@ -259,20 +264,14 @@ public class Step4_MatchingVariantsFromExAC
 				// no chrom in tabix or so
 			}
 			
-			//we want at least 2 variants in order to get the interval for exac
-			//we expect clinvarPatho.get(gene).size() == 1, but lets print anyway to check
+			//there are a lot of genes with only 1 pathogenic variant.. a bit silly to consider them seriously for calibration work
+			//drop and report as N1
 			if(clinvarPatho.get(gene).size() < 2)
 			{
 				droppedGenesClinVarTooFew++;
-				//sanity check
-				if(exacVariants.size() > 1)
-				{
-					tr.close();
-					throw new Exception("Strange: more than 1 exac variant found for position " + clinvarPatho.get(gene).get(0).getString("#CHROM") + ":" + clinvarPatho.get(gene).get(0).getString("POS"));
-				}
-				//should match clinvar impact 100%, so just as a control really
-				String exacImpact = exacVariants.size() == 1 ? "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(exacVariants).toString() : StringUtils.repeat("\t" + NA, 4);
-				String maf = exacVariants.size() == 1 ? st4h.getExACMAFforUnprocessedClinvarVariant(clinvarPatho.get(gene).get(0), exacVariants.get(0)) : NA;
+				//report exac impact and MAF (if overlaps with clinvar) anyway
+				String exacImpact = exacVariants.size() > 0 ? "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(exacVariants).toString() : StringUtils.repeat("\t" + NA, 4);
+				String maf = exacVariants.size() > 0 ? st4h.getExACMAFforUnprocessedClinvarVariant(clinvarPatho.get(gene).get(0), exacVariants) : NA;
 				geneInfo.put(gene, "N1" + "\t" + clinvarPatho.get(gene).get(0).getString("#CHROM") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + clinvarPatho.get(gene).get(0).getString("POS") + "\t" + exacVariants.size() + "\t" + clinvarPatho.get(gene).size() + "\t" + (maf.equals(NA) ? 0 : 1) + "\t" + 0 + "\t" + maf + exacImpact + "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
 				continue;
 			}
@@ -282,7 +281,6 @@ public class Step4_MatchingVariantsFromExAC
 
 			if (exacVariants.size() > 0)
 			{
-				
 				//found out: which variants are only in ExAC, which only in ClinVar, which in both
 				VariantIntersectResult vir = st4h.intersectVariants(exacVariants, clinvarPatho.get(gene));
 				
@@ -335,7 +333,6 @@ public class Step4_MatchingVariantsFromExAC
 			else
 			{
 				droppedGenesExACtooFew++;
-				//can happen: 2+ ClinVar variants on same position, so we query an interval of size 1... so be it
 				geneInfo.put(gene, "N2" + "\t" + chrom + "\t" + leftMostPos + "\t" + rightMostPos + "\t" + 0 + "\t" + clinvarPatho.get(gene).size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + StringUtils.repeat("\t" + NA, 4)  + "\t" + st4h.calculateImpactRatiosFromUnprocessedVariants(clinvarPatho.get(gene)) + StringUtils.repeat("\t" + NA, 4));
 			}
 			
