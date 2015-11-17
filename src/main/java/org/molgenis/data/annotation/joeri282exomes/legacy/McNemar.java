@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.molgenis.data.annotation.joeri282exomes;
+package org.molgenis.data.annotation.joeri282exomes.legacy;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
