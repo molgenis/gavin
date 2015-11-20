@@ -1,15 +1,18 @@
 package org.molgenis.data.annotation.joeri282exomes;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
+import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.vcf.VcfRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
@@ -18,31 +21,19 @@ import org.springframework.stereotype.Component;
 public class CalibratedExomeAnalysis
 {
 
-	HashMap<String, ArrayList<String>> patientgroupToGenes = new HashMap<String, ArrayList<String>>();
-
 	private HashMap<String, String> sampleToGroup;
-
-	private String gtcMessage = null;
-
-	public void go(File vcfFile, File patientGroups) throws Exception
+//	private HashMap<String, List<CandidateVariant>> sampleToPathogenicVariants;
+	
+	private List<CandidateVariant> pathogenicVariants;
+	
+	public void go(File vcfFile, File patientGroups, File ccggFile) throws Exception
 	{
+		pathogenicVariants = new ArrayList<CandidateVariant>();
+		
+		loadSampleToGroup(patientGroups);
 
-		Set<String> groups = new HashSet<String>();
-
-		HashMap<String, String> sampleToGroup = new HashMap<String, String>();
-		Scanner s = new Scanner(patientGroups);
-		String line = null;
-		while (s.hasNextLine())
-		{
-			line = s.nextLine();
-			String[] lineSplit = line.split("\t", -1);
-			sampleToGroup.put(lineSplit[0], lineSplit[1]);
-			groups.add(lineSplit[1]);
-		}
-		s.close();
-
-		this.sampleToGroup = sampleToGroup;
-
+		CCGGUtils ccgg = new CCGGUtils(ccggFile);
+		
 		VcfRepository vcf = new VcfRepository(vcfFile, "vcf");
 		Iterator<Entity> it = vcf.iterator();
 
@@ -56,52 +47,194 @@ public class CalibratedExomeAnalysis
 			{
 				continue;
 			}
-
-			String chr = record.getString("#CHROM");
-			String pos = record.getString("POS");
-			String ref = record.getString("REF");
+			
+		//	System.out.println(record.toString());
+//			String chr = record.getString("#CHROM");
+//			String pos = record.getString("POS");
+//			String ref = record.getString("REF");
 			String altStr = record.getString("ALT");
 			String exac_af_STR = record.get("EXAC_AF") == null ? null : record.get("EXAC_AF").toString();
 			String exac_ac_hom_STR = record.get("EXAC_AC_HOM") == null ? null : record.get("EXAC_AC_HOM").toString();
 			String exac_ac_het_STR = record.get("EXAC_AC_HET") == null ? null : record.get("EXAC_AC_HET").toString();
-			String[] multiAnn = record.getString("ANN").split(",");
+			
+			String ann = record.getString("ANN");
 
-			String[] altsplit = altStr.split(",", -1);
+			String cadd_STR = record.get("CADD_SCALED") == null ? null : record.get("CADD_SCALED").toString();
+			
+			String[] alts = altStr.split(",", -1);
 
-			String[] exac_af_split = new String[altsplit.length];
+			
+			String[] exac_af_split = new String[alts.length];
 			if (exac_af_STR != null)
 			{
 				exac_af_split = exac_af_STR.split(",", -1);
 			}
+			String[] exac_ac_hom_split = new String[alts.length];
+			if (exac_ac_hom_STR != null)
+			{
+				exac_ac_hom_split = exac_ac_hom_STR.split(",", -1);
+			}
 
-			//TODO: multiple genes!?!? check MTOR / ANGPTL7
-			//e.g.
-			//1       11249803        rs141187277     T       C       1634.44 PASS    AC=2;AF=0.003546;AN=564;BaseQRankSum=4.12;ClippingRankSum=0.209;DB;DP=10525;FS=0.0;GQ_MEAN=98.68;GQ_STDDEV=45.19;InbreedingCoeff=-0.0036;MLEAC=2;MLEAF=0.003546;MQ=60.0;MQ0=0;MQRankSum=1.01;NCC=0;QD=17.96;ReadPosRankSum=0.377;SOR=0.622;VQSLOD=18.2;culprit=MQ;ANN=C|missense_variant|MODERATE|ANGPTL7|ANGPTL7|transcript|NM_021146.3|Coding|1/5|c.167T>C|p.Val56Ala|458/2290|167/1041|56/346||,C|intron_variant|MODIFIER|MTOR|MTOR|transcript|NM_004958.3|Coding|28/57|c.4253+9512A>G||||||;GoNL_GTC=.,.,.;GoNL_AF=.;EXAC_AF=1.318E-4;EXAC_AC_HOM=0;EXAC_AC_HET=16;CADD=3.259127;CADD_SCALED=22.8;
+			String[] exac_ac_het_split = new String[alts.length];
+			if (exac_ac_het_STR != null)
+			{
+				exac_ac_het_split = exac_ac_het_STR.split(",", -1);
+			}
+			String[] cadd_split = new String[alts.length];
+			if (cadd_STR != null)
+			{
+				cadd_split = cadd_STR.split(",", -1);
+			}
+			
+			Set<String> genes = getGenesFromAnn(ann);
+			
 			
 			/**
 			 * Iterate over alternatives, if applicable multi allelic example: 1:1148100-1148100
 			 */
-			for (int i = 0; i < altsplit.length; i++)
+			for (int i = 0; i < alts.length; i++)
 			{
-				String alt = altsplit[i];
-
-				if (exac_af_STR != null && !exac_af_split[i].equals("."))
+				String alt = alts[i];
+				
+				double exac_af = (exac_af_split[i] != null && !exac_af_split[i].equals(".")) ? Double.parseDouble(exac_af_split[i]) : 0;
+				Double cadd = (cadd_split[i] != null && !cadd_split[i].equals(".")) ? Double.parseDouble(cadd_split[i]) : null;
+				int exac_hom = exac_ac_hom_split[i] != null && !exac_ac_hom_split[i].equals(".") ? Integer.parseInt(exac_ac_hom_split[i]) : 0;
+				int exac_het = exac_ac_het_split[i] != null && !exac_ac_het_split[i].equals(".") ? Integer.parseInt(exac_ac_het_split[i]) : 0;
+				
+				for(String gene : genes)
 				{
-					Double exac_af = Double.parseDouble(exac_af_split[i]);
-					if (exac_af > 0.05)
+					if(!ccgg.geneToEntry.containsKey(gene))
 					{
 						continue;
 					}
+					Impact impact = getImpact(ann, gene, alt);
+
+					
+					Judgment j = ccgg.classifyVariant(gene, exac_af, impact, cadd);
+					
+					if(j.classification.equals(Judgment.Classification.Pathogenic))
+					{
+						List<String> samples = findInterestingSamples(record, i, exac_het, exac_hom);
+						if(samples.size() > 0)
+						{
+							CandidateVariant cv = new CandidateVariant(record, alt, gene, j, samples);
+							pathogenicVariants.add(cv);
+							System.out.println("added patho variant: " + cv.toString());
+						}
+						
+					}
+
 				}
-
-				String ann = multiAnn[i];
-				String[] annSplit = ann.split("\\|", -1);
-				String impact = annSplit[2];
-
-
+				
+				
 			}
 
 		}
+		vcf.close();
+	}
+	
+	public List<String> findInterestingSamples(Entity record, int altIndex, int exacHets, int exacHoms)
+	{
+		List<String> homSampleIds = new ArrayList<String>();
+		List<String> hetSampleIds = new ArrayList<String>();
+		Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
+		//first alt has index 0, but we want to check 0/1, 1/1 etc. So +1.
+		altIndex = altIndex + 1;
+		
+		int hetCount = 0;
+		int homCount = 0;
+		
+		for (Entity sample : sampleEntities)
+		{
+			String genotype = sample.get("GT").toString();
+
+			if (genotype.equals("./."))
+			{
+				continue;
+			}
+
+			// quality filter: we want depth X or more
+			int depthOfCoverage = Integer.parseInt(sample.get("DP").toString());
+			if (depthOfCoverage < 10)
+			{
+				continue;
+			}
+
+			
+			if (genotype.equals("0/" + altIndex) || genotype.equals(altIndex + "/0")
+					|| genotype.equals("0|" + altIndex) || genotype.equals(altIndex + "|0") )
+			{
+				//interesting!
+				String sampleName = sample.get("ORIGINAL_NAME").toString();
+				hetSampleIds.add(sampleName);
+				hetCount++;
+			}
+			
+			
+			if ( genotype.equals(altIndex + "/" + altIndex) || genotype.equals(altIndex + "|" + altIndex) )
+			{
+				//interesting!
+				String sampleName = sample.get("ORIGINAL_NAME").toString();
+				homSampleIds.add(sampleName);
+				homCount++;
+			}
+
+			
+		}
+		
+		//TODO
+		//do something based on exac genotype counts? e.g. delete heterozygous set when > 10 GTC or so
+//		if(exacHoms > 10)
+//		{
+//			return new ArrayList<String>();
+//		}
+		
+//		System.out.println("homs: " + homCount +" , hets: " + hetCount);
+//		System.out.println("exachoms: " + exacHoms +" , exachets: " + exacHets);
+		List<String> sampleIds = new ArrayList<String>();
+		sampleIds.addAll(homSampleIds);
+		sampleIds.addAll(hetSampleIds);
+		return sampleIds;
+	}
+	
+	public Impact getImpact(String ann, String gene, String allele) throws Exception
+	{
+		String[] annSplit = ann.split(",", -1);
+		for(String oneAnn : annSplit)
+		{
+			String[] fields = oneAnn.split("\\|", -1);
+			String geneFromAnn = fields[3];
+			if(!gene.equals(geneFromAnn))
+			{
+				continue;
+			}
+			String alleleFromAnn = fields[0];
+			if(!allele.equals(alleleFromAnn))
+			{
+				continue;
+			}
+			String impact = fields[2];
+			return Impact.valueOf(impact);
+		}
+		System.out.println("warning: impact could not be determined for " + gene + ", allele=" + allele + ", ann=" + ann);
+		return null;
+	}
+	
+	public Set<String> getGenesFromAnn(String ann)
+	{
+		Set<String> genes = new HashSet<String>();
+		String[] annSplit = ann.split(",", -1);
+		for(String oneAnn : annSplit)
+		{
+			String[] fields = oneAnn.split("\\|", -1);
+//			String impact = fields[2];
+//			String effect = fields[1];
+//			String cDNA = fields[9];
+//			String aaChange = fields[10];
+			String gene = fields[3];
+			genes.add(gene);
+		}
+		return genes;
 	}
 
 	public static void main(String[] args) throws Exception
@@ -115,6 +248,22 @@ public class CalibratedExomeAnalysis
 		main.run(args);
 		ctx.close();
 	}
+	
+
+	private void loadSampleToGroup(File patientGroups) throws FileNotFoundException
+	{
+		HashMap<String, String> sampleToGroup = new HashMap<String, String>();
+		Scanner s = new Scanner(patientGroups);
+		String line = null;
+		while (s.hasNextLine())
+		{
+			line = s.nextLine();
+			String[] lineSplit = line.split("\t", -1);
+			sampleToGroup.put(lineSplit[0], lineSplit[1]);
+		}
+		s.close();
+		this.sampleToGroup = sampleToGroup;
+	}
 
 	public void run(String[] args) throws Exception
 	{
@@ -122,9 +271,9 @@ public class CalibratedExomeAnalysis
 		//we can do SNVs easy but not indels and other 'non predictable' changes
 		//send off to CADD webservice, and give the output so we use this in second pass
 		
-		if (!(args.length == 2))
+		if (!(args.length == 3))
 		{
-			throw new Exception("Must supply 2 arguments");
+			throw new Exception("Must supply 3 arguments");
 		}
 
 		File vcfFile = new File(args[0]);
@@ -138,9 +287,15 @@ public class CalibratedExomeAnalysis
 		{
 			throw new Exception("Patient groups file does not exist or directory: " + patientGroups.getAbsolutePath());
 		}
+		
+		File ccggFile = new File(args[2]);
+		if (!ccggFile.isFile())
+		{
+			throw new Exception("CCGG file does not exist or directory: " + ccggFile.getAbsolutePath());
+		}
 
 		CalibratedExomeAnalysis cf = new CalibratedExomeAnalysis();
-		cf.go(vcfFile, patientGroups);
+		cf.go(vcfFile, patientGroups, ccggFile);
 
 	}
 
