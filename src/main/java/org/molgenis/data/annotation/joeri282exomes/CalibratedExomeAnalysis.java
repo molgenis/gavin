@@ -86,7 +86,7 @@ public class CalibratedExomeAnalysis
 				cadd_split = cadd_STR.split(",", -1);
 			}
 			
-			Set<String> genes = getGenesFromAnn(ann);
+			Set<String> genes = CCGGUtils.getGenesFromAnn(ann);
 			
 			
 			/**
@@ -107,7 +107,7 @@ public class CalibratedExomeAnalysis
 					{
 						continue;
 					}
-					Impact impact = getImpact(ann, gene, alt);
+					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 
 					
 					Judgment j = ccgg.classifyVariant(gene, exac_af, impact, cadd);
@@ -195,46 +195,6 @@ public class CalibratedExomeAnalysis
 		sampleIds.addAll(homSampleIds);
 		sampleIds.addAll(hetSampleIds);
 		return sampleIds;
-	}
-	
-	public Impact getImpact(String ann, String gene, String allele) throws Exception
-	{
-		String[] annSplit = ann.split(",", -1);
-		for(String oneAnn : annSplit)
-		{
-			String[] fields = oneAnn.split("\\|", -1);
-			String geneFromAnn = fields[3];
-			if(!gene.equals(geneFromAnn))
-			{
-				continue;
-			}
-			String alleleFromAnn = fields[0];
-			if(!allele.equals(alleleFromAnn))
-			{
-				continue;
-			}
-			String impact = fields[2];
-			return Impact.valueOf(impact);
-		}
-		System.out.println("warning: impact could not be determined for " + gene + ", allele=" + allele + ", ann=" + ann);
-		return null;
-	}
-	
-	public Set<String> getGenesFromAnn(String ann)
-	{
-		Set<String> genes = new HashSet<String>();
-		String[] annSplit = ann.split(",", -1);
-		for(String oneAnn : annSplit)
-		{
-			String[] fields = oneAnn.split("\\|", -1);
-//			String impact = fields[2];
-//			String effect = fields[1];
-//			String cDNA = fields[9];
-//			String aaChange = fields[10];
-			String gene = fields[3];
-			genes.add(gene);
-		}
-		return genes;
 	}
 
 	public static void main(String[] args) throws Exception

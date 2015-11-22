@@ -3,7 +3,8 @@ package org.molgenis.data.annotation.joeri282exomes;
 public class Judgment
 {
 	public enum Classification{
-		Benign, Likely_Benign, VOUS, Likely_Pathogenic, Pathogenic
+		Benign, Likely_Benign, Likely_Pathogenic, Pathogenic
+		//VOUS,
 	}
 	
 	String reason;
