@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.molgenis.calibratecadd.support.CaddScoreMissingException;
+import org.molgenis.calibratecadd.support.CCGGException;
 import org.molgenis.calibratecadd.support.MVLResults;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
@@ -34,6 +34,7 @@ public class Step9_Validation
 		loadCCGG(ccggLoc);
 		scanMVL(mvlLoc);
 		reportResults();
+		calculateOverallPerformance();
 	}
 	
 	public void scanMVL(String mvlLoc) throws Exception
@@ -71,21 +72,20 @@ public class Step9_Validation
 
 			for(String gene : genes)
 			{
-				if(ccgg.contains(gene))
-				{
-					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
-					System.out.println("going to classify: gene=" + gene + ", impact=" + impact + ", MAF=" + MAF + ", CADD=" + CADDscore);
-					try{
+		
+		//		System.out.println("MVL: " + mvl + ", gene: " + gene + ", cat:" + ccgg.getCategory(gene));
+				Impact impact = CCGGUtils.getImpact(ann, gene, alt);
+		//		System.out.println("going to classify: gene=" + gene + ", impact=" + impact + ", MAF=" + MAF + ", CADD=" + CADDscore);
+				
+				try{
 					Judgment j = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
-					System.out.println("we say: " + j.getClassification() + ", mvl says: " + classification);
+			//		System.out.println("we say: " + j.getClassification() + ", mvl says: " + classification);
 					addToMVLResults(j.getClassification(), classification, mvl);
 					}
-					catch(CaddScoreMissingException e)
-					{
-						System.out.println("unfortunately, missing cadd score to classify this variant");
-					}
+				catch(CCGGException e)
+				{
+		//			System.out.println(e);
 				}
-				
 			}
 		}
 	}
@@ -142,9 +142,6 @@ public class Step9_Validation
 				mvlR.nrOf_VOUS_judgedAs_P_LP++;
 			}
 		}
-		
-		
-		
 	}
 	
 	public void loadCCGG(String ccggLoc) throws Exception
@@ -168,6 +165,32 @@ public class Step9_Validation
 			System.out.println("FN: " +(mvlResults.get(mvl).getPercOfFalseNegatives()));
 			
 		}
+		
+	}
+	
+	public void calculateOverallPerformance()
+	{
+		int totalFPcountableMVLs = 0;
+		int totalFNcountableMVLs = 0;
+		double cumulativeFP = 0;
+		double cumulativeFN = 0;
+		for(String mvl : mvlResults.keySet())
+		{
+			Double FP = mvlResults.get(mvl).getPercOfFalsePositives();
+			Double FN = mvlResults.get(mvl).getPercOfFalseNegatives();
+			if(FP != null)
+			{
+				totalFPcountableMVLs++;
+				cumulativeFP += FP;
+			}
+			if(FN != null)
+			{
+				totalFNcountableMVLs++;
+				cumulativeFN += FN;
+			}
+		}
+		System.out.println("average FP = " + cumulativeFP/totalFPcountableMVLs);
+		System.out.println("average FN = " + cumulativeFN/totalFNcountableMVLs);
 	}
 
 

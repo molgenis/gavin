@@ -1,13 +1,13 @@
 package org.molgenis.calibratecadd.support;
 
-public class CaddScoreMissingException extends CCGGException {
+public class NoDataForGeneException extends CCGGException {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public CaddScoreMissingException(String msg) {
+	public NoDataForGeneException(String msg) {
 		super(msg);
 	}
 }

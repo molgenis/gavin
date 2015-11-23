@@ -48,17 +48,25 @@ public class MVLResults {
 	 * Proportion of benign/LB variants classified by CCGG as pathogenic/LP, so we make a FP type of mistake according to the human expert.
 	 * @return
 	 */
-	public double getPercOfFalsePositives()
+	public Double getPercOfFalsePositives()
 	{
-		return ((double)nrOf_B_LB_judgedAs_P_LP/(double)nrOf_B_LB_judgedAs_B_LB)*100;
+		if(nrOf_B_LB == 0)
+		{
+			return null;
+		}
+		return ((double)nrOf_B_LB_judgedAs_P_LP/(double)nrOf_B_LB)*100;
 	}
 	
 	/**
 	 * Proportion of pathogenic/LP variants classified by CCGG as benign/LB, so we make a FN type of mistake according to the human expert.
 	 * @return
 	 */
-	public double getPercOfFalseNegatives()
+	public Double getPercOfFalseNegatives()
 	{
+		if(nrOf_P_LP == 0)
+		{
+			return null;
+		}
 		return ((double)nrOf_P_LP_judgedAs_B_LB/(double)nrOf_P_LP)*100;
 	}
 }

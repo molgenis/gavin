@@ -7,6 +7,8 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.molgenis.calibratecadd.support.CaddScoreMissingException;
+import org.molgenis.calibratecadd.support.InsufficientDataException;
+import org.molgenis.calibratecadd.support.NoDataForGeneException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGEntry.Category;
@@ -33,6 +35,11 @@ public class CCGGUtils
 		
 	}
 	
+	public Category getCategory(String gene)
+	{
+		return geneToEntry.get(gene).category;
+	}
+	
 	public boolean contains(String gene)
 	{
 		return geneToEntry.containsKey(gene) ? true : false;
@@ -44,17 +51,18 @@ public class CCGGUtils
 		
 		if(!geneToEntry.containsKey(gene))
 		{
-			throw new Exception("Cannot classify variant, no calibration data for " + gene);
+			throw new NoDataForGeneException("Cannot classify variant, no calibration data for " + gene);
 		}
 		CCGGEntry entry = geneToEntry.get(gene);
 		CCGGEntry.Category category = entry.category;
 		
 		if((category.equals(Category.N1) || category.equals(Category.N2)))
 		{
-			return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+			throw new InsufficientDataException("Cannot classify variant, no calibration data for " + gene);
+		//	return new Judgment(Judgment.Classification.Likely_Benign, "todo");
 		}
 		
-		if(MAF > entry.PathoMAFThreshold)
+		if(MAF > (entry.PathoMAFThreshold*100))
 		{
 	//		System.out.println("MAF > entry.PathoMAFThreshold: " + MAF + " > " + entry.PathoMAFThreshold);
 			return new Judgment(Judgment.Classification.Likely_Benign, "todo");
@@ -89,7 +97,7 @@ public class CCGGUtils
 			}
 			else
 			{
-				return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
 			}
 		}
 		if((category.equals(Category.C3) || category.equals(Category.C4)))
@@ -108,7 +116,7 @@ public class CCGGUtils
 			}
 			else
 			{
-				return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
 			}
 		}
 		else if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
@@ -124,7 +132,7 @@ public class CCGGUtils
 			return new Judgment(Judgment.Classification.Pathogenic, "category.equals(Category.I3) && impact.equals(Impact.LOW) so Pathogenic");
 		}
 		
-		return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+		return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
 	}
 	
 	public static Set<String> getGenesFromAnn(String ann)
