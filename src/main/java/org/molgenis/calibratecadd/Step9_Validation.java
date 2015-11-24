@@ -11,7 +11,6 @@ import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
 import org.molgenis.data.annotation.joeri282exomes.Judgment;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.NewClassifications;
 import org.molgenis.data.vcf.VcfRepository;
 
 public class Step9_Validation
@@ -48,8 +47,6 @@ public class Step9_Validation
 		VcfRepository vcfRepo = new VcfRepository(mvlFile, "mvl");
 		
 		java.util.Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
-		
-		NewClassifications nc = new NewClassifications();
 
 		while (vcfRepoIter.hasNext())
 		{
