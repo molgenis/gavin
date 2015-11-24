@@ -11,6 +11,7 @@ import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
 import org.molgenis.data.annotation.joeri282exomes.Judgment;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
+import org.molgenis.data.annotation.joeri282exomes.NewClassifications;
 import org.molgenis.data.vcf.VcfRepository;
 
 public class Step9_Validation
@@ -47,6 +48,8 @@ public class Step9_Validation
 		VcfRepository vcfRepo = new VcfRepository(mvlFile, "mvl");
 		
 		java.util.Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
+		
+		NewClassifications nc = new NewClassifications();
 
 		while (vcfRepoIter.hasNext())
 		{
@@ -69,7 +72,13 @@ public class Step9_Validation
 			
 			String classification = record.getString("CLSF");
 			String mvl = record.getString("MVL");
-
+			
+//			String id = record.getString("ID");
+//			if( nc.newClsf.containsKey(id))
+//			{
+//				System.out.println((classification.equals(nc.newClsf.get(id))?"" : "---> !! DIFFERENCE: ") + id + " is found in VCF classified as " + classification + ", according to re-classified list: " + nc.newClsf.get(id));
+//			}
+			
 			for(String gene : genes)
 			{
 		
@@ -79,12 +88,13 @@ public class Step9_Validation
 				
 				try{
 					Judgment j = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
-			//		System.out.println("we say: " + j.getClassification() + ", mvl says: " + classification);
+				//	System.out.println("we say: " + j.getClassification() + ", mvl says: " + classification);
 					addToMVLResults(j.getClassification(), classification, mvl);
 					}
 				catch(CCGGException e)
 				{
 		//			System.out.println(e);
+					addToMVLResults(null, classification, mvl);
 				}
 			}
 		}
@@ -170,27 +180,62 @@ public class Step9_Validation
 	
 	public void calculateOverallPerformance()
 	{
-		int totalFPcountableMVLs = 0;
-		int totalFNcountableMVLs = 0;
-		double cumulativeFP = 0;
-		double cumulativeFN = 0;
+		int correctlyClassifiedBenign = 0;
+		int correctlyClassifiedPathogenic = 0;
+		int wronglyClassifiedBenign = 0;
+		int wronglyClassifiedPathogenic = 0;
+		int nrOf_B_LB_P_LP_CCGGclassifiedVariants_acrossAllMVLs = 0;
+		
+		int nrOf_B_LB_CCGGclassifiedVariants_acrossAllMVLs = 0;
+		int nrOf_P_LP_CCGGclassifiedVariants_acrossAllMVLs = 0;
+		
+		int nrOf_VOUS_CCGGclassifiedVariants_acrossAllMVLs = 0;
+		int nrOf_VOUS_B_LB_CCGGclassifiedVariants_acrossAllMVLs = 0;
+		int nrOf_VOUS_P_LP_CCGGclassifiedVariants_acrossAllMVLs = 0;
+		
+		int nrOfMVL_B_LB_P_LP_variants = 0;
+		int nrOfMVL_VOUS_variants = 0;
+		int nrOfMVL_P_LP_variants = 0;
+		int nrOfMVL_B_LB_variants = 0;
 		for(String mvl : mvlResults.keySet())
 		{
-			Double FP = mvlResults.get(mvl).getPercOfFalsePositives();
-			Double FN = mvlResults.get(mvl).getPercOfFalseNegatives();
-			if(FP != null)
-			{
-				totalFPcountableMVLs++;
-				cumulativeFP += FP;
-			}
-			if(FN != null)
-			{
-				totalFNcountableMVLs++;
-				cumulativeFN += FN;
-			}
+			nrOfMVL_B_LB_P_LP_variants += mvlResults.get(mvl).nrOf_B_LB + mvlResults.get(mvl).nrOf_P_LP;
+			nrOfMVL_P_LP_variants += mvlResults.get(mvl).nrOf_P_LP;
+			nrOfMVL_B_LB_variants += mvlResults.get(mvl).nrOf_B_LB;
+			
+			nrOf_B_LB_P_LP_CCGGclassifiedVariants_acrossAllMVLs += mvlResults.get(mvl).nrOf_B_LB_P_LP_CCGGClassifiedVariants();
+			nrOf_B_LB_CCGGclassifiedVariants_acrossAllMVLs += mvlResults.get(mvl).nrOf_B_LB_judgedAs_B_LB + mvlResults.get(mvl).nrOf_P_LP_judgedAs_B_LB;
+			nrOf_P_LP_CCGGclassifiedVariants_acrossAllMVLs += mvlResults.get(mvl).nrOf_P_LP_judgedAs_P_LP + mvlResults.get(mvl).nrOf_B_LB_judgedAs_P_LP;
+			
+			nrOfMVL_VOUS_variants += mvlResults.get(mvl).nrOf_VOUS;		
+			nrOf_VOUS_CCGGclassifiedVariants_acrossAllMVLs += mvlResults.get(mvl).nrOf_VOUS_CCGGClassifiedVariants();
+			nrOf_VOUS_B_LB_CCGGclassifiedVariants_acrossAllMVLs += mvlResults.get(mvl).nrOf_VOUS_judgedAs_B_LB;
+			nrOf_VOUS_P_LP_CCGGclassifiedVariants_acrossAllMVLs += mvlResults.get(mvl).nrOf_VOUS_judgedAs_P_LP;
+			
+			correctlyClassifiedBenign += mvlResults.get(mvl).nrOf_B_LB_judgedAs_B_LB;
+			correctlyClassifiedPathogenic += mvlResults.get(mvl).nrOf_P_LP_judgedAs_P_LP;
+			wronglyClassifiedBenign += mvlResults.get(mvl).nrOf_B_LB_judgedAs_P_LP;
+			wronglyClassifiedPathogenic += mvlResults.get(mvl).nrOf_P_LP_judgedAs_B_LB;
+			
 		}
-		System.out.println("average FP = " + cumulativeFP/totalFPcountableMVLs);
-		System.out.println("average FN = " + cumulativeFN/totalFNcountableMVLs);
+
+		
+		System.out.println("\n\nTotal amount of B/LB/LP/P variants in original MVLs = " + nrOfMVL_B_LB_P_LP_variants + " ("+nrOfMVL_B_LB_variants+" benign, "+nrOfMVL_P_LP_variants+" pathogenic)");
+		System.out.println("Total amount of B/LB/LP/P variants that CCGG-classified as B/LB/LP/P = " + nrOf_B_LB_P_LP_CCGGclassifiedVariants_acrossAllMVLs);
+		
+		System.out.println("\nCorrectly classified benign = " + correctlyClassifiedBenign);
+		System.out.println("Wrongly classified benign (LB/B judged as LP/P, false positives) = " + wronglyClassifiedBenign);
+		System.out.println("Correctly classified pathogenic = " + correctlyClassifiedPathogenic);
+		System.out.println("Wrongly classified pathogenic (LP/P judged as LB/B, false negatives) = " + wronglyClassifiedPathogenic);
+
+		System.out.println("\nAverage false positive rate in CCGG-classifications across all MVLs = " + Math.round(((double)wronglyClassifiedBenign/(double)(wronglyClassifiedBenign+correctlyClassifiedBenign))*100) + "%");
+		System.out.println("Average false negative rate in CCGG-classifications across all MVLs = " + Math.round(((double)wronglyClassifiedPathogenic/(double)(wronglyClassifiedPathogenic+correctlyClassifiedPathogenic))*100) + "%");
+
+		System.out.println("\nClassification of VOUS variants:");
+		System.out.println("Total amount of VOUS variants in original MVLs = " + nrOfMVL_VOUS_variants);
+		System.out.println("Total amount of VOUS variants that CCGG-classified as B/LB/LP/P = " + nrOf_VOUS_CCGGclassifiedVariants_acrossAllMVLs + " (" + nrOf_VOUS_B_LB_CCGGclassifiedVariants_acrossAllMVLs + " benign, " + nrOf_VOUS_P_LP_CCGGclassifiedVariants_acrossAllMVLs + " pathogenic)");
+
+		
 	}
 
 

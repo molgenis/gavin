@@ -47,32 +47,73 @@ public class CCGGUtils
 	
 	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
 	{
-		//System.out.println("going to classify variant with gene="+gene+", maf=" + MAF + ", impact=" + impact + ", cadd=" + CADDscore);
-		
 		if(!geneToEntry.containsKey(gene))
 		{
 			throw new NoDataForGeneException("Cannot classify variant, no calibration data for " + gene);
 		}
+		
 		CCGGEntry entry = geneToEntry.get(gene);
 		CCGGEntry.Category category = entry.category;
 		
-		if((category.equals(Category.N1) || category.equals(Category.N2)))
-		{
-			throw new InsufficientDataException("Cannot classify variant, no calibration data for " + gene);
-		//	return new Judgment(Judgment.Classification.Likely_Benign, "todo");
-		}
+
 		
+		/**
+		 * Apply MAF threshold first
+		 * 100 is more strict in selecting (~1% FP), 10 is all right too (~4% FP)
+		 */
 		if(MAF > (entry.PathoMAFThreshold*100))
 		{
-	//		System.out.println("MAF > entry.PathoMAFThreshold: " + MAF + " > " + entry.PathoMAFThreshold);
 			return new Judgment(Judgment.Classification.Likely_Benign, "todo");
 		}
 		
+
+		/**
+		 * "N-class genes"
+		 */
+		if((category.equals(Category.N1) || category.equals(Category.N2)))
+		{
+			
+			
+			throw new InsufficientDataException("Cannot classify variant, no futher calibration data for N1/N2 gene " + gene);
+		}
+		
+		/**
+		 * "T-class genes"
+		 */
+		if(category.equals(Category.T1) || category.equals(Category.T2))
+		{			
+			throw new InsufficientDataException("Cannot classify variant, no futher calibration data for T1/T2 gene " + gene);
+		}
 		
 		
 		
-	//	System.out.println("category: " + category);
 		
+		/**
+		 * "I-class genes"
+		 */
+		if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
+		{
+			return new Judgment(Judgment.Classification.Pathogenic, "I1 and impact HIGH");
+		}
+		else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
+		{
+			return new Judgment(Judgment.Classification.Pathogenic, "I2 and impact HIGH/MODERATE");
+		}
+		else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
+		{
+			return new Judgment(Judgment.Classification.Pathogenic, "I3 and impact HIGH/MODERATE/LOW");
+		}
+		else if(category.equals(Category.I1) || category.equals(Category.I2) || category.equals(Category.I3))
+		{
+			throw new InsufficientDataException("Cannot classify variant, no futher calibration data for I1/I2/I3 gene " + gene);
+		}
+		
+		
+		
+		
+		/**
+		 * "C-class genes"
+		 */
 		if((category.equals(Category.C1) || category.equals(Category.C2)))
 		{
 			if(CADDscore == null)
@@ -97,9 +138,12 @@ public class CCGGUtils
 			}
 			else
 			{
+				//justification?
+			//	System.out.println("impact: " + impact);
 				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
 			}
 		}
+		
 		if((category.equals(Category.C3) || category.equals(Category.C4)))
 		{
 			if(CADDscore == null)
@@ -108,31 +152,26 @@ public class CCGGUtils
 			}
 			if(CADDscore > entry.Spec95thPerCADDThreshold)
 			{
+				return new Judgment(Judgment.Classification.Pathogenic, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
+			}
+			else if(CADDscore > entry.MeanPathogenicCADDScore)
+			{
 				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
 			}
 			else if(CADDscore < entry.Sens95thPerCADDThreshold)
 			{
-				return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+				return new Judgment(Judgment.Classification.Benign, "todo");
 			}
-			else
-			{
-				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
-			}
-		}
-		else if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
-		{
-			return new Judgment(Judgment.Classification.Pathogenic, "category.equals(Category.I1) && impact.equals(Impact.HIGH)) so Pathogenic");
-		}
-		else if(category.equals(Category.I2) && impact.equals(Impact.MODERATE))
-		{
-			return new Judgment(Judgment.Classification.Pathogenic, "category.equals(Category.I2) && impact.equals(Impact.MODERATE) so Pathogenic");
-		}
-		else if(category.equals(Category.I3) && impact.equals(Impact.LOW))
-		{
-			return new Judgment(Judgment.Classification.Pathogenic, "category.equals(Category.I3) && impact.equals(Impact.LOW) so Pathogenic");
+//			else if(CADDscore < entry.MeanPopulationCADDScore)
+//			{
+//				return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+//			}
 		}
 		
-		return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
+	//	if(1 == 1) { throw new NoDataForGeneException("QUITTING"); }
+	
+		
+		throw new InsufficientDataException("Cannot classify variant in gene " + gene);
 	}
 	
 	public static Set<String> getGenesFromAnn(String ann)

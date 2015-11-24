@@ -34,6 +34,21 @@ public class MVLResults {
 		nrOf_P_LP_judgedAs_P_LP = 0;
 		
 	}
+	
+	public int totalNrOfCCGGClassifiedVariants()
+	{
+		return nrOf_B_LB_P_LP_CCGGClassifiedVariants() + nrOf_VOUS_CCGGClassifiedVariants();
+	}
+	
+	public int nrOf_B_LB_P_LP_CCGGClassifiedVariants()
+	{
+		return nrOf_B_LB_judgedAs_B_LB + nrOf_B_LB_judgedAs_P_LP + nrOf_P_LP_judgedAs_B_LB + nrOf_P_LP_judgedAs_P_LP; 
+	}
+	
+	public int nrOf_VOUS_CCGGClassifiedVariants()
+	{
+		return nrOf_VOUS_judgedAs_B_LB + nrOf_VOUS_judgedAs_P_LP;
+	}
 
 	@Override
 	public String toString() {
@@ -50,11 +65,11 @@ public class MVLResults {
 	 */
 	public Double getPercOfFalsePositives()
 	{
-		if(nrOf_B_LB == 0)
+		if(nrOf_B_LB_judgedAs_P_LP+nrOf_B_LB_judgedAs_B_LB == 0)
 		{
 			return null;
 		}
-		return ((double)nrOf_B_LB_judgedAs_P_LP/(double)nrOf_B_LB)*100;
+		return ((double)nrOf_B_LB_judgedAs_P_LP/(double)(nrOf_B_LB_judgedAs_P_LP+nrOf_B_LB_judgedAs_B_LB))*100;
 	}
 	
 	/**
@@ -63,10 +78,10 @@ public class MVLResults {
 	 */
 	public Double getPercOfFalseNegatives()
 	{
-		if(nrOf_P_LP == 0)
+		if(nrOf_P_LP_judgedAs_B_LB+nrOf_P_LP_judgedAs_P_LP == 0)
 		{
 			return null;
 		}
-		return ((double)nrOf_P_LP_judgedAs_B_LB/(double)nrOf_P_LP)*100;
+		return ((double)nrOf_P_LP_judgedAs_B_LB/(double)(nrOf_P_LP_judgedAs_B_LB+nrOf_P_LP_judgedAs_P_LP))*100;
 	}
 }
