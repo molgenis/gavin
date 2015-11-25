@@ -12,6 +12,8 @@ import org.molgenis.calibratecadd.support.NoDataForGeneException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGEntry.Category;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Confidence;
 
 public class CCGGUtils
 {
@@ -45,7 +47,7 @@ public class CCGGUtils
 		return geneToEntry.containsKey(gene) ? true : false;
 	}
 	
-	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
+	public Judgment classifyVariant_FP_FN_1perc(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
 	{
 		if(!geneToEntry.containsKey(gene))
 		{
@@ -55,96 +57,47 @@ public class CCGGUtils
 		CCGGEntry entry = geneToEntry.get(gene);
 		CCGGEntry.Category category = entry.category;
 		
-
-		
 		/**
-		 * Apply MAF threshold first
-		 * 100 is more strict in selecting (~1% FP), 10 is all right too (~4% FP)
+		 * Round one: going for < 1% FN/FP
 		 */
+		
+		// any gene
 		if(MAF > (entry.PathoMAFThreshold*100))
 		{
-			return new Judgment(Judgment.Classification.Likely_Benign, "todo");
+			return new Judgment(Classification.Benign, Confidence.FP_FN_1perc, "todo");
 		}
 		
-
-		/**
-		 * "N-class genes"
-		 */
-		if((category.equals(Category.N1) || category.equals(Category.N2)))
-		{
-			
-			
-			throw new InsufficientDataException("Cannot classify variant, no futher calibration data for N1/N2 gene " + gene);
-		}
-		
-		/**
-		 * "T-class genes"
-		 */
-		if(category.equals(Category.T1) || category.equals(Category.T2))
-		{			
-			throw new InsufficientDataException("Cannot classify variant, no futher calibration data for T1/T2 gene " + gene);
-		}
-		
-		
-		
-		
-		/**
-		 * "I-class genes"
-		 */
+		// "I-class genes"
 		if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
 		{
-			return new Judgment(Judgment.Classification.Pathogenic, "I1 and impact HIGH");
+			return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "I1 and impact HIGH");
 		}
 		else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 		{
-			return new Judgment(Judgment.Classification.Pathogenic, "I2 and impact HIGH/MODERATE");
+			return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "I2 and impact HIGH/MODERATE");
 		}
 		else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 		{
-			return new Judgment(Judgment.Classification.Pathogenic, "I3 and impact HIGH/MODERATE/LOW");
+			return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "I3 and impact HIGH/MODERATE/LOW");
 		}
-		else if(category.equals(Category.I1) || category.equals(Category.I2) || category.equals(Category.I3))
+		else if(impact.equals(Impact.MODIFIER))
 		{
-			throw new InsufficientDataException("Cannot classify variant, no futher calibration data for I1/I2/I3 gene " + gene);
+			return new Judgment(Judgment.Classification.Benign,  Confidence.FP_FN_1perc, "impact MODIFIER");
 		}
-		
-		
-		
-		
-		/**
-		 * "C-class genes"
-		 */
+
+		// "C-class genes"
 		if((category.equals(Category.C1) || category.equals(Category.C2)))
 		{
 			if(CADDscore == null)
 			{
 				throw new CaddScoreMissingException("Cannot classify variant, need to have CADD score for " + gene);
 			}
-			if(CADDscore > entry.Spec95thPerCADDThreshold)
+			if(CADDscore > entry.MeanPathogenicCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
-			}
-			else if(CADDscore > entry.MeanPathogenicCADDScore)
-			{
-				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
-			}
-			else if(CADDscore < entry.Sens95thPerCADDThreshold)
-			{
-				return new Judgment(Judgment.Classification.Benign, "todo");
-			}
-			else if(CADDscore < entry.MeanPopulationCADDScore)
-			{
-				return new Judgment(Judgment.Classification.Likely_Benign, "todo");
-			}
-			else
-			{
-				//justification?
-			//	System.out.println("impact: " + impact);
-				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
+				return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "todo");
 			}
 		}
-		
-		if((category.equals(Category.C3) || category.equals(Category.C4)))
+		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore == null)
 			{
@@ -152,26 +105,59 @@ public class CCGGUtils
 			}
 			if(CADDscore > entry.Spec95thPerCADDThreshold)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
+				return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
 			}
-			else if(CADDscore > entry.MeanPathogenicCADDScore)
-			{
-				return new Judgment(Judgment.Classification.Likely_Pathogenic, "todo");
-			}
-			else if(CADDscore < entry.Sens95thPerCADDThreshold)
-			{
-				return new Judgment(Judgment.Classification.Benign, "todo");
-			}
-//			else if(CADDscore < entry.MeanPopulationCADDScore)
-//			{
-//				return new Judgment(Judgment.Classification.Likely_Benign, "todo");
-//			}
+		}
+
+		/**
+		 * Round two: going for < 5% FN/FP
+		 */
+		if(MAF > (entry.PathoMAFThreshold))
+		{
+			return new Judgment(Classification.Benign, Confidence.FP_FN_5perc, "todo");
 		}
 		
-	//	if(1 == 1) { throw new NoDataForGeneException("QUITTING"); }
-	
+		if((category.equals(Category.C1) || category.equals(Category.C2)))
+		{
+			if(CADDscore > entry.MeanPopulationCADDScore)
+			{
+				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_5perc, "todo");
+			}
+		}
+		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
+		{
+			if(CADDscore > entry.MeanPathogenicCADDScore)
+			{
+				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_5perc, "todo");
+			}
+		}
 		
-		throw new InsufficientDataException("Cannot classify variant in gene " + gene);
+		/**
+		 * Round three: going for < 10% FN/FP
+		 */
+		if(MAF > (entry.PathoMAFThreshold/100))
+		{
+			return new Judgment(Classification.Benign, Confidence.FP_FN_10perc, "todo");
+		}
+		
+		if((category.equals(Category.C1) || category.equals(Category.C2)))
+		{
+			if(CADDscore > entry.Sens95thPerCADDThreshold)
+			{
+				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_10perc, "todo");
+			}
+		}
+		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
+		{
+			if(CADDscore > entry.MeanPopulationCADDScore)
+			{
+				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_10perc, "todo");
+			}
+		}
+	
+		return new Judgment(Judgment.Classification.Benign, Confidence.FP_FN_25perc, "No further calibration data for gene " + gene + " but it has not been judged pathogenic, so we call it benign for now");
+		
+	//	throw new InsufficientDataException("No further calibration data for gene " + gene + " but it has not been judged pathogenic, so we call it benign for now");
 	}
 	
 	public static Set<String> getGenesFromAnn(String ann)

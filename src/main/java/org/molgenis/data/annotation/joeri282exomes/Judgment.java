@@ -3,18 +3,24 @@ package org.molgenis.data.annotation.joeri282exomes;
 public class Judgment
 {
 	public enum Classification{
-		Benign, Likely_Benign, Likely_Pathogenic, Pathogenic
+		Benign, Pathogenic
 		//VOUS,
+	}
+	
+	public enum Confidence{
+		FP_FN_1perc, FP_FN_5perc, FP_FN_10perc, FP_FN_25perc
 	}
 	
 	String reason;
 	Classification classification;
+	Confidence confidence;
 
-	public Judgment(Classification classification, String reason)
+	public Judgment(Classification classification, Confidence confidence, String reason)
 	{
 		super();
 		this.reason = reason;
 		this.classification = classification;
+		this.confidence = confidence;
 	}
 
 	public String getReason()

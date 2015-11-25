@@ -70,23 +70,25 @@ public class Step9_Validation
 			String classification = record.getString("CLSF");
 			String mvl = record.getString("MVL");
 			
+			boolean variantClassified = false;
 			for(String gene : genes)
 			{
 		
-		//		System.out.println("MVL: " + mvl + ", gene: " + gene + ", cat:" + ccgg.getCategory(gene));
 				Impact impact = CCGGUtils.getImpact(ann, gene, alt);
-		//		System.out.println("going to classify: gene=" + gene + ", impact=" + impact + ", MAF=" + MAF + ", CADD=" + CADDscore);
-				
 				try{
-					Judgment j = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
-				//	System.out.println("we say: " + j.getClassification() + ", mvl says: " + classification);
+					Judgment j = ccgg.classifyVariant_FP_FN_1perc(gene, MAF, impact, CADDscore);
 					addToMVLResults(j.getClassification(), classification, mvl);
-					}
+					variantClassified = true;
+				}
 				catch(CCGGException e)
 				{
-		//			System.out.println(e);
+					//System.out.println(e);
 					addToMVLResults(null, classification, mvl);
 				}
+			}
+			if(!variantClassified)
+			{
+				//System.out.println("Variant not classified: " + record.toString());
 			}
 		}
 	}
@@ -105,11 +107,11 @@ public class Step9_Validation
 		if(mvlClasfc.equals("B") || mvlClasfc.equals("LB"))
 		{
 			mvlR.nrOf_B_LB++;
-			if(ccggClasfc == Classification.Benign || ccggClasfc == Classification.Likely_Benign)
+			if(ccggClasfc == Classification.Benign)
 			{
 				mvlR.nrOf_B_LB_judgedAs_B_LB++;
 			}
-			if(ccggClasfc == Classification.Pathogenic || ccggClasfc == Classification.Likely_Pathogenic)
+			if(ccggClasfc == Classification.Pathogenic )
 			{
 				//"false positives"
 				mvlR.nrOf_B_LB_judgedAs_P_LP++;
@@ -119,12 +121,12 @@ public class Step9_Validation
 		if(mvlClasfc.equals("P") || mvlClasfc.equals("LP"))
 		{
 			mvlR.nrOf_P_LP++;
-			if(ccggClasfc == Classification.Benign || ccggClasfc == Classification.Likely_Benign)
+			if(ccggClasfc == Classification.Benign)
 			{
 				//"false negatives"
 				mvlR.nrOf_P_LP_judgedAs_B_LB++;
 			}
-			if(ccggClasfc == Classification.Pathogenic || ccggClasfc == Classification.Likely_Pathogenic)
+			if(ccggClasfc == Classification.Pathogenic)
 			{
 				mvlR.nrOf_P_LP_judgedAs_P_LP++;
 			}
@@ -134,11 +136,11 @@ public class Step9_Validation
 		if(mvlClasfc.equals("V"))
 		{
 			mvlR.nrOf_VOUS++;
-			if(ccggClasfc == Classification.Benign || ccggClasfc == Classification.Likely_Benign)
+			if(ccggClasfc == Classification.Benign)
 			{
 				mvlR.nrOf_VOUS_judgedAs_B_LB++;
 			}
-			if(ccggClasfc == Classification.Pathogenic || ccggClasfc == Classification.Likely_Pathogenic)
+			if(ccggClasfc == Classification.Pathogenic)
 			{
 				mvlR.nrOf_VOUS_judgedAs_P_LP++;
 			}
