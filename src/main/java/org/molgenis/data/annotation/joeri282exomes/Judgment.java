@@ -32,6 +32,11 @@ public class Judgment
 	{
 		return classification;
 	}
+	
+	public Confidence getConfidence()
+	{
+		return confidence;
+	}
 
 	@Override
 	public String toString()

@@ -110,7 +110,7 @@ public class CalibratedExomeAnalysis
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 
 					
-					Judgment j = ccgg.classifyVariant_FP_FN_1perc(gene, exac_af, impact, cadd);
+					Judgment j = ccgg.classifyVariant(gene, exac_af, impact, cadd);
 					
 					if(j.classification.equals(Judgment.Classification.Pathogenic))
 					{
