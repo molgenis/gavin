@@ -70,12 +70,6 @@ public class Step9_Validation
 			String classification = record.getString("CLSF");
 			String mvl = record.getString("MVL");
 			
-//			String id = record.getString("ID");
-//			if( nc.newClsf.containsKey(id))
-//			{
-//				System.out.println((classification.equals(nc.newClsf.get(id))?"" : "---> !! DIFFERENCE: ") + id + " is found in VCF classified as " + classification + ", according to re-classified list: " + nc.newClsf.get(id));
-//			}
-			
 			for(String gene : genes)
 			{
 		
