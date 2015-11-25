@@ -24,11 +24,7 @@
 			<h4>${entity.get('Recommendation')?html}</h4>
 		</div>
 		<div class="col-md-4">
-			<#list 1..22 as supportedChrom>
-				<#if entity.getString('Chr') == supportedChrom?string>
-					<div id="modalGenomeBrowser"></div>
-				</#if>
-			</#list>
+			<div id="modalGenomeBrowser"></div>
 		</div>
 	</div>
 
@@ -85,20 +81,16 @@
 	<button type="button" class="btn btn-default" data-dismiss="modal">close</button>
 </div>
 
-<#list 1..22 as supportedChrom>
-	<#if entity.getString('Chr') == supportedChrom?string>
-	<script>
-	    molgenis.dataexplorer.data.createGenomeBrowser({
-	        pageName: 'modalGenomeBrowser', 
-	        noPersist: true, 
-	        chr: ${entity.getString("Chr")}, 
-	        viewStart: ${entity.getString("Start")} - 10000, 
-	        viewEnd: ${entity.getString("End")} + 10000
-	    });
-	
-	    setTimeout(function(){
-	        $('.modal-body').animate({scrollTop:0},0);
-	    }, 10);
-	</script>
-	</#if>
-</#list>
+<script>
+    molgenis.dataexplorer.data.createGenomeBrowser({
+        pageName: 'modalGenomeBrowser', 
+        noPersist: true, 
+        chr: '${entity.getString("Chr")}', 
+        viewStart: ${entity.getString("Start")} - 10000, 
+        viewEnd: ${entity.getString("End")} + 10000
+    });
+
+    setTimeout(function(){
+        $('.modal-body').animate({scrollTop:0},0);
+    }, 10);
+</script>
