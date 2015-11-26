@@ -175,7 +175,7 @@ public class CCGGUtils
 			}
 			else if(CADDscore != null && CADDscore < 10)
 			{
-				return new Judgment(Judgment.Classification.Benign, Confidence.Low, "CADDscore > 20");
+				return new Judgment(Judgment.Classification.Benign, Confidence.Low, "CADDscore < 10");
 			}
 			else
 			{
