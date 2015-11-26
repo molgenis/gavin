@@ -58,13 +58,13 @@ public class CCGGUtils
 		CCGGEntry.Category category = entry.category;
 		
 		/**
-		 * Round one: going for < 1% FN/FP
+		 * High confidence tranche, strict settings
 		 */
 		
-		// any gene
+		// MAF filter
 		if(MAF > (entry.PathoMAFThreshold*100))
 		{
-			return new Judgment(Classification.Benign, Confidence.High, "todo");
+			return new Judgment(Classification.Benign, Confidence.High, "MAF > (entry.PathoMAFThreshold*100)");
 		}
 		
 		// "I-class genes"
@@ -90,7 +90,7 @@ public class CCGGUtils
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPathogenicCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "todo");
+				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "CADDscore > entry.MeanPathogenicCADDScore");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
@@ -102,54 +102,86 @@ public class CCGGUtils
 		}
 
 		/**
-		 * Round two: going for < 5% FN/FP
+		 * Medium confidence tranche, less strict settings
 		 */
+		
 		if(MAF > (entry.PathoMAFThreshold))
 		{
-			return new Judgment(Classification.Benign, Confidence.Medium, "todo");
+			return new Judgment(Classification.Benign, Confidence.Medium, "MAF > (entry.PathoMAFThreshold)");
 		}
 		
 		if((category.equals(Category.C1) || category.equals(Category.C2)))
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPopulationCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Confidence.Medium, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Medium, "CADDscore > entry.MeanPopulationCADDScore");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPathogenicCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Confidence.Medium, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Medium, "CADDscore > entry.MeanPathogenicCADDScore");
 			}
 		}
 		
 		/**
-		 * Round three: going for < 10% FN/FP
+		 * Medium confidence tranche, least strict settings
 		 */
+		
 		if(MAF > (entry.PathoMAFThreshold/100))
 		{
-			return new Judgment(Classification.Benign, Confidence.Low, "todo");
+			return new Judgment(Classification.Benign, Confidence.Low, "MAF > (entry.PathoMAFThreshold/100)");
 		}
 		
 		if((category.equals(Category.C1) || category.equals(Category.C2)))
 		{
 			if(CADDscore != null && CADDscore > entry.Sens95thPerCADDThreshold)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "CADDscore > entry.Sens95thPerCADDThreshold");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPopulationCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "CADDscore > entry.MeanPopulationCADDScore");
 			}
 		}
 	
-	//	return new Judgment(Judgment.Classification.Benign, Confidence.FP_FN_25perc, "No further calibration data for gene " + gene + " but it has not been judged pathogenic, so we call it benign for now");
+	//	System.out.println("cant judge " + gene + " " + MAF + " " + impact + " " + CADDscore);
 		
-		throw new InsufficientDataException("No further calibration data for gene " + gene + " so we don't judge");
+		return naiveClassifyVariant(gene, MAF, impact, CADDscore);
+		
+	//	throw new InsufficientDataException("No further calibration data for gene " + gene + " so we don't judge");
+	}
+	
+	
+	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
+	{
+		if(MAF > 0.01)
+		{
+			return new Judgment(Judgment.Classification.Benign, Confidence.Low, "MAF > 0.01");
+		}
+		else if(impact.equals(impact.equals(Impact.MODIFIER) || impact.equals(Impact.LOW)))
+		{
+			return new Judgment(Judgment.Classification.Benign, Confidence.Low, "Impact.MODIFIER || Impact.LOW");
+		}
+		else
+		{
+			if(CADDscore != null && CADDscore > 20)
+			{
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "CADDscore > 20");
+			}
+			else if(CADDscore != null && CADDscore < 10)
+			{
+				return new Judgment(Judgment.Classification.Benign, Confidence.Low, "CADDscore > 20");
+			}
+			else
+			{
+				throw new InsufficientDataException("Unable to naively classify " + gene + "! ");
+			}
+		}
 	}
 	
 	public static Set<String> getGenesFromAnn(String ann) throws Exception

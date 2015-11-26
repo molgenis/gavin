@@ -11,10 +11,13 @@ public class ProcessJudgedVariantMVLResults
 {
 	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants)
 	{
-//		printCountsOfExpertMVLClassifications(judgedMVLVariants);
-//		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.FP_FN_1perc);
-//		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.FP_FN_5perc);
+		printCountsOfExpertMVLClassifications(judgedMVLVariants);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.High);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.High);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Medium);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Medium);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Low);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Low);
 	}
 	
 	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
@@ -22,7 +25,12 @@ public class ProcessJudgedVariantMVLResults
 		System.out.println("\nFalse posities & false negatives in confidence tranche: " + confidenceTranche);
 		int grandTotal = 0;
 		
-		System.out.println("\t" + "TN" + "\t" + "TP" + "\t" + "FP" + "\t" + "FN");
+		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV");
+		
+		int TN_all = 0;
+		int TP_all = 0;
+		int FP_all = 0;
+		int FN_all = 0;
 		
 		for(String mvl : judgedMVLVariants.keySet())
 		{
@@ -37,28 +45,53 @@ public class ProcessJudgedVariantMVLResults
 					if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.Benign))
 					{
 						TN ++;
+						TN_all ++;
 					}
 					else if((jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getClassification().equals(Classification.Pathogn))
 					{
 						TP ++;
+						TP_all ++;
 					}
 					else if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.Pathogn))
 					{
 						FP ++;
+						FP_all ++;
 					}
 					else if((jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getClassification().equals(Classification.Benign))
 					{
 						FN ++;
+						FN_all ++;
 					}
 				}
 			}
 			
-			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN);
+			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP)+ "\t" + getNPV(TN, FN));
 			
 			
 		}
 		
+		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all));
 
+	}
+	
+	private static String getTPR(int TP, int FN)
+	{
+		return TP+FN == 0 ? "" : (int)Math.round((double)TP/(TP+FN)*100) + "%";
+	}
+	
+	private static String getTNR(int TN, int FP)
+	{
+		return TN+FP == 0 ? "" : (int)Math.round((double)TN/(FP+TN)*100) + "%";
+	}
+	
+	private static String getPPV(int TP, int FP)
+	{
+		return TP+FP == 0 ? "" : (int)Math.round((double)TP/(TP+FP)*100) + "%";
+	}
+	
+	private static String getNPV(int TN, int FN)
+	{
+		return TN+FN == 0 ? "" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
 	}
 
 	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
