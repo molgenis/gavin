@@ -7,9 +7,14 @@ public class JudgedVariant
 {
 	Judgment j;
 	Entity e;
-	String expertClassification;
 	
-	public Judgment getJ()
+	public enum ExpertClassification{
+		B, LB, V, LP, P
+	}
+	
+	ExpertClassification expertClassification;
+	
+	public Judgment getJudgment()
 	{
 		return j;
 	}
@@ -17,11 +22,11 @@ public class JudgedVariant
 	{
 		return e;
 	}
-	public String getExpertClassification()
+	public ExpertClassification getExpertClassification()
 	{
 		return expertClassification;
 	}
-	public JudgedVariant(Judgment j, Entity e, String expertClassification)
+	public JudgedVariant(Judgment j, Entity e, ExpertClassification expertClassification)
 	{
 		super();
 		this.j = j;

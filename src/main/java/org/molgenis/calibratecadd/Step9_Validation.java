@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.molgenis.calibratecadd.support.CCGGException;
 import org.molgenis.calibratecadd.support.JudgedVariant;
+import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
 import org.molgenis.calibratecadd.support.ProcessJudgedVariantMVLResults;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
@@ -103,7 +104,7 @@ public class Step9_Validation
 			judgedMVLVariants.put(mvl, variants);
 		}
 		List<JudgedVariant> variants = judgedMVLVariants.get(mvl);
-		variants.add(new JudgedVariant(judgment, variant, mvlClasfc));
+		variants.add(new JudgedVariant(judgment, variant, ExpertClassification.valueOf(mvlClasfc)));
 	}
 	
 //	private void addToMVLResults(Classification ccggClasfc, String mvlClasfc, String mvl)

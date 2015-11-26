@@ -112,7 +112,7 @@ public class CalibratedExomeAnalysis
 					
 					Judgment j = ccgg.classifyVariant(gene, exac_af, impact, cadd);
 					
-					if(j.classification.equals(Judgment.Classification.Pathogenic))
+					if(j.classification.equals(Judgment.Classification.Pathogn))
 					{
 						List<String> samples = findInterestingSamples(record, i, exac_het, exac_hom);
 						if(samples.size() > 0)

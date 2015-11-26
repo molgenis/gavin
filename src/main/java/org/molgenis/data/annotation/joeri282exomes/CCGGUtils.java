@@ -64,25 +64,25 @@ public class CCGGUtils
 		// any gene
 		if(MAF > (entry.PathoMAFThreshold*100))
 		{
-			return new Judgment(Classification.Benign, Confidence.FP_FN_1perc, "todo");
+			return new Judgment(Classification.Benign, Confidence.High, "todo");
 		}
 		
 		// "I-class genes"
 		if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
 		{
-			return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "I1 and impact HIGH");
+			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "I1 and impact HIGH");
 		}
 		else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 		{
-			return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "I2 and impact HIGH/MODERATE");
+			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "I2 and impact HIGH/MODERATE");
 		}
 		else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 		{
-			return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "I3 and impact HIGH/MODERATE/LOW");
+			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "I3 and impact HIGH/MODERATE/LOW");
 		}
 		else if(impact.equals(Impact.MODIFIER))
 		{
-			return new Judgment(Judgment.Classification.Benign,  Confidence.FP_FN_1perc, "impact MODIFIER");
+			return new Judgment(Judgment.Classification.Benign,  Confidence.High, "impact MODIFIER");
 		}
 
 		// "C-class genes"
@@ -90,14 +90,14 @@ public class CCGGUtils
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPathogenicCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "todo");
+				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "todo");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore != null && CADDscore > entry.Spec95thPerCADDThreshold)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic,  Confidence.FP_FN_1perc, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
+				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
 			}
 		}
 
@@ -106,21 +106,21 @@ public class CCGGUtils
 		 */
 		if(MAF > (entry.PathoMAFThreshold))
 		{
-			return new Judgment(Classification.Benign, Confidence.FP_FN_5perc, "todo");
+			return new Judgment(Classification.Benign, Confidence.Medium, "todo");
 		}
 		
 		if((category.equals(Category.C1) || category.equals(Category.C2)))
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPopulationCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_5perc, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Medium, "todo");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPathogenicCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_5perc, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Medium, "todo");
 			}
 		}
 		
@@ -129,21 +129,21 @@ public class CCGGUtils
 		 */
 		if(MAF > (entry.PathoMAFThreshold/100))
 		{
-			return new Judgment(Classification.Benign, Confidence.FP_FN_10perc, "todo");
+			return new Judgment(Classification.Benign, Confidence.Low, "todo");
 		}
 		
 		if((category.equals(Category.C1) || category.equals(Category.C2)))
 		{
 			if(CADDscore != null && CADDscore > entry.Sens95thPerCADDThreshold)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_10perc, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "todo");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPopulationCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogenic, Confidence.FP_FN_10perc, "todo");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "todo");
 			}
 		}
 	

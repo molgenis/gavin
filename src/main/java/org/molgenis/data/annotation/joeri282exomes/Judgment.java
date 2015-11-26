@@ -3,12 +3,12 @@ package org.molgenis.data.annotation.joeri282exomes;
 public class Judgment
 {
 	public enum Classification{
-		Benign, Pathogenic
+		Benign, Pathogn
 		//VOUS,
 	}
 	
 	public enum Confidence{
-		FP_FN_1perc, FP_FN_5perc, FP_FN_10perc, FP_FN_25perc
+		High, Medium, Low, FP_FN_25perc
 	}
 	
 	String reason;
