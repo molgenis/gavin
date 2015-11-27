@@ -151,9 +151,9 @@ public class CCGGUtils
 	
 	//	System.out.println("cant judge " + gene + " " + MAF + " " + impact + " " + CADDscore);
 		
-		return naiveClassifyVariant(gene, MAF, impact, CADDscore);
+	//	return naiveClassifyVariant(gene, MAF, impact, CADDscore);
 		
-	//	throw new InsufficientDataException("No further calibration data for gene " + gene + " so we don't judge");
+		throw new InsufficientDataException("No further calibration data for gene " + gene + " so we don't judge");
 	}
 	
 	

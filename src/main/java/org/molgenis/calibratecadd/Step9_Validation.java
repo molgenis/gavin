@@ -81,7 +81,7 @@ public class Step9_Validation
 					{
 						Judgment judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
 				//		Judgment judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
-						addToMVLResults(judgment, mvlClassfc, mvlName, record);	
+						addToMVLResults(judgment, mvlClassfc, mvlName, record);
 					}
 					catch(CCGGException e)
 					{

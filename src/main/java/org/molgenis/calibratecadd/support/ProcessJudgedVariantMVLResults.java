@@ -18,6 +18,85 @@ public class ProcessJudgedVariantMVLResults
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Medium);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Low);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Low);
+		reportVOUScounts(judgedMVLVariants, Confidence.High);
+		reportVOUScounts(judgedMVLVariants, Confidence.Medium);
+		reportVOUScounts(judgedMVLVariants, Confidence.Low);
+		printVOUSresults(judgedMVLVariants, Confidence.High);
+	}
+	
+	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	{
+		System.out.println("\nCVOUS variants in confidence tranche: " + confidenceTranche);
+		
+		for(String mvl : judgedMVLVariants.keySet())
+		{
+			int benignVOUSforMVL = 0;
+			int pathogenicVOUSforMVL = 0;
+			
+			StringBuffer benignVous = new StringBuffer();
+			
+			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
+			{
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Benign) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				{
+					benignVous.append(jv.printVariant() + "\n");
+				}
+			}
+			if(benignVous.length() > 0)
+			{
+				System.out.println(mvl + ", benign:" + "\n" + benignVous.toString());
+			}
+			
+			
+			StringBuffer pathoVous = new StringBuffer();
+			
+			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
+			{
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				{
+					pathoVous.append(jv.printVariant() + "\n");
+				}
+			}
+			if(pathoVous.length() > 0)
+			{
+				System.out.println(mvl + ", pathogenic:" + "\n" + pathoVous.toString());
+			}
+		}
+	}
+	
+	public static void reportVOUScounts(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	{
+		System.out.println("\nClassifications of VOUS variants in confidence tranche: " + confidenceTranche);
+		
+		System.out.println("\t" + "Benign" + "\t" + "Pathogn");
+		
+		int totalBenign = 0;
+		int totalPathogn = 0;
+		for(String mvl : judgedMVLVariants.keySet())
+		{
+			int benignVOUSforMVL = 0;
+			int pathogenicVOUSforMVL = 0;
+			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
+			{
+				if(jv.getJudgment() != null && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				{
+					if(jv.getJudgment().getClassification().equals(Classification.Benign))
+					{
+						benignVOUSforMVL++;
+						totalBenign++;
+					}
+					else if(jv.getJudgment().getClassification().equals(Classification.Pathogn))
+					{
+						pathogenicVOUSforMVL++;
+						totalPathogn++;
+					}
+				}
+			}
+			System.out.println(mvl + "\t" + benignVOUSforMVL + "\t" + pathogenicVOUSforMVL);
+		}
+		System.out.println("TOTAL" + "\t" + totalBenign + "\t" + totalPathogn);
+		
+		
 	}
 	
 	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
@@ -190,18 +269,3 @@ public class ProcessJudgedVariantMVLResults
 	}
 
 }
-
-//System.out.println("\n\nTotal amount of B/LB/LP/P variants in original MVLs = " + nrOfMVL_B_LB_P_LP_variants + " ("+nrOfMVL_B_LB_variants+" benign, "+nrOfMVL_P_LP_variants+" pathogenic)");
-//System.out.println("Total amount of B/LB/LP/P variants that CCGG-classified as B/LB/LP/P = " + nrOf_B_LB_P_LP_CCGGclassifiedVariants_acrossAllMVLs);
-//
-//System.out.println("\nCorrectly classified benign = " + correctlyClassifiedBenign);
-//System.out.println("Wrongly classified benign (LB/B judged as LP/P, false positives) = " + wronglyClassifiedBenign);
-//System.out.println("Correctly classified pathogenic = " + correctlyClassifiedPathogenic);
-//System.out.println("Wrongly classified pathogenic (LP/P judged as LB/B, false negatives) = " + wronglyClassifiedPathogenic);
-//
-//System.out.println("\nAverage false positive rate in CCGG-classifications across all MVLs = " + Math.round(((double)wronglyClassifiedBenign/(double)(wronglyClassifiedBenign+correctlyClassifiedBenign))*100) + "%");
-//System.out.println("Average false negative rate in CCGG-classifications across all MVLs = " + Math.round(((double)wronglyClassifiedPathogenic/(double)(wronglyClassifiedPathogenic+correctlyClassifiedPathogenic))*100) + "%");
-//
-//System.out.println("\nClassification of VOUS variants:");
-//System.out.println("Total amount of VOUS variants in original MVLs = " + nrOfMVL_VOUS_variants);
-//System.out.println("Total amount of VOUS variants that CCGG-classified as B/LB/LP/P = " + nrOf_VOUS_CCGGclassifiedVariants_acrossAllMVLs + " (" + nrOf_VOUS_B_LB_CCGGclassifiedVariants_acrossAllMVLs + " benign, " + nrOf_VOUS_P_LP_CCGGclassifiedVariants_acrossAllMVLs + " pathogenic)");

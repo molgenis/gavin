@@ -5,7 +5,7 @@ import org.molgenis.data.annotation.joeri282exomes.Judgment;
 
 public class JudgedVariant
 {
-	Judgment j;
+	Judgment judgment;
 	Entity e;
 	
 	public enum ExpertClassification{
@@ -16,7 +16,7 @@ public class JudgedVariant
 	
 	public Judgment getJudgment()
 	{
-		return j;
+		return judgment;
 	}
 	public Entity getE()
 	{
@@ -26,13 +26,17 @@ public class JudgedVariant
 	{
 		return expertClassification;
 	}
-	public JudgedVariant(Judgment j, Entity e, ExpertClassification expertClassification)
+	public JudgedVariant(Judgment judgment, Entity variant, ExpertClassification expertClassification)
 	{
 		super();
-		this.j = j;
-		this.e = e;
+		this.judgment = judgment;
+		this.e = variant;
 		this.expertClassification = expertClassification;
 	}
 	
+	public String printVariant()
+	{
+		return e.getString("#CHROM") + ", " + e.getString("POS") + ", " + e.getString("REF") + ", " + e.getString("ALT") + ", reason: " + judgment.getReason();
+	}
 	
 }
