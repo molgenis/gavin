@@ -1,4 +1,8 @@
 
+### new plot in gg ###
+library(ggplot2)
+
+
 ### summary gene plots (uses output of Step 7)
 #calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
@@ -8,6 +12,40 @@ points(calibcaddGenes$MeanPathogenicCADDScore, col="red")
 calibcaddGenes$MeanDifference <- as.numeric(calibcaddGenes$MeanDifference)
 plot(density(calibcaddGenes$MeanDifference))
 abline(v = mean(calibcaddGenes$MeanDifference))
+
+calibcaddGenesOrdered <- calibcaddGenes[order(-calibcaddGenes$MeanDifference),] 
+##ggplot version of scatterplot
+p <- ggplot() +
+  geom_point(data = calibcaddGenesOrdered, aes(y=MeanPopulationCADDScore, x=seq(1,dim(calibcaddGenes)[1])), alpha = 1, colour="blue") +
+  geom_point(data = calibcaddGenesOrdered, aes(y=MeanPathogenicCADDScore, x=seq(1,dim(calibcaddGenes)[1])), alpha = 1, colour="red") +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_line(colour = "black"),
+        panel.grid.minor = element_line(colour = "gray"),
+        panel.border = element_blank(),
+        panel.background = element_blank()
+  ) +
+  labs(title="Mean CADD scores of equalized genes: blue = population, red = pathogenic") +
+  ylab("CADD score") +
+  xlab("Genes by index, sorted by mean difference in pathogenic vs population mean CADD score") +
+  theme(legend.position = "none")
+p
+##ggplot version of density
+p <- ggplot() +
+  geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddGenes, size=1, alpha=1, aes(x=MeanDifference, y=..count..), colour="black") +
+  geom_vline(xintercept = mean(calibcaddGenes$MeanDifference), colour = "black", size = 1, alpha = 1, linetype = "longdash") +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_line(colour = "black"),
+        panel.grid.minor = element_line(colour = "gray"),
+        panel.border = element_blank(),
+        panel.background = element_blank()
+  ) +
+  labs(title=paste(sep="", "Population CADD mean vs pathogenic CADD mean for equalized genes. Mean of means = ", format(mean(calibcaddGenes$MeanDifference), digits=3))) +
+  ylab("Gene density with preserved counts") +
+  xlab("Gene difference of CADD scores between pathogenic mean and population mean") +
+  theme(legend.position = "none")
+p
 
 ## single gene plots
 #calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
@@ -19,9 +57,6 @@ plot(calibcaddVariants.selectedGene.popul$pos, calibcaddVariants.selectedGene.po
 points(calibcaddVariants.selectedGene.path$pos, calibcaddVariants.selectedGene.path$cadd, col="red")
 abline(h = mean(calibcaddVariants.selectedGene.popul$cadd), col="blue")
 abline(h = mean(calibcaddVariants.selectedGene.path$cadd), col="red")
-
-### new plot in gg ###
-library(ggplot2)
 
 for (selectGene in unique(calibcaddVariants$gene)) {
 #selectGene <- "ATM"
