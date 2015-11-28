@@ -36,7 +36,7 @@ public class JudgedVariant
 	
 	public String printVariant()
 	{
-		return e.getString("#CHROM") + ", " + e.getString("POS") + ", " + e.getString("REF") + ", " + e.getString("ALT") + ", reason: " + judgment.getReason();
+		return e.getString("ID") + " (" + e.getString("#CHROM") + ":" + e.getString("POS") + " " + e.getString("REF") + " to " + e.getString("ALT") + "), reason: " + judgment.getReason();
 	}
 	
 }

@@ -64,25 +64,25 @@ public class CCGGUtils
 		// MAF filter
 		if(MAF > (entry.PathoMAFThreshold*100))
 		{
-			return new Judgment(Classification.Benign, Confidence.High, "MAF > (entry.PathoMAFThreshold*100)");
+			return new Judgment(Classification.Benign, Confidence.High, "MAF of " + MAF + " greather than 100 times the pathogenic MAF "+(entry.PathoMAFThreshold+" "));
 		}
 		
 		// "I-class genes"
 		if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
 		{
-			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "I1 and impact HIGH");
+			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "Variant of HIGH impact, while no high impact variants known in population" + " (MAF " + MAF + ")");
 		}
 		else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 		{
-			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "I2 and impact HIGH/MODERATE");
+			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "Variant of HIGH/MODERATE impact, while no high/moderate impact variants known in population" + " (MAF " + MAF + ")");
 		}
 		else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 		{
-			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "I3 and impact HIGH/MODERATE/LOW");
+			return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "Variant of HIGH/MODERATE/LOW impact, while no high/moderate/low impact variants known in population" + " (MAF " + MAF + ")");
 		}
 		else if(impact.equals(Impact.MODIFIER))
 		{
-			return new Judgment(Judgment.Classification.Benign,  Confidence.High, "impact MODIFIER");
+			return new Judgment(Judgment.Classification.Benign,  Confidence.High, "Variant impact of MODIFIER, unlikely to be pathogenic" + " (MAF " + MAF + ")");
 		}
 
 		// "C-class genes"
@@ -90,14 +90,14 @@ public class CCGGUtils
 		{
 			if(CADDscore != null && CADDscore > entry.MeanPathogenicCADDScore)
 			{
-				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "CADDscore > entry.MeanPathogenicCADDScore");
+				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "CADD score of " + CADDscore + " higher than the mean pathogenic score of " + entry.MeanPathogenicCADDScore + " (and MAF " + MAF + ")");
 			}
 		}
 		else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 		{
 			if(CADDscore != null && CADDscore > entry.Spec95thPerCADDThreshold)
 			{
-				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "CADD score " + CADDscore + " higher than 95% specificity threhold " + entry.Spec95thPerCADDThreshold);
+				return new Judgment(Judgment.Classification.Pathogn,  Confidence.High, "CADD score of " + CADDscore + " higher than the 95% specificity threhold " + entry.Spec95thPerCADDThreshold + " (and MAF " + MAF + ")");
 			}
 		}
 

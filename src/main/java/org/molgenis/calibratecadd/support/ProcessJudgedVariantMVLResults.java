@@ -26,7 +26,7 @@ public class ProcessJudgedVariantMVLResults
 	
 	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
 	{
-		System.out.println("\nCVOUS variants in confidence tranche: " + confidenceTranche);
+		System.out.println("\nVOUS variants in confidence tranche: " + confidenceTranche);
 		
 		for(String mvl : judgedMVLVariants.keySet())
 		{
