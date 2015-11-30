@@ -22,6 +22,46 @@ public class ProcessJudgedVariantMVLResults
 		reportVOUScounts(judgedMVLVariants, Confidence.Medium);
 		reportVOUScounts(judgedMVLVariants, Confidence.Low);
 		printVOUSresults(judgedMVLVariants, Confidence.High);
+		printFalseResults(judgedMVLVariants, Confidence.High);
+		printFalseResults(judgedMVLVariants, Confidence.Medium);
+		printFalseResults(judgedMVLVariants, Confidence.Low);
+	}
+	
+	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	{
+		System.out.println("\nFalse hits in confidence tranche: " + confidenceTranche);
+		
+		for(String mvl : judgedMVLVariants.keySet())
+		{
+			StringBuffer FN = new StringBuffer();
+			
+			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
+			{
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Benign) && (jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				{
+					FN.append(jv.printVariant() + "\n");
+				}
+			}
+			if(FN.length() > 0)
+			{
+				System.out.println(mvl + ", false negatives:" + "\n" + FN.toString());
+			}
+			
+			
+			StringBuffer FP = new StringBuffer();
+			
+			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
+			{
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && (jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				{
+					FP.append(jv.printVariant() + "\n");
+				}
+			}
+			if(FP.length() > 0)
+			{
+				System.out.println(mvl + ", false positives:" + "\n" + FP.toString());
+			}
+		}
 	}
 	
 	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
@@ -30,9 +70,6 @@ public class ProcessJudgedVariantMVLResults
 		
 		for(String mvl : judgedMVLVariants.keySet())
 		{
-			int benignVOUSforMVL = 0;
-			int pathogenicVOUSforMVL = 0;
-			
 			StringBuffer benignVous = new StringBuffer();
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
