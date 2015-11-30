@@ -159,9 +159,9 @@ public class CCGGUtils
 	
 	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
 	{
-		if(MAF > 0.01)
+		if(MAF > 0.001)
 		{
-			return new Judgment(Judgment.Classification.Benign, Confidence.Low, "MAF > 0.01");
+			return new Judgment(Judgment.Classification.Benign, Confidence.Low, "MAF > 0.001");
 		}
 		else if(impact.equals(impact.equals(Impact.MODIFIER) || impact.equals(Impact.LOW)))
 		{
@@ -169,13 +169,13 @@ public class CCGGUtils
 		}
 		else
 		{
-			if(CADDscore != null && CADDscore > 20)
+			if(CADDscore != null && CADDscore > 33)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "CADDscore > 20");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "CADDscore > 33");
 			}
-			else if(CADDscore != null && CADDscore < 10)
+			else if(CADDscore != null && CADDscore < 5)
 			{
-				return new Judgment(Judgment.Classification.Benign, Confidence.Low, "CADDscore < 10");
+				return new Judgment(Judgment.Classification.Benign, Confidence.Low, "CADDscore < 5");
 			}
 			else
 			{
