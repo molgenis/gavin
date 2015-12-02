@@ -16,6 +16,7 @@ points(calibcaddGenes$MeanPathogenicCADDScore, col="red")
 #regular density of means
 plot(density(calibcaddGenes$MeanDifference))
 abline(v = mean(calibcaddGenes$MeanDifference))
+
 #ggplot of patho MAF
 calibcaddGenesOrdered <- calibcaddAllGenes[order(-calibcaddAllGenes$PathoMAFThreshold),] 
 p <- ggplot() +
@@ -27,6 +28,7 @@ p <- ggplot() +
   theme(legend.position = "none")
 p
 ggsave("~/mafplot.png", width=8, height=4.5)
+
 ##ggplot version of scatterplot
 calibcaddGenesOrdered <- calibcaddGenes[order(-calibcaddGenes$MeanDifference),] 
 p <- ggplot() +
@@ -45,6 +47,7 @@ p <- ggplot() +
   theme(legend.position = "none")
 p
 ggsave("~/meansplot.png", width=8, height=4.5)
+
 ##ggplot version of density
 p <- ggplot() +
   geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddGenes, size=1, alpha=1, aes(x=MeanDifference, y=..count..), colour="black") +
@@ -62,6 +65,20 @@ p <- ggplot() +
   theme(legend.position = "none")
 p
 ggsave("~/densitysplot.png", width=8, height=4.5)
+
+##GG plot of all cadd scores, compared pop vs patho
+calibcaddVariants.path <- subset(calibcaddVariants, group == "PATHOGENIC")
+calibcaddVariants.popul <- subset(calibcaddVariants, group == "POPULATION")
+p <- ggplot() +
+  geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddVariants.popul, size=1, alpha=1, linetype=2, aes(x=cadd), colour="black") +
+  geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddVariants.path, size=1, alpha=1, aes(x=cadd), colour="black") +
+  theme_bw() + theme(axis.line = element_line(colour = "black"),panel.grid.major = element_line(colour = "black"),panel.grid.minor = element_line(colour = "gray"),panel.border = element_blank(),panel.background = element_blank()) +
+  labs(title="Density distribution of CADD-scored variants.\nDashed = population, solid = pathogenic.") +
+  ylab("Density function") +
+  xlab("CADD scaled-C score") +
+  theme(legend.position = "none")
+p
+ggsave("~/caddplot.png", width=8, height=4.5)
 
 ## single gene plots, regular R
 #calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
