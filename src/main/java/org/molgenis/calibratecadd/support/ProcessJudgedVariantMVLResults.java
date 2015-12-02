@@ -18,13 +18,20 @@ public class ProcessJudgedVariantMVLResults
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Medium);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Low);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Low);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Naive);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Naive);
 		reportVOUScounts(judgedMVLVariants, Confidence.High);
-		reportVOUScounts(judgedMVLVariants, Confidence.Medium);
-		reportVOUScounts(judgedMVLVariants, Confidence.Low);
 		printVOUSresults(judgedMVLVariants, Confidence.High);
-		printFalseResults(judgedMVLVariants, Confidence.High);
+		reportVOUScounts(judgedMVLVariants, Confidence.Medium);
+		printVOUSresults(judgedMVLVariants, Confidence.Medium);
+		reportVOUScounts(judgedMVLVariants, Confidence.Low);
+		printVOUSresults(judgedMVLVariants, Confidence.Low);
+		reportVOUScounts(judgedMVLVariants, Confidence.Naive);
+		printVOUSresults(judgedMVLVariants, Confidence.Naive);
 		printFalseResults(judgedMVLVariants, Confidence.Medium);
+		printFalseResults(judgedMVLVariants, Confidence.High);
 		printFalseResults(judgedMVLVariants, Confidence.Low);
+		printFalseResults(judgedMVLVariants, Confidence.Naive);
 	}
 	
 	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)

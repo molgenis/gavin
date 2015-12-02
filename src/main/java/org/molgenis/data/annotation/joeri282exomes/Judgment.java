@@ -8,7 +8,7 @@ public class Judgment
 	}
 	
 	public enum Confidence{
-		High, Medium, Low
+		High, Medium, Low, Naive
 	}
 	
 	String reason;

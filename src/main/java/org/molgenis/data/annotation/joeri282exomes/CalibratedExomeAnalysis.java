@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.hibernate.validator.util.privilegedactions.GetAnnotationParameter;
+import org.molgenis.calibratecadd.support.CCGGException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Confidence;
 import org.molgenis.data.vcf.VcfRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
@@ -43,7 +46,7 @@ public class CalibratedExomeAnalysis
 
 			String filter = record.getString("FILTER");
 
-			if (!filter.equals("PASS"))
+			if (filter != null && !filter.equals("PASS"))
 			{
 				continue;
 			}
@@ -103,21 +106,23 @@ public class CalibratedExomeAnalysis
 				
 				for(String gene : genes)
 				{
-					if(!ccgg.geneToEntry.containsKey(gene))
-					{
-						continue;
-					}
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
-
-					
-					Judgment j = ccgg.classifyVariant(gene, exac_af, impact, cadd);
-					
-					if(j.classification.equals(Judgment.Classification.Pathogn))
+					Judgment judgment = null;
+					try
 					{
-						List<String> samples = findInterestingSamples(record, i, exac_het, exac_hom);
+						judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
+					}
+					catch(CCGGException e)
+					{
+						//
+					}
+					
+					if(judgment != null && judgment.classification.equals(Judgment.Classification.Pathogn))
+					{
+						HashMap<String, Entity> samples = findInterestingSamples(record, i, exac_het, exac_hom);
 						if(samples.size() > 0)
 						{
-							CandidateVariant cv = new CandidateVariant(record, alt, gene, j, samples);
+							CandidateVariant cv = new CandidateVariant(record, alt, gene, judgment, samples);
 							pathogenicVariants.add(cv);
 							System.out.println("added patho variant: " + cv.toString());
 						}
@@ -131,12 +136,54 @@ public class CalibratedExomeAnalysis
 
 		}
 		vcf.close();
+		
+		printResults(pathogenicVariants);
 	}
 	
-	public List<String> findInterestingSamples(Entity record, int altIndex, int exacHets, int exacHoms)
+	public void printResults(List<CandidateVariant> pathogenicVariants) throws Exception
 	{
-		List<String> homSampleIds = new ArrayList<String>();
-		List<String> hetSampleIds = new ArrayList<String>();
+		System.out.println("\n## RESULTS ##\n");
+		
+		for(Confidence conf : Confidence.values())
+		{
+			System.out.println("\nPathogenic candidates in confidence tranche: " + conf);
+			for(CandidateVariant cv : pathogenicVariants)
+			{
+				if(cv.judgment.confidence.equals(conf))
+				{
+			//		System.out.println(cv.toString());
+					
+					String ann = CCGGUtils.getAnn(cv.getVcfRecord().getString("ANN"), cv.gene, cv.allele);
+					String[] annSplit = ann.split("\\|", -1);
+					String cDNA = annSplit[9];
+					String aaChange = annSplit[10];
+					String effect = annSplit[1];
+					String genomic = cv.vcfRecord.getString("#CHROM") + ":" + cv.vcfRecord.getString("POS") + " " + cv.vcfRecord.getString("REF") + " to " + cv.vcfRecord.getString("ALT");
+					String id = (cv.vcfRecord.getString("ID") != null && !cv.vcfRecord.getString("ID").equals("") && !cv.vcfRecord.getString("ID").equals(".")) ? (", " + cv.vcfRecord.getString("ID")) : "";
+					String gonlAF = cv.vcfRecord.getString("GoNL_AF").equals(".") ? "0" : cv.vcfRecord.getString("GoNL_AF");
+					String exacAF = cv.vcfRecord.getString("EXAC_AF") == null ? "0" : cv.vcfRecord.getString("EXAC_AF");
+					String _1kgAF = cv.vcfRecord.getString("Thousand_Genomes_AF") == null ? "0" : cv.vcfRecord.getString("Thousand_Genomes_AF");
+					
+					System.out.println(cv.gene + ":" + cDNA + " (" + aaChange + id + "), genomic: " +genomic + " (pathogenic allele: " + cv.allele + ")");
+					System.out.println("Effect: " + effect + ", GoNL MAF: " + gonlAF+ ", ExAC MAF: " + exacAF+ ", 1KG MAF: " + _1kgAF);
+					System.out.println("Reason: " + cv.getJudgment().reason);
+					
+					System.out.println("Samples carrying this allele:");
+					for(String sampleId : cv.getSampleIds().keySet())
+					{
+						System.out.println("\t" + sampleId + ", genotype: " + cv.getSampleIds().get(sampleId).getString("GT") + ", cov: " + cv.getSampleIds().get(sampleId).getString("DP") + ", allelic cov: " + cv.getSampleIds().get(sampleId).getString("AD"));
+					}
+				}
+				
+			}
+		}
+		
+	}
+	
+	public HashMap<String, Entity> findInterestingSamples(Entity record, int altIndex, int exacHets, int exacHoms)
+	{
+		HashMap<String, Entity> homSampleIds = new HashMap<String, Entity>();
+		HashMap<String, Entity> hetSampleIds = new HashMap<String, Entity>();
 		Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
 		//first alt has index 0, but we want to check 0/1, 1/1 etc. So +1.
 		altIndex = altIndex + 1;
@@ -166,7 +213,7 @@ public class CalibratedExomeAnalysis
 			{
 				//interesting!
 				String sampleName = sample.get("ORIGINAL_NAME").toString();
-				hetSampleIds.add(sampleName);
+				hetSampleIds.put(sampleName, sample);
 				hetCount++;
 			}
 			
@@ -175,7 +222,7 @@ public class CalibratedExomeAnalysis
 			{
 				//interesting!
 				String sampleName = sample.get("ORIGINAL_NAME").toString();
-				homSampleIds.add(sampleName);
+				homSampleIds.put(sampleName, sample);
 				homCount++;
 			}
 
@@ -191,9 +238,9 @@ public class CalibratedExomeAnalysis
 		
 //		System.out.println("homs: " + homCount +" , hets: " + hetCount);
 //		System.out.println("exachoms: " + exacHoms +" , exachets: " + exacHets);
-		List<String> sampleIds = new ArrayList<String>();
-		sampleIds.addAll(homSampleIds);
-		sampleIds.addAll(hetSampleIds);
+		HashMap<String, Entity> sampleIds = new HashMap<String, Entity>();
+		sampleIds.putAll(homSampleIds);
+		sampleIds.putAll(hetSampleIds);
 		return sampleIds;
 	}
 

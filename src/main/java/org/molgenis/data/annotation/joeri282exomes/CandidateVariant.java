@@ -1,5 +1,6 @@
 package org.molgenis.data.annotation.joeri282exomes;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.molgenis.data.Entity;
@@ -17,9 +18,9 @@ public class CandidateVariant
 	Judgment judgment;
 	
 	//the samples with interesting genotypes for this variant (+allele/gene)
-	List<String> sampleIds;
+	HashMap<String, Entity> sampleIds;
 
-	public CandidateVariant(Entity vcfRecord, String allele, String gene, Judgment judgment, List<String> sampleIds)
+	public CandidateVariant(Entity vcfRecord, String allele, String gene, Judgment judgment, HashMap<String, Entity> sampleIds)
 	{
 		super();
 		this.vcfRecord = vcfRecord;
@@ -49,7 +50,7 @@ public class CandidateVariant
 		return judgment;
 	}
 
-	public List<String> getSampleIds()
+	public HashMap<String, Entity> getSampleIds()
 	{
 		return sampleIds;
 	}

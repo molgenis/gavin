@@ -20,7 +20,7 @@ public class Step9_Validation
 {
 	public static void main(String[] args) throws Exception
 	{
-		new Step9_Validation(args[0], args[1]);
+		new Step9_Validation(args[0], args[1], Boolean.valueOf(args[2]));
 	}
 	
 	CCGGUtils ccgg;
@@ -32,14 +32,14 @@ public class Step9_Validation
 	 * Check if classification matches
 	 * @throws Exception 
 	 */
-	public Step9_Validation(String ccggLoc, String mvlLoc) throws Exception
+	public Step9_Validation(String ccggLoc, String mvlLoc, boolean naiveOnly) throws Exception
 	{
 		loadCCGG(ccggLoc);
-		scanMVL(mvlLoc);
+		scanMVL(mvlLoc, naiveOnly);
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants);
 	}
 	
-	public void scanMVL(String mvlLoc) throws Exception
+	public void scanMVL(String mvlLoc, boolean naiveOnly) throws Exception
 	{
 		File mvlFile = new File(mvlLoc);
 		if(!mvlFile.exists())
@@ -79,8 +79,15 @@ public class Step9_Validation
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 					try
 					{
-						Judgment judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
-				//		Judgment judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
+						Judgment judgment;
+						if(naiveOnly)
+						{
+							judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
+						}
+						else
+						{
+							judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
+						}
 						addToMVLResults(judgment, mvlClassfc, mvlName, record);
 					}
 					catch(CCGGException e)

@@ -49,11 +49,22 @@ public class CCGGUtils
 	
 	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
 	{
-		if(!geneToEntry.containsKey(gene))
+		if(impact == null)
 		{
-			throw new NoDataForGeneException("Cannot classify variant, no calibration data for " + gene);
+			throw new InsufficientDataException("Missing impact for gene " + gene + " so we don't judge");
 		}
 		
+		if(!geneToEntry.containsKey(gene))
+		{
+			return naiveClassifyVariant(gene, MAF, impact, CADDscore);
+		//	throw new NoDataForGeneException("Cannot classify variant, no calibration data for " + gene);
+		}
+		
+		if(geneToEntry.get(gene).PathoMAFThreshold == null)
+		{
+			throw new InsufficientDataException("Missing MAF for gene " + gene + " so we don't judge");
+		}
+
 		CCGGEntry entry = geneToEntry.get(gene);
 		CCGGEntry.Category category = entry.category;
 		
@@ -62,7 +73,7 @@ public class CCGGUtils
 		 */
 		
 		// MAF filter
-		if(MAF > (entry.PathoMAFThreshold*100))
+		if(MAF > 0 && MAF > (entry.PathoMAFThreshold*100))
 		{
 			return new Judgment(Classification.Benign, Confidence.High, "MAF of " + MAF + " greather than 100 times the pathogenic MAF "+(entry.PathoMAFThreshold+" "));
 		}
@@ -105,7 +116,7 @@ public class CCGGUtils
 		 * Medium confidence tranche, less strict settings
 		 */
 		
-		if(MAF > (entry.PathoMAFThreshold))
+		if(MAF > 0 && MAF > (entry.PathoMAFThreshold))
 		{
 			return new Judgment(Classification.Benign, Confidence.Medium, "MAF > (entry.PathoMAFThreshold)");
 		}
@@ -126,10 +137,10 @@ public class CCGGUtils
 		}
 		
 		/**
-		 * Medium confidence tranche, least strict settings
+		 * Low confidence tranche, least strict settings
 		 */
 		
-		if(MAF > (entry.PathoMAFThreshold/100))
+		if(MAF > 0 && MAF > (entry.PathoMAFThreshold/100))
 		{
 			return new Judgment(Classification.Benign, Confidence.Low, "MAF > (entry.PathoMAFThreshold/100)");
 		}
@@ -149,11 +160,11 @@ public class CCGGUtils
 			}
 		}
 	
-	//	System.out.println("cant judge " + gene + " " + MAF + " " + impact + " " + CADDscore);
+	//	System.out.println("!! cant judge " + gene + " " + MAF + " " + impact + " " + CADDscore);
 		
-	//	return naiveClassifyVariant(gene, MAF, impact, CADDscore);
+		return naiveClassifyVariant(gene, MAF, impact, CADDscore);
 		
-		throw new InsufficientDataException("No further calibration data for gene " + gene + " so we don't judge");
+	//	throw new InsufficientDataException("No further calibration data for gene " + gene + " so we don't judge");
 	}
 	
 	
@@ -161,21 +172,21 @@ public class CCGGUtils
 	{
 		if(MAF > 0.001)
 		{
-			return new Judgment(Judgment.Classification.Benign, Confidence.Low, "MAF > 0.001");
+			return new Judgment(Judgment.Classification.Benign, Confidence.Naive, "MAF > 0.001");
 		}
 		else if(impact.equals(impact.equals(Impact.MODIFIER) || impact.equals(Impact.LOW)))
 		{
-			return new Judgment(Judgment.Classification.Benign, Confidence.Low, "Impact.MODIFIER || Impact.LOW");
+			return new Judgment(Judgment.Classification.Benign, Confidence.Naive, "Impact.MODIFIER || Impact.LOW");
 		}
 		else
 		{
 			if(CADDscore != null && CADDscore > 33)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Confidence.Low, "CADDscore > 33");
+				return new Judgment(Judgment.Classification.Pathogn, Confidence.Naive, "CADDscore > 33");
 			}
 			else if(CADDscore != null && CADDscore < 5)
 			{
-				return new Judgment(Judgment.Classification.Benign, Confidence.Low, "CADDscore < 5");
+				return new Judgment(Judgment.Classification.Benign, Confidence.Naive, "CADDscore < 5");
 			}
 			else
 			{
@@ -228,6 +239,22 @@ public class CCGGUtils
 	
 	public static Impact getImpact(String ann, String gene, String allele) throws Exception
 	{
+		String findAnn = getAnn(ann, gene, allele);
+		if(findAnn == null)
+		{
+			System.out.println("FAILED TO GET IMPACT FOR " + ann);
+			return null;
+		}
+		else
+		{
+			String[] fields = findAnn.split("\\|", -1);
+			String impact = fields[2];
+			return Impact.valueOf(impact);
+		}
+	}
+	
+	public static String getAnn(String ann, String gene, String allele) throws Exception
+	{
 		String[] annSplit = ann.split(",", -1);
 		for(String oneAnn : annSplit)
 		{
@@ -242,10 +269,9 @@ public class CCGGUtils
 			{
 				continue;
 			}
-			String impact = fields[2];
-			return Impact.valueOf(impact);
+			return oneAnn;
 		}
-		System.out.println("warning: impact could not be determined for " + gene + ", allele=" + allele + ", ann=" + ann);
+		System.out.println("warning: annotation could not be found for " + gene + ", allele=" + allele + ", ann=" + ann);
 		return null;
 	}
 
