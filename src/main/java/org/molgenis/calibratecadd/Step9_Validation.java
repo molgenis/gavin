@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.molgenis.calibratecadd.support.CCGGException;
+import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.calibratecadd.support.JudgedVariant;
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
 import org.molgenis.calibratecadd.support.ProcessJudgedVariantMVLResults;
@@ -90,7 +90,7 @@ public class Step9_Validation
 						}
 						addToMVLResults(judgment, mvlClassfc, mvlName, record);
 					}
-					catch(CCGGException e)
+					catch(VariantClassificationException e)
 					{
 						addToMVLResults(null, mvlClassfc, mvlName, record);
 					}

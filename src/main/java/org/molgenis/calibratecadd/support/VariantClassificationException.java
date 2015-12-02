@@ -1,13 +1,13 @@
 package org.molgenis.calibratecadd.support;
 
-public class CCGGException extends Exception
+public class VariantClassificationException extends Exception
 {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public CCGGException(String msg) {
+	public VariantClassificationException(String msg) {
 		super(msg);
 	}
 }

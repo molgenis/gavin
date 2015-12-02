@@ -11,7 +11,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.hibernate.validator.util.privilegedactions.GetAnnotationParameter;
-import org.molgenis.calibratecadd.support.CCGGException;
+import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
@@ -112,7 +112,7 @@ public class CalibratedExomeAnalysis
 					{
 						judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
 					}
-					catch(CCGGException e)
+					catch(VariantClassificationException e)
 					{
 						//
 					}

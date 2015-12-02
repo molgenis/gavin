@@ -6,9 +6,7 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.molgenis.calibratecadd.support.CaddScoreMissingException;
-import org.molgenis.calibratecadd.support.InsufficientDataException;
-import org.molgenis.calibratecadd.support.NoDataForGeneException;
+import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGEntry.Category;
@@ -48,21 +46,15 @@ public class CCGGUtils
 	}
 	
 	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
-	{
-		if(impact == null)
-		{
-			throw new InsufficientDataException("Missing impact for gene " + gene + " so we don't judge");
-		}
-		
+	{	
 		if(!geneToEntry.containsKey(gene))
 		{
 			return naiveClassifyVariant(gene, MAF, impact, CADDscore);
-		//	throw new NoDataForGeneException("Cannot classify variant, no calibration data for " + gene);
 		}
 		
 		if(geneToEntry.get(gene).PathoMAFThreshold == null)
 		{
-			throw new InsufficientDataException("Missing MAF for gene " + gene + " so we don't judge");
+			throw new VariantClassificationException("Missing MAF for gene " + gene + " so we don't judge");
 		}
 
 		CCGGEntry entry = geneToEntry.get(gene);
@@ -190,7 +182,7 @@ public class CCGGUtils
 			}
 			else
 			{
-				throw new InsufficientDataException("Unable to naively classify " + gene + "! ");
+				throw new VariantClassificationException("Unable to classify " + gene + "! ");
 			}
 		}
 	}
