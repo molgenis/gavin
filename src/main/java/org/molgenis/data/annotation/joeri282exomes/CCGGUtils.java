@@ -65,21 +65,24 @@ public class CCGGUtils
 		String mafReason = "the variant MAF of " + MAF + " is lesser than the pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".";
 		
 		// Impact based classification, calibrated
-		if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
+		if(impact != null)
 		{
-			return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high impact, while there are no known high impact variants in the population. Also, " + mafReason);
-		}
-		else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
-		{
-			return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high/moderate impact, while there are no known high/moderate impact variants in the population. Also, " + mafReason);
-		}
-		else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
-		{
-			return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high/moderate/low impact, while there are no known high/moderate/low impact variants in the population. Also, " + mafReason);
-		}
-		else if(impact.equals(Impact.MODIFIER))
-		{
-			return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant is of 'modifier' impact, and therefore unlikely to be pathogenic. However, " + mafReason);
+			if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
+			{
+				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high impact, while there are no known high impact variants in the population. Also, " + mafReason);
+			}
+			else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
+			{
+				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high/moderate impact, while there are no known high/moderate impact variants in the population. Also, " + mafReason);
+			}
+			else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
+			{
+				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high/moderate/low impact, while there are no known high/moderate/low impact variants in the population. Also, " + mafReason);
+			}
+			else if(impact.equals(Impact.MODIFIER))
+			{
+				return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant is of 'modifier' impact, and therefore unlikely to be pathogenic. However, " + mafReason);
+			}
 		}
 
 		// CADD score based classification, calibrated
