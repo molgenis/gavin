@@ -21,8 +21,9 @@ abline(v = mean(calibcaddGenes$MeanDifference))
 calibcaddGenesOrdered <- calibcaddAllGenes[order(-calibcaddAllGenes$PathoMAFThreshold),] 
 p <- ggplot() +
   geom_point(data = calibcaddGenesOrdered, aes(y=PathoMAFThreshold, x=seq(1,dim(calibcaddAllGenes)[1])), alpha = 1, colour="black") +
+  geom_hline(yintercept = mean(calibcaddAllGenes$PathoMAFThreshold, na.rm=T), colour = "black", size = 1, alpha = 1, linetype = 3) +
   theme_bw() + theme(axis.line = element_line(colour = "black"),panel.grid.major = element_line(colour = "black"),panel.grid.minor = element_line(colour = "gray"),panel.border = element_blank(),panel.background = element_blank()) +
-  labs(title="95th percentile MAF for pathogenic variants") +
+  labs(title=paste(sep="", "95th percentile MAFs for pathogenic variants in each gene.\nDotted line at mean of ", format(mean(calibcaddAllGenes$PathoMAFThreshold, na.rm=T), digits=3))) +
   ylab("Minor allele frequency (MAF)") +
   xlab("Genes, sorted by 95th percentile MAF value") +
   theme(legend.position = "none")
@@ -72,8 +73,10 @@ calibcaddVariants.popul <- subset(calibcaddVariants, group == "POPULATION")
 p <- ggplot() +
   geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddVariants.popul, size=1, alpha=1, linetype=2, aes(x=cadd), colour="black") +
   geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddVariants.path, size=1, alpha=1, aes(x=cadd), colour="black") +
+  geom_vline(colour="black", size=1, linetype=3, xintercept = 34) +
+  geom_vline(colour="black", size=1, linetype=3, xintercept = 2) +
   theme_bw() + theme(axis.line = element_line(colour = "black"),panel.grid.major = element_line(colour = "black"),panel.grid.minor = element_line(colour = "gray"),panel.border = element_blank(),panel.background = element_blank()) +
-  labs(title="Density distribution of CADD-scored variants.\nDashed = population, solid = pathogenic.") +
+  labs(title="Density distribution of CADD-scored variants.\nDashed = population, solid = pathogenic. Dotted lines added at 2 and 34.") +
   ylab("Density function") +
   xlab("CADD scaled-C score") +
   theme(legend.position = "none")
