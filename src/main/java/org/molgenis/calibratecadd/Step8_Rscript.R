@@ -23,7 +23,7 @@ p <- ggplot() +
   geom_point(data = calibcaddGenesOrdered, aes(y=PathoMAFThreshold, x=seq(1,dim(calibcaddAllGenes)[1])), alpha = 1, colour="black") +
   geom_hline(yintercept = mean(calibcaddAllGenes$PathoMAFThreshold, na.rm=T), colour = "black", size = 1, alpha = 1, linetype = 3) +
   theme_bw() + theme(axis.line = element_line(colour = "black"),panel.grid.major = element_line(colour = "black"),panel.grid.minor = element_line(colour = "gray"),panel.border = element_blank(),panel.background = element_blank()) +
-  labs(title=paste(sep="", "95th percentile MAFs for pathogenic variants in each gene.\nDotted line at mean of ", format(mean(calibcaddAllGenes$PathoMAFThreshold, na.rm=T), digits=3))) +
+  labs(title=paste(sep="", "95th percentile MAFs for pathogenic variants in each gene.\nDotted line added at the mean (", format(mean(calibcaddAllGenes$PathoMAFThreshold, na.rm=T), digits=3), ")")) +
   ylab("Minor allele frequency (MAF)") +
   xlab("Genes, sorted by 95th percentile MAF value") +
   theme(legend.position = "none")
