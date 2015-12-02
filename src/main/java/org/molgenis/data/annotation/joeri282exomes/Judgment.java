@@ -7,20 +7,20 @@ public class Judgment
 		//VOUS,
 	}
 	
-	public enum Confidence{
-		High, Medium, Low, Naive
+	public enum Method{
+		calibrated, naive
 	}
 	
 	String reason;
 	Classification classification;
-	Confidence confidence;
+	Method method;
 
-	public Judgment(Classification classification, Confidence confidence, String reason)
+	public Judgment(Classification classification, Method method, String reason)
 	{
 		super();
 		this.reason = reason;
 		this.classification = classification;
-		this.confidence = confidence;
+		this.method = method;
 	}
 
 	public String getReason()
@@ -33,9 +33,9 @@ public class Judgment
 		return classification;
 	}
 	
-	public Confidence getConfidence()
+	public Method getConfidence()
 	{
-		return confidence;
+		return method;
 	}
 
 	@Override

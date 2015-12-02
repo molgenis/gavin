@@ -5,36 +5,26 @@ import java.util.List;
 
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Confidence;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 
 public class ProcessJudgedVariantMVLResults
 {
 	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants)
 	{
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.High);
-		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.High);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Medium);
-		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Medium);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Low);
-		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Low);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Confidence.Naive);
-		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Confidence.Naive);
-		reportVOUScounts(judgedMVLVariants, Confidence.High);
-		printVOUSresults(judgedMVLVariants, Confidence.High);
-		reportVOUScounts(judgedMVLVariants, Confidence.Medium);
-		printVOUSresults(judgedMVLVariants, Confidence.Medium);
-		reportVOUScounts(judgedMVLVariants, Confidence.Low);
-		printVOUSresults(judgedMVLVariants, Confidence.Low);
-		reportVOUScounts(judgedMVLVariants, Confidence.Naive);
-		printVOUSresults(judgedMVLVariants, Confidence.Naive);
-		printFalseResults(judgedMVLVariants, Confidence.Medium);
-		printFalseResults(judgedMVLVariants, Confidence.High);
-		printFalseResults(judgedMVLVariants, Confidence.Low);
-		printFalseResults(judgedMVLVariants, Confidence.Naive);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.calibrated);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.calibrated);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.naive);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.naive);
+		reportVOUScounts(judgedMVLVariants, Method.calibrated);
+		printVOUSresults(judgedMVLVariants, Method.calibrated);
+		reportVOUScounts(judgedMVLVariants, Method.naive);
+		printVOUSresults(judgedMVLVariants, Method.naive);
+		printFalseResults(judgedMVLVariants, Method.calibrated);
+		printFalseResults(judgedMVLVariants, Method.naive);
 	}
 	
-	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
 	{
 		System.out.println("\nFalse hits in confidence tranche: " + confidenceTranche);
 		
@@ -71,7 +61,7 @@ public class ProcessJudgedVariantMVLResults
 		}
 	}
 	
-	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
 	{
 		System.out.println("\nVOUS variants in confidence tranche: " + confidenceTranche);
 		
@@ -108,7 +98,7 @@ public class ProcessJudgedVariantMVLResults
 		}
 	}
 	
-	public static void reportVOUScounts(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	public static void reportVOUScounts(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
 	{
 		System.out.println("\nClassifications of VOUS variants in confidence tranche: " + confidenceTranche);
 		
@@ -143,7 +133,7 @@ public class ProcessJudgedVariantMVLResults
 		
 	}
 	
-	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
 	{
 		System.out.println("\nFalse posities & false negatives in confidence tranche: " + confidenceTranche);
 		int grandTotal = 0;
@@ -217,7 +207,7 @@ public class ProcessJudgedVariantMVLResults
 		return TN+FN == 0 ? "" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
 	}
 
-	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Confidence confidenceTranche)
+	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
 	{
 		System.out.println("\nCounts in confidence tranche: " + confidenceTranche);
 		int grandTotal = 0;

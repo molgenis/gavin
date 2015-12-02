@@ -15,7 +15,7 @@ import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Confidence;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
@@ -144,12 +144,12 @@ public class CalibratedExomeAnalysis
 	{
 		System.out.println("\n## RESULTS ##\n");
 		
-		for(Confidence conf : Confidence.values())
+		for(Method conf : Method.values())
 		{
 			System.out.println("\nPathogenic candidates in confidence tranche: " + conf);
 			for(CandidateVariant cv : pathogenicVariants)
 			{
-				if(cv.judgment.confidence.equals(conf))
+				if(cv.judgment.method.equals(conf))
 				{
 			//		System.out.println(cv.toString());
 					
