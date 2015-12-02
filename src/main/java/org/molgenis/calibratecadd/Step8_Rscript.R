@@ -5,16 +5,29 @@ library(ggplot2)
 
 ### summary gene plots (uses output of Step 7)
 #calibcaddGenes <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-calibcaddGenes <- subset(calibcaddGenes, UTestPvalue != '')
+calibcaddAllGenes <- read.table('/Users/jvelde/Desktop/clinvarcadd/clinvar.patho.fix.snpeff.exac.genesumm.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddAllGenes$PathoMAFThreshold <- as.numeric(calibcaddAllGenes$PathoMAFThreshold)
+calibcaddAllGenes$MeanDifference <- as.numeric(calibcaddAllGenes$MeanDifference)
+calibcaddGenes <- subset(calibcaddAllGenes, UTestPvalue != '')
+#regular plot of means
 plot(calibcaddGenes$MeanPopulationCADDScore, col="blue")
 points(calibcaddGenes$MeanPathogenicCADDScore, col="red")
-calibcaddGenes$MeanDifference <- as.numeric(calibcaddGenes$MeanDifference)
+#regular density of means
 plot(density(calibcaddGenes$MeanDifference))
 abline(v = mean(calibcaddGenes$MeanDifference))
-
-calibcaddGenesOrdered <- calibcaddGenes[order(-calibcaddGenes$MeanDifference),] 
+#ggplot of patho MAF
+calibcaddGenesOrdered <- calibcaddAllGenes[order(-calibcaddAllGenes$PathoMAFThreshold),] 
+p <- ggplot() +
+  geom_point(data = calibcaddGenesOrdered, aes(y=PathoMAFThreshold, x=seq(1,dim(calibcaddAllGenes)[1])), alpha = 1, colour="black") +
+  theme_bw() + theme(axis.line = element_line(colour = "black"),panel.grid.major = element_line(colour = "black"),panel.grid.minor = element_line(colour = "gray"),panel.border = element_blank(),panel.background = element_blank()) +
+  labs(title="95th percentile MAF for pathogenic variants") +
+  ylab("Minor allele frequency (MAF)") +
+  xlab("Genes, sorted by 95th percentile MAF value") +
+  theme(legend.position = "none")
+p
+ggsave("~/mafplot.png", width=8, height=4.5)
 ##ggplot version of scatterplot
+calibcaddGenesOrdered <- calibcaddGenes[order(-calibcaddGenes$MeanDifference),] 
 p <- ggplot() +
   geom_point(data = calibcaddGenesOrdered, aes(y=MeanPopulationCADDScore, x=seq(1,dim(calibcaddGenes)[1])), alpha = 1, colour="blue") +
   geom_point(data = calibcaddGenesOrdered, aes(y=MeanPathogenicCADDScore, x=seq(1,dim(calibcaddGenes)[1])), alpha = 1, colour="red") +
@@ -30,6 +43,7 @@ p <- ggplot() +
   xlab("Genes by index, sorted by mean difference in pathogenic vs population mean CADD score") +
   theme(legend.position = "none")
 p
+ggsave("~/meansplot.png", width=8, height=4.5)
 ##ggplot version of density
 p <- ggplot() +
   geom_line(stat="density", adjust=1, kernel = "epanechnikov", data = calibcaddGenes, size=1, alpha=1, aes(x=MeanDifference, y=..count..), colour="black") +
@@ -41,11 +55,12 @@ p <- ggplot() +
         panel.border = element_blank(),
         panel.background = element_blank()
   ) +
-  labs(title=paste(sep="", "Population CADD mean vs pathogenic CADD mean for equalized genes. Mean of means = ", format(mean(calibcaddGenes$MeanDifference), digits=3))) +
+  labs(title=paste(sep="", "Population CADD mean vs pathogenic CADD mean for equalized genes.\nMean of means = ", format(mean(calibcaddGenes$MeanDifference), digits=3))) +
   ylab("Gene density with preserved counts") +
   xlab("Gene difference of CADD scores between pathogenic mean and population mean") +
   theme(legend.position = "none")
 p
+ggsave("~/densitysplot.png", width=8, height=4.5)
 
 ## single gene plots
 #calibcaddVariants <- read.table('E:\\Data\\clinvarcadd\\clinvar.patho.fix.snpeff.exac.withcadd.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
