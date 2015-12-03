@@ -189,22 +189,22 @@ public class ProcessJudgedVariantMVLResults
 	
 	private static String getTPR(int TP, int FN)
 	{
-		return TP+FN == 0 ? "" : (int)Math.round((double)TP/(TP+FN)*100) + "%";
+		return TP+FN == 0 ? "-" : (int)Math.round((double)TP/(TP+FN)*100) + "%";
 	}
 	
 	private static String getTNR(int TN, int FP)
 	{
-		return TN+FP == 0 ? "" : (int)Math.round((double)TN/(FP+TN)*100) + "%";
+		return TN+FP == 0 ? "-" : (int)Math.round((double)TN/(FP+TN)*100) + "%";
 	}
 	
 	private static String getPPV(int TP, int FP)
 	{
-		return TP+FP == 0 ? "" : (int)Math.round((double)TP/(TP+FP)*100) + "%";
+		return TP+FP == 0 ? "-" : (int)Math.round((double)TP/(TP+FP)*100) + "%";
 	}
 	
 	private static String getNPV(int TN, int FN)
 	{
-		return TN+FN == 0 ? "" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
+		return TN+FN == 0 ? "-" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
 	}
 
 	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
