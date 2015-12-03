@@ -24,9 +24,9 @@ public class ProcessJudgedVariantMVLResults
 		printFalseResults(judgedMVLVariants, Method.naive);
 	}
 	
-	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
+	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nFalse hits in confidence tranche: " + confidenceTranche);
+		System.out.println("\nFalse hits, method: " + method);
 		
 		for(String mvl : judgedMVLVariants.keySet())
 		{
@@ -34,7 +34,7 @@ public class ProcessJudgedVariantMVLResults
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Benign) && (jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Benign) && (jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getConfidence().equals(method))
 				{
 					FN.append(jv.printVariant() + "\n");
 				}
@@ -49,7 +49,7 @@ public class ProcessJudgedVariantMVLResults
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && (jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && (jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getConfidence().equals(method))
 				{
 					FP.append(jv.printVariant() + "\n");
 				}
@@ -61,9 +61,9 @@ public class ProcessJudgedVariantMVLResults
 		}
 	}
 	
-	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
+	public static void printVOUSresults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nVOUS variants in confidence tranche: " + confidenceTranche);
+		System.out.println("\nVOUS variants, method: " + method);
 		
 		for(String mvl : judgedMVLVariants.keySet())
 		{
@@ -71,7 +71,7 @@ public class ProcessJudgedVariantMVLResults
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Benign) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Benign) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(method))
 				{
 					benignVous.append(jv.printVariant() + "\n");
 				}
@@ -86,7 +86,7 @@ public class ProcessJudgedVariantMVLResults
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(method))
 				{
 					pathoVous.append(jv.printVariant() + "\n");
 				}
@@ -98,9 +98,9 @@ public class ProcessJudgedVariantMVLResults
 		}
 	}
 	
-	public static void reportVOUScounts(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
+	public static void reportVOUScounts(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nClassifications of VOUS variants in confidence tranche: " + confidenceTranche);
+		System.out.println("\nClassifications of VOUS variants, method: " + method);
 		
 		System.out.println("\t" + "Benign" + "\t" + "Pathogn");
 		
@@ -112,7 +112,7 @@ public class ProcessJudgedVariantMVLResults
 			int pathogenicVOUSforMVL = 0;
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(method))
 				{
 					if(jv.getJudgment().getClassification().equals(Classification.Benign))
 					{
@@ -133,9 +133,9 @@ public class ProcessJudgedVariantMVLResults
 		
 	}
 	
-	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
+	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nFalse posities & false negatives in confidence tranche: " + confidenceTranche);
+		System.out.println("\nFalse posities & false negatives, method: " + method);
 		int grandTotal = 0;
 		
 		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV");
@@ -153,7 +153,7 @@ public class ProcessJudgedVariantMVLResults
 			int FN = 0;
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getJudgment().getConfidence().equals(method))
 				{
 					if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.Benign))
 					{
@@ -207,9 +207,9 @@ public class ProcessJudgedVariantMVLResults
 		return TN+FN == 0 ? "-" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
 	}
 
-	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method confidenceTranche)
+	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nCounts in confidence tranche: " + confidenceTranche);
+		System.out.println("\nCounts, method: " + method);
 		int grandTotal = 0;
 		for(String mvl : judgedMVLVariants.keySet())
 		{
@@ -225,7 +225,7 @@ public class ProcessJudgedVariantMVLResults
 			{	
 				for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 				{
-					if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(cl) && jv.getJudgment().getConfidence().equals(confidenceTranche))
+					if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(cl) && jv.getJudgment().getConfidence().equals(method))
 					{
 						count++;
 					}
@@ -244,7 +244,7 @@ public class ProcessJudgedVariantMVLResults
 		{	
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getConfidence().equals(confidenceTranche))
+				if(jv.getJudgment() != null && jv.getJudgment().getConfidence().equals(method))
 				{
 					count++;
 				}
