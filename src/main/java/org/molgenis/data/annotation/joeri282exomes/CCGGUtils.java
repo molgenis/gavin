@@ -96,7 +96,7 @@ public class CCGGUtils
 				}
 				else if(CADDscore < entry.MeanPopulationCADDScore)
 				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative. Also, " + mafReason);
+					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
 				}
 			}
 			else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
@@ -107,7 +107,7 @@ public class CCGGUtils
 				}
 				else if(CADDscore < entry.Sens95thPerCADDThreshold)
 				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene. Also, " + mafReason);
+					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
 				}
 			}
 		}
