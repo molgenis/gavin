@@ -7,6 +7,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.molgenis.calibratecadd.support.VariantClassificationException;
+import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGEntry.Category;
@@ -45,12 +46,12 @@ public class CCGGUtils
 		return geneToEntry.containsKey(gene) ? true : false;
 	}
 	
-	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
+	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore, ExpertClassification mvlClassfc) throws Exception
 	{
 		//if we have no data for this gene, immediately fall back to the naive method
 		if(!geneToEntry.containsKey(gene))
 		{
-			return naiveClassifyVariant(gene, MAF, impact, CADDscore);
+			return naiveClassifyVariant(gene, MAF, impact, CADDscore, mvlClassfc);
 		}
 
 		CCGGEntry entry = geneToEntry.get(gene);
@@ -59,6 +60,10 @@ public class CCGGUtils
 		// MAF based classification, calibrated
 		if(MAF > entry.PathoMAFThreshold)
 		{
+			if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_pathomaf"); }
+			else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_pathomaf"); }
+			else { System.out.println("VOUS_benign_pathomaf"); }
+				
 			return new Judgment(Classification.Benign, Method.calibrated, "Variant MAF of " + MAF + " is greater than the pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".");
 		}
 		
@@ -69,18 +74,34 @@ public class CCGGUtils
 		{
 			if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
 			{
+				if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("false_patho_i1"); }
+				else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("true_patho_i1"); }
+				else { System.out.println("VOUS_patho_i1"); }
+			
 				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high impact, while there are no known high impact variants in the population. Also, " + mafReason);
 			}
 			else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 			{
+				if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("false_patho_i2"); }
+				else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("true_patho_i2"); }
+				else { System.out.println("VOUS_patho_i2"); }
+	
 				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high/moderate impact, while there are no known high/moderate impact variants in the population. Also, " + mafReason);
 			}
 			else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 			{
+				if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("false_patho_i3"); }
+				else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("true_patho_i3"); }
+				else { System.out.println("VOUS_patho_i3"); }
+	
 				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant is of high/moderate/low impact, while there are no known high/moderate/low impact variants in the population. Also, " + mafReason);
 			}
 			else if(impact.equals(Impact.MODIFIER))
 			{
+				if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_modf"); }
+				else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_modf"); }
+				else { System.out.println("VOUS_benign_modf"); }
+	
 				return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant is of 'modifier' impact, and therefore unlikely to be pathogenic. However, " + mafReason);
 			}
 		}
@@ -92,10 +113,18 @@ public class CCGGUtils
 			{
 				if(CADDscore > entry.MeanPathogenicCADDScore)
 				{
+					if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("false_patho_c12"); }
+					else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("true_patho_c12"); }
+					else { System.out.println("VOUS_patho_c12"); }
+		
 					return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant CADD score of " + CADDscore + " is greater than the mean pathogenic score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative. Also, " + mafReason);
 				}
 				else if(CADDscore < entry.MeanPopulationCADDScore)
 				{
+					if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_c12"); }
+					else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_c12"); }
+					else { System.out.println("VOUS_benign_c12"); }
+		
 					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
 				}
 			}
@@ -103,24 +132,36 @@ public class CCGGUtils
 			{
 				if(CADDscore > entry.Spec95thPerCADDThreshold)
 				{
+					if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("false_patho_c345"); }
+					else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("true_patho_c345"); }
+					else { System.out.println("VOUS_patho_c345"); }
+		
 					return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, "Variant CADD score of " + CADDscore + " is greater than the 95% specificity threhold of " + entry.Spec95thPerCADDThreshold + " for this gene. Also, " + mafReason);
 				}
 				else if(CADDscore < entry.Sens95thPerCADDThreshold)
 				{
+					if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_c345"); }
+					else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_c345"); }
+					else { System.out.println("VOUS_benign_c345"); }
+		
 					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
 				}
 			}
 		}
 		
 		//if everything so far has failed, we can still fall back to the naive method
-		return naiveClassifyVariant(gene, MAF, impact, CADDscore);
+		return naiveClassifyVariant(gene, MAF, impact, CADDscore, mvlClassfc);
 	}
 	
 	
-	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
+	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore, ExpertClassification mvlClassfc) throws Exception
 	{
 		if(MAF > 0.00474)
 		{
+			if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_naive_maf"); }
+			else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_naive_maf"); }
+			else { System.out.println("VOUS_benign_naive_maf"); }
+
 			return new Judgment(Judgment.Classification.Benign, Method.naive, "MAF > 0.00474");
 		}
 //		if(impact.equals(impact.equals(Impact.MODIFIER) || impact.equals(Impact.LOW)))
@@ -131,10 +172,17 @@ public class CCGGUtils
 		{
 			if(CADDscore != null && CADDscore > 34)
 			{
+				if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("false_patho_naive_cadd"); }
+				else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("true_patho_naive_cadd"); }
+				else { System.out.println("VOUS_patho_naive_cadd"); }
+
 				return new Judgment(Judgment.Classification.Pathogn, Method.naive, "CADDscore > 34");
 			}
 			else if(CADDscore != null && CADDscore < 2)
 			{
+				if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_naive_cadd"); }
+				else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_naive_cadd"); }
+				else { System.out.println("VOUS_benign_naive_cadd"); }
 				return new Judgment(Judgment.Classification.Benign, Method.naive, "CADDscore < 2");
 			}
 			else

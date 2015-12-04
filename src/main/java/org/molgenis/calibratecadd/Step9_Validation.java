@@ -82,11 +82,11 @@ public class Step9_Validation
 						Judgment judgment;
 						if(naiveOnly)
 						{
-							judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
+							judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore, ExpertClassification.valueOf(mvlClassfc));
 						}
 						else
 						{
-							judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
+							judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore, ExpertClassification.valueOf(mvlClassfc));
 						}
 						addToMVLResults(judgment, mvlClassfc, mvlName, record);
 					}
