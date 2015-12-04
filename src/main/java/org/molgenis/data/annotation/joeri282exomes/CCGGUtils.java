@@ -57,7 +57,7 @@ public class CCGGUtils
 		CCGGEntry.Category category = entry.category;
 		
 		// MAF based classification, calibrated
-		if(MAF > entry.PathoMAFThreshold)
+		if(entry.PathoMAFThreshold != null && MAF > entry.PathoMAFThreshold)
 		{
 			return new Judgment(Classification.Benign, Method.calibrated, "Variant MAF of " + MAF + " is greater than the pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".");
 		}
