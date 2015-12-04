@@ -4,17 +4,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.hibernate.validator.util.privilegedactions.GetAnnotationParameter;
 import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -29,6 +28,14 @@ public class CalibratedExomeAnalysis
 	
 	private List<CandidateVariant> pathogenicVariants;
 	
+	private int calibPatho = 0;
+	private int calibBenign = 0;
+	private int naivePatho = 0;
+	private int naiveBenign = 0;
+	private int failedToClassify = 0;
+	private int totalVariantSeen = 0;
+	private int totalVariantRefAltGeneCombinationsSeen = 0;
+	
 	public void go(File vcfFile, File patientGroups, File ccggFile) throws Exception
 	{
 		pathogenicVariants = new ArrayList<CandidateVariant>();
@@ -39,9 +46,15 @@ public class CalibratedExomeAnalysis
 		
 		VcfRepository vcf = new VcfRepository(vcfFile, "vcf");
 		Iterator<Entity> it = vcf.iterator();
-
+		
 		while (it.hasNext())
 		{
+			if(totalVariantSeen % 1000 == 0)
+			{
+				System.out.println("Seen " + totalVariantSeen + " variants, in a total of " + totalVariantRefAltGeneCombinationsSeen + " ref/alt/gene combinations. Classified " + (calibPatho+naivePatho) + " as pathogenic, " + (calibBenign+naiveBenign) + " as benign, failed to classify " + failedToClassify + ".");
+			}
+			totalVariantSeen++;
+			
 			Entity record = it.next();
 
 			String filter = record.getString("FILTER");
@@ -106,15 +119,39 @@ public class CalibratedExomeAnalysis
 				
 				for(String gene : genes)
 				{
+					totalVariantRefAltGeneCombinationsSeen++;
+					
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 					Judgment judgment = null;
 					try
 					{
 						judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
+						if(judgment.method.equals(Method.calibrated))
+						{
+							if(judgment.getClassification().equals(Classification.Benign))
+							{
+								calibBenign++;
+							}
+							if(judgment.getClassification().equals(Classification.Pathogn))
+							{
+								calibPatho++;
+							}
+						}
+						if(judgment.method.equals(Method.naive))
+						{
+							if(judgment.getClassification().equals(Classification.Benign))
+							{
+								naiveBenign++;
+							}
+							if(judgment.getClassification().equals(Classification.Pathogn))
+							{
+								naivePatho++;
+							}
+						}
 					}
 					catch(VariantClassificationException e)
 					{
-						//
+						failedToClassify++;
 					}
 					
 					if(judgment != null && judgment.classification.equals(Judgment.Classification.Pathogn))
@@ -138,6 +175,15 @@ public class CalibratedExomeAnalysis
 		vcf.close();
 		
 		printResults(pathogenicVariants);
+		
+		System.out.println("\n## COUNTS ##\n");
+		System.out.println("calibBenign = " + calibBenign);
+		System.out.println("calibPatho = " + calibPatho);
+		System.out.println("naiveBenign = " + naiveBenign);
+		System.out.println("naivePatho = " + naivePatho);
+		System.out.println("failedToClassify = " + failedToClassify);
+		System.out.println("totalVariantSeen = " + totalVariantSeen);
+		System.out.println("totalVariantRefAltGeneCombinationsSeen = " + totalVariantRefAltGeneCombinationsSeen);
 	}
 	
 	public void printResults(List<CandidateVariant> pathogenicVariants) throws Exception
@@ -146,7 +192,7 @@ public class CalibratedExomeAnalysis
 		
 		for(Method conf : Method.values())
 		{
-			System.out.println("\nPathogenic candidates in confidence tranche: " + conf);
+			System.out.println("\nPathogenic candidates, method: " + conf);
 			for(CandidateVariant cv : pathogenicVariants)
 			{
 				if(cv.judgment.method.equals(conf))
@@ -177,7 +223,6 @@ public class CalibratedExomeAnalysis
 				
 			}
 		}
-		
 	}
 	
 	public HashMap<String, Entity> findInterestingSamples(Entity record, int altIndex, int exacHets, int exacHoms)
