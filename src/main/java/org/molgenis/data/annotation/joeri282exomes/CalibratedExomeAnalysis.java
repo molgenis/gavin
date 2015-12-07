@@ -65,9 +65,9 @@ public class CalibratedExomeAnalysis
 			}
 			
 		//	System.out.println(record.toString());
-//			String chr = record.getString("#CHROM");
-//			String pos = record.getString("POS");
-//			String ref = record.getString("REF");
+			String chr = record.getString("#CHROM");
+			String pos = record.getString("POS");
+			String ref = record.getString("REF");
 			String altStr = record.getString("ALT");
 			String exac_af_STR = record.get("EXAC_AF") == null ? null : record.get("EXAC_AF").toString();
 			String exac_ac_hom_STR = record.get("EXAC_AC_HOM") == null ? null : record.get("EXAC_AC_HOM").toString();
@@ -116,6 +116,11 @@ public class CalibratedExomeAnalysis
 				Double cadd = (cadd_split[i] != null && !cadd_split[i].equals(".")) ? Double.parseDouble(cadd_split[i]) : null;
 				int exac_hom = exac_ac_hom_split[i] != null && !exac_ac_hom_split[i].equals(".") ? Integer.parseInt(exac_ac_hom_split[i]) : 0;
 				int exac_het = exac_ac_het_split[i] != null && !exac_ac_het_split[i].equals(".") ? Integer.parseInt(exac_ac_het_split[i]) : 0;
+				
+				if(cadd == null)
+				{
+					System.out.println("CADD missing for " + chr + " " + pos + " " + ref + " " + alt);
+				}
 				
 				for(String gene : genes)
 				{
