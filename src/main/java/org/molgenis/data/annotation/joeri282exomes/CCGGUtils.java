@@ -123,10 +123,10 @@ public class CCGGUtils
 		{
 			return new Judgment(Judgment.Classification.Benign, Method.naive, "MAF > 0.00474");
 		}
-//		if(impact.equals(impact.equals(Impact.MODIFIER) || impact.equals(Impact.LOW)))
-//		{
-//			return new Judgment(Judgment.Classification.Benign, Confidence.Naive, "Impact.MODIFIER || Impact.LOW");
-//		}
+		if(impact.equals(Impact.MODIFIER))
+		{
+			return new Judgment(Judgment.Classification.Benign, Method.naive, "Impact is MODIFIER");
+		}
 		else
 		{
 			if(CADDscore != null && CADDscore > 34)
@@ -191,7 +191,7 @@ public class CCGGUtils
 		String findAnn = getAnn(ann, gene, allele);
 		if(findAnn == null)
 		{
-			System.out.println("FAILED TO GET IMPACT FOR " + ann);
+			System.out.println("WARNING: failed to get impact for gene '"+gene+"', allele '"+allele+"' in " + ann);
 			return null;
 		}
 		else
@@ -220,7 +220,7 @@ public class CCGGUtils
 			}
 			return oneAnn;
 		}
-		System.out.println("warning: annotation could not be found for " + gene + ", allele=" + allele + ", ann=" + ann);
+		System.out.println("WARNING: annotation could not be found for " + gene + ", allele=" + allele + ", ann=" + ann);
 		return null;
 	}
 
