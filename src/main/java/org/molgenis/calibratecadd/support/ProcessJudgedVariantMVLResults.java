@@ -138,7 +138,7 @@ public class ProcessJudgedVariantMVLResults
 		System.out.println("\nFalse posities & false negatives, method: " + method);
 		int grandTotal = 0;
 		
-		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV");
+		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC");
 		
 		int TN_all = 0;
 		int TP_all = 0;
@@ -178,12 +178,12 @@ public class ProcessJudgedVariantMVLResults
 				}
 			}
 			
-			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP)+ "\t" + getNPV(TN, FN));
+			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP) + "\t" + getNPV(TN, FN) + "\t" + getAcc(TP, TN, FP, FN) + "\t" + getMCC(TP, TN, FP, FN));
 			
 			
 		}
 		
-		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all));
+		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all));
 
 	}
 	
@@ -205,6 +205,19 @@ public class ProcessJudgedVariantMVLResults
 	private static String getNPV(int TN, int FN)
 	{
 		return TN+FN == 0 ? "-" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
+	}
+	
+	private static String getAcc(int TP, int TN, int FP, int FN)
+	{
+		return TP+TN+FP+FN == 0 ? "-" : (int)Math.round((double)(TP+TN)/(TP+TN+FP+FN)*100) + "%";
+	}
+	
+	// https://en.wikipedia.org/wiki/Matthews_correlation_coefficient
+	private static String getMCC(int TP, int TN, int FP, int FN)
+	{
+		double aboveDiv = TP*TN-FP*FN;
+		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
+		return belowDiv == 0 ? "-" : (int)Math.round((aboveDiv/belowDiv)*100) + "%";
 	}
 
 	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
