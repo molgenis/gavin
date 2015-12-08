@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.molgenis.calibratecadd.support.PONP2Results;
 import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.calibratecadd.support.JudgedVariant;
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
@@ -20,7 +21,7 @@ public class Step9_Validation
 {
 	public static void main(String[] args) throws Exception
 	{
-		new Step9_Validation(args[0], args[1], Boolean.valueOf(args[2]));
+		new Step9_Validation(args[0], args[1], args[2]);
 	}
 	
 	CCGGUtils ccgg;
@@ -32,14 +33,18 @@ public class Step9_Validation
 	 * Check if classification matches
 	 * @throws Exception 
 	 */
-	public Step9_Validation(String ccggLoc, String mvlLoc, boolean naiveOnly) throws Exception
+	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
 	{
+		if(!mode.equals("full") && !mode.equals("naiveonly") && !mode.equals("ponp2"))
+		{
+			throw new Exception("mode needs to be 'full', 'naiveonly', or 'ponp2'");
+		}
 		loadCCGG(ccggLoc);
-		scanMVL(mvlLoc, naiveOnly);
+		scanMVL(mvlLoc, mode);
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants);
 	}
 	
-	public void scanMVL(String mvlLoc, boolean naiveOnly) throws Exception
+	public void scanMVL(String mvlLoc, String mode) throws Exception
 	{
 		File mvlFile = new File(mvlLoc);
 		if(!mvlFile.exists())
@@ -54,6 +59,9 @@ public class Step9_Validation
 		{
 			Entity record = vcfRepoIter.next();
 			
+			String chr = record.getString("#CHROM");
+			String pos = record.getString("POS");
+			String ref = record.getString("REF");
 			String alt = record.getString("ALT");
 			if(alt.contains(","))
 			{
@@ -80,9 +88,14 @@ public class Step9_Validation
 					try
 					{
 						Judgment judgment;
-						if(naiveOnly)
+						if(mode.equals("naiveonly"))
 						{
 							judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
+						}
+						else if (mode.equals("ponp2"))
+						{
+							PONP2Results p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/PONP2_predictions.txt"));
+							judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
 						}
 						else
 						{
