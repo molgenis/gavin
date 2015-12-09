@@ -56,11 +56,11 @@ public class PONP2Results
 			}
 			else if(pc.equals(PonpClassification.Neutral))
 			{
-				return new Judgment(Classification.Benign, Method.naive, "PONP2 result 'Neutral'");
+				return new Judgment(Classification.Benign, Method.calibrated, "PONP2 result 'Neutral'");
 			}
 			else if(pc.equals(PonpClassification.Pathogenic))
 			{
-				return new Judgment(Classification.Pathogn, Method.naive, "PONP2 result 'Pathogenic'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, "PONP2 result 'Pathogenic'");
 			}
 			else
 			{

@@ -15,6 +15,8 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
 import org.molgenis.data.annotation.joeri282exomes.Judgment;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
 
 public class Step9_Validation
@@ -54,6 +56,17 @@ public class Step9_Validation
 		VcfRepository vcfRepo = new VcfRepository(mvlFile, "mvl");
 		
 		java.util.Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
+		
+		/**
+		 * Here, we let PON-P2 handle the classification and see what happens
+		 * Obviously, before this works, you must score your variant list with PON-P2
+		 * And then link this file below
+		 */
+		PONP2Results p2r = null;
+		if (mode.equals("ponp2"))
+		{
+			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/PONP2_predictions.txt"));
+		}
 
 		while (vcfRepoIter.hasNext())
 		{
@@ -74,16 +87,25 @@ public class Step9_Validation
 			String ann = record.getString("ANN");
 			Set<String> genes = CCGGUtils.getGenesFromAnn(ann);
 			String id = record.getString("ID");
-			String geneFromId = id.split(":", -1)[0];
+			
+			//for some variants, we have GENE:MUTATION in the ID
+			// for example, in the MVL data, we see "GUSB:c.1222C>T", and in the VariBench data: "PAH:c.617A>G"
+			//if this is present, we use this to narrow the scope by matching the annotated genes to the gene symbol here
+			String[] idSplit = id.split(":", -1);
+			boolean hasGeneId = idSplit.length > 1 ? true : false;
+			String geneFromId = idSplit[0];
+			
 			String mvlClassfc = record.getString("CLSF");
 			String mvlName = record.getString("MVL");
 			
-			boolean geneToIdMatch = false;
+			ArrayList<Judgment> multipleJudgments = new ArrayList<Judgment>();
+			
+			boolean geneToIdMatchFound = false;
 			for(String gene : genes)
 			{
-				if(gene.equals(geneFromId))
+				if(!hasGeneId || gene.equals(geneFromId))
 				{
-					geneToIdMatch = true;
+					geneToIdMatchFound = true;
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 					try
 					{
@@ -94,25 +116,77 @@ public class Step9_Validation
 						}
 						else if (mode.equals("ponp2"))
 						{
-							PONP2Results p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/PONP2_predictions.txt"));
 							judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
 						}
 						else
 						{
 							judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
 						}
-						addToMVLResults(judgment, mvlClassfc, mvlName, record);
+						multipleJudgments.add(judgment);
+						//addToMVLResults(judgment, mvlClassfc, mvlName, record);
 					}
 					catch(VariantClassificationException e)
 					{
-						addToMVLResults(null, mvlClassfc, mvlName, record);
+						//addToMVLResults(null, mvlClassfc, mvlName, record);
 					}
-					break;
 				}
 			}
-			if(!geneToIdMatch)
+			if(hasGeneId && !geneToIdMatchFound)
 			{
-				throw new Exception("no gene to id match for " + record.toString());
+				System.out.println("WARNING: bad data for variant " + chr + ":" + pos + " " + ref + "/" + alt + ", no match from ID field gene to snpeff annotations!");
+				//throw new Exception("no gene to id match for " + record.toString());
+			}
+			
+			//if no judgment, add null for this variant
+			if(multipleJudgments.size() == 0)
+			{
+				addToMVLResults(null, mvlClassfc, mvlName, record);
+				continue;
+			}
+			
+			//go through the possible classifications and check if any of them are conflicting
+			//also, if we have a calibrated judgment, 
+			int nrOfBenignClsf = 0;
+			int nrOfPathognClsf = 0;
+			boolean hasCalibratedJudgment = false;
+			for(Judgment judgment : multipleJudgments)
+			{
+				if(judgment.getClassification().equals(Classification.Benign))
+				{
+					nrOfBenignClsf++;
+				}
+				if(judgment.getClassification().equals(Classification.Pathogn))
+				{
+					nrOfPathognClsf++;
+				}
+				if(judgment.getConfidence().equals(Method.calibrated))
+				{
+					hasCalibratedJudgment = true;
+				}
+			}
+			
+			//check if we have any conflicts
+			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
+			{
+				System.out.println("WARNING: conflicting classification! not adding this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
+			}
+			else
+			{
+				for(Judgment judgment : multipleJudgments)
+				{
+					//if we know we have calibrated results, wait for it, then add it, and then break
+					if(hasCalibratedJudgment && judgment.getConfidence().equals(Method.calibrated))
+					{
+						addToMVLResults(judgment, mvlClassfc, mvlName, record);
+						break;
+					}
+					//if not, might as well add this one and be done
+					else if(!hasCalibratedJudgment)
+					{
+						addToMVLResults(judgment, mvlClassfc, mvlName, record);
+						break;
+					}
+				}
 			}
 		}
 	}
