@@ -12,6 +12,8 @@ public class ProcessJudgedVariantMVLResults
 	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants)
 	{
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, null);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, null);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.calibrated);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.calibrated);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.naive);
@@ -135,7 +137,7 @@ public class ProcessJudgedVariantMVLResults
 	
 	public static void calculateAndPrint_FP_FN_stats(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nFalse posities & false negatives, method: " + method);
+		System.out.println("\nFalse posities & false negatives, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;
 		
 		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC");
@@ -153,7 +155,7 @@ public class ProcessJudgedVariantMVLResults
 			int FN = 0;
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getConfidence().equals(method))
+				if(jv.getJudgment() != null && (method == null || jv.getJudgment().getConfidence().equals(method)))
 				{
 					if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.Benign))
 					{
@@ -222,7 +224,7 @@ public class ProcessJudgedVariantMVLResults
 
 	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
-		System.out.println("\nCounts, method: " + method);
+		System.out.println("\nCounts, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;
 		for(String mvl : judgedMVLVariants.keySet())
 		{
@@ -238,7 +240,7 @@ public class ProcessJudgedVariantMVLResults
 			{	
 				for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 				{
-					if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(cl) && jv.getJudgment().getConfidence().equals(method))
+					if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(cl) && (method == null || jv.getJudgment().getConfidence().equals(method)))
 					{
 						count++;
 					}
@@ -257,7 +259,7 @@ public class ProcessJudgedVariantMVLResults
 		{	
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getConfidence().equals(method))
+				if(jv.getJudgment() != null && (method == null || jv.getJudgment().getConfidence().equals(method)))
 				{
 					count++;
 				}
