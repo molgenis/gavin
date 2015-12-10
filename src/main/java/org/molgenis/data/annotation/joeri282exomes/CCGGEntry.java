@@ -23,7 +23,7 @@ public class CCGGEntry
 	Double PopImpactHighEq;
 	Double PopImpactModerateEq;
 	Double PopImpactLowEq;
-	Integer PopImpactModifierEq;
+	Double PopImpactModifierEq;
 	Integer NrOfCADDScoredPopulationVars;
 	Integer NrOfCADDScoredPathogenicVars;
 	Double MeanPopulationCADDScore;
@@ -56,12 +56,32 @@ public class CCGGEntry
 		this.NrOfOverlappingVariants = Integer.valueOf(split[7]);
 		this.NrOfFilteredPopVariants = Integer.valueOf(split[8]);
 		this.PathoMAFThreshold = split[9].isEmpty() ? null : Double.parseDouble(split[9]);
+		
+		this.PopImpactHighPerc = split[10].isEmpty() ? null : Double.parseDouble(split[10]);
+		this.PopImpactModeratePerc = split[11].isEmpty() ? null : Double.parseDouble(split[11]);
+		this.PopImpactLowPerc = split[12].isEmpty() ? null : Double.parseDouble(split[12]);
+		this.PopImpactModifierPerc = split[13].isEmpty() ? null : Double.parseDouble(split[13]);
+		
+		this.PathoImpactHighPerc = split[14].isEmpty() ? null : Double.parseDouble(split[14]);
+		this.PathoImpactModeratePerc = split[15].isEmpty() ? null : Double.parseDouble(split[15]);
+		this.PathoImpactLowPerc = split[16].isEmpty() ? null : Double.parseDouble(split[16]);
+		this.PathoImpactModifierPerc = split[17].isEmpty() ? null : Double.parseDouble(split[17]);
+	
+		this.PopImpactHighEq = split[18].isEmpty() ? null : Double.parseDouble(split[18]);
+		this.PopImpactModerateEq = split[19].isEmpty() ? null : Double.parseDouble(split[19]);
+		this.PopImpactLowEq = split[20].isEmpty() ? null : Double.parseDouble(split[20]);
+		this.PopImpactModifierEq = split[21].isEmpty() ? null : Double.parseDouble(split[21]);
+		
+		this.NrOfCADDScoredPopulationVars = split[22].isEmpty() ? null : Integer.parseInt(split[22]);
+		this.NrOfCADDScoredPathogenicVars = split[23].isEmpty() ? null : Integer.parseInt(split[23]);
+		
 		this.MeanPopulationCADDScore = split[24].isEmpty() ? null : Double.parseDouble(split[24]);
 		this.MeanPathogenicCADDScore = split[25].isEmpty() ? null : Double.parseDouble(split[25]);
 		this.MeanDifference = split[26].isEmpty() ? null : Double.parseDouble(split[26]);
 		this.UTestPvalue = split[27].isEmpty() ? null : Double.parseDouble(split[27]);
 		this.Sens95thPerCADDThreshold = split[28].isEmpty() ? null : Double.parseDouble(split[28]);
 		this.Spec95thPerCADDThreshold = split[29].isEmpty() ? null : Double.parseDouble(split[29]);
+		//30 is 'reason' string
 	}
 		
 }
