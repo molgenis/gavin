@@ -164,10 +164,13 @@ public class CCGGUtils
 
 			return new Judgment(Judgment.Classification.Benign, Method.naive, "MAF > 0.00474");
 		}
-//		if(impact.equals(impact.equals(Impact.MODIFIER) || impact.equals(Impact.LOW)))
-//		{
-//			return new Judgment(Judgment.Classification.Benign, Confidence.Naive, "Impact.MODIFIER || Impact.LOW");
-//		}
+		if(impact.equals(Impact.MODIFIER))
+		{
+			if(mvlClassfc.equals(ExpertClassification.B) || mvlClassfc.equals(ExpertClassification.LB)){ System.out.println("true_benign_naive_modifier"); }
+			else if(mvlClassfc.equals(ExpertClassification.P) || mvlClassfc.equals(ExpertClassification.LP)){ System.out.println("false_benign_naive_modifier"); }
+			else { System.out.println("VOUS_benign_naive_modifier"); }
+			return new Judgment(Judgment.Classification.Benign, Method.naive, "Impact.MODIFIER");
+		}
 		else
 		{
 			if(CADDscore != null && CADDscore > 34)
