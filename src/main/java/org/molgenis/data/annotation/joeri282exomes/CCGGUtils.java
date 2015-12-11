@@ -34,7 +34,12 @@ public class CCGGUtils
 		}
 		
 	}
-	
+
+	public HashMap<String, CCGGEntry> getGeneToEntry()
+	{
+		return geneToEntry;
+	}
+
 	public Category getCategory(String gene)
 	{
 		return geneToEntry.get(gene).category;

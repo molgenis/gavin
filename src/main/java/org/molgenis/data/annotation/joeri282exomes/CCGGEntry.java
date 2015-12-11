@@ -2,39 +2,39 @@ package org.molgenis.data.annotation.joeri282exomes;
 
 public class CCGGEntry
 {
-	String gene;
-	Category category;
-	String chromosome;
-	int start;
-	int end;
-	int NrOfPopulationVariants;
-	int NrOfPathogenicVariants;
-	int NrOfOverlappingVariants;
-	int NrOfFilteredPopVariants;
-	Double PathoMAFThreshold;
-	Double PopImpactHighPerc;
-	Double PopImpactModeratePerc;
-	Double PopImpactLowPerc;
-	Double PopImpactModifierPerc;
-	Double PathoImpactHighPerc;
-	Double PathoImpactModeratePerc;
-	Double PathoImpactLowPerc;
-	Double PathoImpactModifierPerc;
-	Double PopImpactHighEq;
-	Double PopImpactModerateEq;
-	Double PopImpactLowEq;
-	Double PopImpactModifierEq;
-	Integer NrOfCADDScoredPopulationVars;
-	Integer NrOfCADDScoredPathogenicVars;
-	Double MeanPopulationCADDScore;
-	Double MeanPathogenicCADDScore;
-	Double MeanDifference;
-	Double UTestPvalue;
-	Double Sens95thPerCADDThreshold;
-	Double Spec95thPerCADDThreshold;
-	String Recommendation;
+	public String gene;
+	public Category category;
+	public String chromosome;
+	public int start;
+	public int end;
+	public int NrOfPopulationVariants;
+	public int NrOfPathogenicVariants;
+	public int NrOfOverlappingVariants;
+	public int NrOfFilteredPopVariants;
+	public Double PathoMAFThreshold;
+	public Double PopImpactHighPerc;
+	public Double PopImpactModeratePerc;
+	public Double PopImpactLowPerc;
+	public Double PopImpactModifierPerc;
+	public Double PathoImpactHighPerc;
+	public Double PathoImpactModeratePerc;
+	public Double PathoImpactLowPerc;
+	public Double PathoImpactModifierPerc;
+	public Double PopImpactHighEq;
+	public Double PopImpactModerateEq;
+	public Double PopImpactLowEq;
+	public Double PopImpactModifierEq;
+	public Integer NrOfCADDScoredPopulationVars;
+	public Integer NrOfCADDScoredPathogenicVars;
+	public Double MeanPopulationCADDScore;
+	public Double MeanPathogenicCADDScore;
+	public Double MeanDifference;
+	public Double UTestPvalue;
+	public Double Sens95thPerCADDThreshold;
+	public Double Spec95thPerCADDThreshold;
+	public String Recommendation;
 	
-	enum Category{
+	public enum Category{
 		N1, N2, T1, T2, I1, I2, I3, C1, C2, C3, C4, C5
 	}
 	
