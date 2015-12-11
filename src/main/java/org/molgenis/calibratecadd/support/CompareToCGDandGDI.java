@@ -207,6 +207,68 @@ public class CompareToCGDandGDI
 		
 		System.out.println("\n\tMeanPopCADD\tMeanPathoCADD\nAD/AR\t" + popMeanCADDforADAR + "\t" + pathoMeanCADDforADAR + "\nAD\t" + popMeanCADDforAD + "\t" + pathoMeanCADDforAD+ "\nAR\t" + popMeanCADDforAR + "\t" + pathoMeanCADDforAR+ "\nOther\t" + popMeanCADDforOther + "\t" + pathoMeanCADDforOther);
 		
+		
+		ArrayList<Double> popMeansCADDforPediatric = new ArrayList<Double>();
+		ArrayList<Double> pathoMeansCADDforPediatric = new ArrayList<Double>();
+		ArrayList<Double> popMeansCADDforAdult = new ArrayList<Double>();
+		ArrayList<Double> pathoMeansCADDforAdult = new ArrayList<Double>();
+		ArrayList<Double> popMeansCADDforOtherOnset = new ArrayList<Double>();
+		ArrayList<Double> pathoMeansCADDforOtherOnset = new ArrayList<Double>();
+		allCat = new HashSet<String>();
+		
+		for(String gene : ccgg.keySet())
+		{
+			if(geneToOnset.containsKey(gene))
+			{
+				Category cat = ccgg.get(gene).category;
+				String onset = geneToOnset.get(gene);
+				if(cat.equals(Category.C1) || cat.equals(Category.C2) || cat.equals(Category.C3) || cat.equals(Category.C4) || cat.equals(Category.C5))
+				{
+					if(onset.equals("Pediatric"))
+					{
+						popMeansCADDforPediatric.add(ccgg.get(gene).MeanPopulationCADDScore);
+						pathoMeansCADDforPediatric.add(ccgg.get(gene).MeanPathogenicCADDScore);
+					}
+					if(onset.equals("Adult"))
+					{
+						popMeansCADDforAdult.add(ccgg.get(gene).MeanPopulationCADDScore);
+						pathoMeansCADDforAdult.add(ccgg.get(gene).MeanPathogenicCADDScore);
+					}
+					if(onset.equals("Other"))
+					{
+						popMeansCADDforOtherOnset.add(ccgg.get(gene).MeanPopulationCADDScore);
+						pathoMeansCADDforOtherOnset.add(ccgg.get(gene).MeanPathogenicCADDScore);
+					}
+				}
+			}
+		}
+		
+		double[] popMeansCADDforPediatric_ = new double[popMeansCADDforPediatric.size()];
+		for(int i = 0; i < popMeansCADDforPediatric.size(); i++) { popMeansCADDforPediatric_[i] = popMeansCADDforPediatric.get(i); }
+		double[] popMeansCADDforAdult_ = new double[popMeansCADDforAdult.size()];
+		for(int i = 0; i < popMeansCADDforAdult.size(); i++) { popMeansCADDforAdult_[i] = popMeansCADDforAdult.get(i); }
+		double[] popMeansCADDforOtherOnset_ = new double[popMeansCADDforOtherOnset.size()];
+		for(int i = 0; i < popMeansCADDforOtherOnset.size(); i++) { popMeansCADDforOtherOnset_[i] = popMeansCADDforOtherOnset.get(i); }
+		
+		double[] pathoMeansCADDforPediatric_ = new double[pathoMeansCADDforPediatric.size()];
+		for(int i = 0; i < pathoMeansCADDforPediatric.size(); i++) { pathoMeansCADDforPediatric_[i] = pathoMeansCADDforPediatric.get(i); }
+		double[] pathoMeansCADDforAdult_ = new double[pathoMeansCADDforAdult.size()];
+		for(int i = 0; i < pathoMeansCADDforAdult.size(); i++) { pathoMeansCADDforAdult_[i] = pathoMeansCADDforAdult.get(i); }
+		double[] pathoMeansCADDforOtherOnset_ = new double[pathoMeansCADDforOtherOnset.size()];
+		for(int i = 0; i < pathoMeansCADDforOtherOnset.size(); i++) { pathoMeansCADDforOtherOnset_[i] = pathoMeansCADDforOtherOnset.get(i); }
+		
+		double popMeanCADDforPediatric = mean.evaluate(popMeansCADDforPediatric_);
+		double popMeanCADDforAdult = mean.evaluate(popMeansCADDforAdult_);
+		double popMeanCADDforOtherOnset = mean.evaluate(popMeansCADDforOtherOnset_);
+		
+		double pathoMeanCADDforPediatric = mean.evaluate(pathoMeansCADDforPediatric_);
+		double pathoMeanCADDforAdult = mean.evaluate(pathoMeansCADDforAdult_);
+		double pathoMeanCADDforOtherOnset = mean.evaluate(pathoMeansCADDforOtherOnset_);
+		
+
+		System.out.println("\n\tMeanPopCADD\tMeanPathoCADD\nPediatric\t" + popMeanCADDforPediatric + "\t" + pathoMeanCADDforPediatric + "\nAdult\t" + popMeanCADDforAdult + "\t" + pathoMeanCADDforAdult+ "\nOther\t" + popMeanCADDforOtherOnset + "\t" + pathoMeanCADDforOtherOnset);
+		
+		
 	}
 	
 	public void compareToGDI()
@@ -270,7 +332,7 @@ public class CompareToCGDandGDI
 			System.out.print("\t" + (categoryToLowDmgcount.get(cat) != null ?  categoryToLowDmgcount.get(cat) : "0"));
 		}
 		
-		
+		System.out.println();
 		
 		ArrayList<Double> popMeansCADDforHighDmg = new ArrayList<Double>();
 		ArrayList<Double> pathoMeansCADDforHighDmg = new ArrayList<Double>();
