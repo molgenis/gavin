@@ -22,6 +22,57 @@ import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
 
+/**
+* Assess the performance of an in silico variant pathogenicity prediction tool on gold standard datasets.
+* 
+* In short: you can run any 'gold standard file' against the CCGG tool, as long as this is a VCF with columns for MVL, CLSF, CADD_SCALED and EXAC_AF.
+* If you want to check the performance of a different tool, you must score the MVL manually and link to the (minimized/cleaned) output of these tools here.
+* This emulates the classification process using a different tool.
+* You can do this already for the GoldStandard_UMCG_MVLs_noClinVar data set. Use the "Prediction_UMCG_MVLs_noClinVar_XXXX" files for this (see code below).
+* 
+* First argument: the CCGG output file. Typically: CCGG_ClassificationSource_GeneSummary.tsv
+* 
+* Second argument:
+* A gold standard file to test against. Typically a VCF file with 'MVL' and 'CLSF' columns denoting expert validated interpretations.
+* Three are used and available here:
+* 1) MutationTaster benchmark set (more info: http://www.mutationtaster.org/info/Comparison_20130328_with_results_ClinVar.html)
+* 		GoldStandard_MutationTaster_TestSet.vcf
+* 2) VariBench benign and pathogenic datasets. Used to train and test PON-P2.
+* 		GoldStandard_VariBench_ToleranceDS7_all.vcf.gz
+* 3) UMCG Managed Variant Lists for 5 disease types.
+* 		GoldStandard_UMCG_MVLs_noClinVar.vcf
+* 
+* Third argument:
+* The tool to classify the variants with and subsequently report the performance of this method.
+* Available by default are: 'ccgg' and 'naive', using CCGG_ClassificationSource_GeneSummary.tsv
+* Requiring extra input (pre-scored variants in minimized files) are: 'ponp2', 'mutationtaster2', 'provean', 'sift'
+* See file examples ('Prediction_XXX') in the hardcoded locations on how to plug in different files for different MVL inputs.
+* 
+* Example usages:
+* 
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
+ ccgg
+*
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_MutationTaster_TestSet.vcf
+ ccgg
+*
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
+ provean
+*
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_VariBench_ToleranceDS7_all.vcf.gz
+ ccgg
+* 
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
+ ponp2
+* 
+* @author jvelde
+*
+*/
 public class Step9_Validation
 {
 	public static void main(String[] args) throws Exception
@@ -71,15 +122,15 @@ public class Step9_Validation
 		ProveanAndSiftResults ps2r = null;
 		if (mode.equals("ponp2"))
 		{
-			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/PONP2_predictions.txt"));
+			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PONP2_output.tsv"));
 		}
 		if (mode.equals("mutationtaster2"))
 		{
-			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MutationTaster2_output_minimized.tsv"));
+			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_MutationTaster2_output_minimized.tsv"));
 		}
 		if (mode.equals("provean") || mode.equals("sift"))
 		{
-			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/provean_sift_predictions_minimized.tsv"));
+			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PROVEAN_SIFT_output_minimized.tsv"));
 		}
 
 		while (vcfRepoIter.hasNext())
