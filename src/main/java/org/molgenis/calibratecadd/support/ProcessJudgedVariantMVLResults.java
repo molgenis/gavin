@@ -219,7 +219,7 @@ public class ProcessJudgedVariantMVLResults
 	{
 		double aboveDiv = TP*TN-FP*FN;
 		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
-		return belowDiv == 0 ? "-" : (int)Math.round((aboveDiv/belowDiv)*100) + "%";
+		return belowDiv == 0 ? "-" : "." + (int)Math.round((aboveDiv/belowDiv)*100);
 	}
 
 	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
