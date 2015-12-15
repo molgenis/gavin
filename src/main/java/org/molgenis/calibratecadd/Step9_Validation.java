@@ -70,6 +70,11 @@ import org.molgenis.data.vcf.VcfRepository;
  /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
  ponp2
 * 
+* MS Windows paths:
+ C:\Users\Joeri\github\molgenis-data-cadd\data\CCGG_ClassificationSource_GeneSummary.tsv
+ C:\Users\Joeri\github\molgenis-data-cadd\data\GoldStandard_UMCG_MVLs_noClinVar.vcf
+ ccgg
+* 
 * @author jvelde
 *
 */
