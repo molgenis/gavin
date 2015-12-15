@@ -9,11 +9,17 @@ import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 
 public class ProcessJudgedVariantMVLResults
 {
-	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants)
+	
+	private static Integer grandTotalExpertClassified;
+	private static Integer grandTotalOursClassified;
+	private static Double nMCCofAllMVLs;
+	
+	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants) throws Exception
 	{
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, null);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, null);
+		printYield();
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.calibrated);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.calibrated);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.naive);
@@ -24,6 +30,18 @@ public class ProcessJudgedVariantMVLResults
 		printVOUSresults(judgedMVLVariants, Method.naive);
 		printFalseResults(judgedMVLVariants, Method.calibrated);
 		printFalseResults(judgedMVLVariants, Method.naive);
+	}
+	
+	public static void printYield() throws Exception
+	{
+		if(grandTotalExpertClassified == null || grandTotalOursClassified == null || nMCCofAllMVLs == null)
+		{
+			throw new Exception("Can only calculate yield when we have grandTotalExpertClassified, grandTotalOursClassified, nMCCofAllMVLs");
+		}
+		else
+		{
+			System.out.println("\nYield:\n" + grandTotalOursClassified + " / " + grandTotalExpertClassified + " * " + nMCCofAllMVLs + " = " + ((double)grandTotalOursClassified/grandTotalExpertClassified*nMCCofAllMVLs));
+		}
 	}
 	
 	public static void printFalseResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
@@ -186,7 +204,7 @@ public class ProcessJudgedVariantMVLResults
 		}
 		
 		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + getNMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + getOPM(TP_all, TN_all, FP_all, FN_all));
-
+		nMCCofAllMVLs = getNMCC(TP_all, TN_all, FP_all, FN_all);
 	}
 	
 	private static String getTPR(int TP, int FN)
@@ -222,17 +240,17 @@ public class ProcessJudgedVariantMVLResults
 		return belowDiv == 0 ? "-" : "." + (int)Math.round((aboveDiv/belowDiv)*100);
 	}
 	
-	private static String getNMCC(int TP, int TN, int FP, int FN)
+	private static double getNMCC(int TP, int TN, int FP, int FN)
 	{
 		double aboveDiv = TP*TN-FP*FN;
 		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
 		if(belowDiv == 0)
 		{
-			return "-";
+			return 0; // arbitrarily set to 0, though could also return "-" or NULL or so..
 		}
 		double mcc = (aboveDiv/belowDiv);
 		double nMcc = ( 1 + mcc ) / 2;
-		return "." + (int)Math.round(nMcc*100);
+		return nMcc;
 	}
 	
 	private static String getOPM(int TP, int TN, int FP, int FN)
@@ -302,6 +320,7 @@ public class ProcessJudgedVariantMVLResults
 			count = 0;
 		}
 		System.out.println("\t" + grandTotal);
+		grandTotalOursClassified = grandTotal;
 	}
 	
 	
@@ -349,6 +368,7 @@ public class ProcessJudgedVariantMVLResults
 			count = 0;
 		}
 		System.out.println("\t" + grandTotal);
+		grandTotalExpertClassified = grandTotal;
 	}
 
 }
