@@ -140,7 +140,7 @@ public class ProcessJudgedVariantMVLResults
 		System.out.println("\nFalse posities & false negatives, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;
 		
-		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC");
+		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC" + "\t" + "nMCC" + "\t" + "OPM");
 		
 		int TN_all = 0;
 		int TP_all = 0;
@@ -180,12 +180,12 @@ public class ProcessJudgedVariantMVLResults
 				}
 			}
 			
-			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP) + "\t" + getNPV(TN, FN) + "\t" + getAcc(TP, TN, FP, FN) + "\t" + getMCC(TP, TN, FP, FN));
+			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP) + "\t" + getNPV(TN, FN) + "\t" + getAcc(TP, TN, FP, FN) + "\t" + getMCC(TP, TN, FP, FN) + "\t" + getNMCC(TP, TN, FP, FN) + "\t" + getOPM(TP, TN, FP, FN));
 			
 			
 		}
 		
-		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all));
+		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + getNMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + getOPM(TP_all, TN_all, FP_all, FN_all));
 
 	}
 	
@@ -220,6 +220,40 @@ public class ProcessJudgedVariantMVLResults
 		double aboveDiv = TP*TN-FP*FN;
 		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
 		return belowDiv == 0 ? "-" : "." + (int)Math.round((aboveDiv/belowDiv)*100);
+	}
+	
+	private static String getNMCC(int TP, int TN, int FP, int FN)
+	{
+		double aboveDiv = TP*TN-FP*FN;
+		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
+		if(belowDiv == 0)
+		{
+			return "-";
+		}
+		double mcc = (aboveDiv/belowDiv);
+		double nMcc = ( 1 + mcc ) / 2;
+		return "." + (int)Math.round(nMcc*100);
+	}
+	
+	private static String getOPM(int TP, int TN, int FP, int FN)
+	{
+		if(TP+FP == 0 || TP+FN == 0 || TN+FP == 0 || TN+FN == 0)
+		{
+			return "-";
+		}
+		double ppv =  (double)TP/(TP+FP);
+		double npv = (double)TN/(TN+FN);
+		double sens = (double)TP/(TP+FN); //same thing as TPR
+		double spec = (double)TN/(FP+TN); //same thing as TNR
+		double acc = (double)(TP+TN)/(TP+TN+FP+FN);
+		
+		double aboveDiv = TP*TN-FP*FN;
+		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
+		double mcc = aboveDiv/belowDiv;
+		double nMcc = ( 1 + mcc ) / 2;
+//		System.out.println("("+ppv +"+"+ npv+") * ("+sens +"+"+ spec+") * ("+acc +"+"+ nMcc+")");
+		double OPM = ( (ppv + npv) * (sens + spec) * (acc + nMcc) ) / 8;
+		return "." + (int)Math.round((OPM)*100);
 	}
 
 	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
