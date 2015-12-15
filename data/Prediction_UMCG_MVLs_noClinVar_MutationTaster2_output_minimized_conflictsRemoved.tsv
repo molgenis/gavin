@@ -1,12 +1,12 @@
 chromosome	position	pred_index	allele_ref	allele_alt
-18	29178610	disease_causing_automatic	C	T
+18	29178610	disease_causing	C	T
 18	29178554	disease_causing	C	T
-10	92679011	disease_causing_automatic		T
-10	92678939	disease_causing_automatic		T
-10	92679017	disease_causing_automatic	C	TC
-10	92675598	disease_causing_automatic	G	
-10	92675979	disease_causing_automatic	AT	
-10	92678945	disease_causing_automatic	C	TC
+10	92679011	disease_causing		T
+10	92678939	disease_causing		T
+10	92679017	disease_causing	C	TC
+10	92675598	disease_causing	G	
+10	92675979	disease_causing	AT	
+10	92678945	disease_causing	C	TC
 10	92676019	disease_causing	G	A
 10	92679983	disease_causing	G	C
 10	92675402	disease_causing	G	T
@@ -19,32 +19,34 @@ chromosome	position	pred_index	allele_ref	allele_alt
 10	92678747	polymorphism	AA	
 10	92678746	polymorphism	T	
 10	92679041	polymorphism	G	A
-13	52532504	disease_causing_automatic	C	GC
-13	52534410	disease_causing	C	T
+10	92678746	polymorphism	TAAA	
 13	52548078	disease_causing	G	A
 13	52508979	polymorphism	C	T
 13	52513335	polymorphism	G	A
 13	52513345	polymorphism	C	T
 13	52515372	polymorphism	A	T
-19	16594855	disease_causing_automatic	A	
-19	16606608	disease_causing_automatic		A
-19	16606612	disease_causing_automatic	T	AT
+19	16594855	disease_causing	A	
+19	16606608	disease_causing		A
+19	16606612	disease_causing	T	AT
 19	16596063	disease_causing	C	T
 19	16601197	disease_causing	C	T
 19	16601332	disease_causing	G	A
 19	16606881	disease_causing	G	C
 19	16596074	disease_causing	A	G
 19	16593318	polymorphism	C	T
-3	48628960	disease_causing_automatic	G	A
+19	16594855	polymorphism	A	
+3	48628960	disease_causing	G	A
 3	48604171	disease_causing	C	G
 3	48626376	disease_causing	G	A
 3	48613682	disease_causing	C	T
 3	48632539	disease_causing	C	G
 3	48623264	polymorphism	A	G
 3	48602525	polymorphism	C	GCGC
+3	48602525	polymorphism		GCG
 3	48620492	polymorphism	A	G
 3	48605082	polymorphism	A	
-2	220285298	disease_causing_automatic		C
+2	220285298	disease_causing		C
+2	220285298	disease_causing	G	CG
 2	220284876	disease_causing	C	T
 2	220288510	disease_causing	C	G
 2	220285283	disease_causing	C	G
@@ -62,16 +64,18 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	220283556	disease_causing	G	A
 2	220285041	disease_causing	C	T
 2	220285088	polymorphism	C	T
-2	220286064	polymorphism_automatic	C	T
-7	107533710	disease_causing_automatic		A
+2	220286064	polymorphism	C	T
+7	107533710	disease_causing		A
+7	107533710	disease_causing		A
 7	107559502	disease_causing	A	C
 7	107545874	disease_causing	C	T
-6	7571619	disease_causing_automatic	A	T
-6	7574319	disease_causing_automatic	AG	
-6	7581031	disease_causing_automatic	ACGCC	
+6	7571619	disease_causing	A	T
+6	7574319	disease_causing	AG	
+6	7581031	disease_causing	ACGCC	
 6	7583831	disease_causing	G	
 6	7542150	disease_causing		A
 6	7542151	disease_causing		A
+6	7542150	disease_causing	T	AT
 6	7584182	disease_causing	A	
 6	7578715	disease_causing	C	T
 6	7556022	disease_causing	G	A
@@ -80,7 +84,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 6	7571625	disease_causing	A	G
 6	7579717	disease_causing	C	G
 6	7585725	disease_causing	A	G
-6	7582993	disease_causing	A	T
 6	7559460	disease_causing	C	T
 6	7579585	disease_causing	GAA	
 6	7577213	disease_causing	G	A
@@ -99,12 +102,11 @@ chromosome	position	pred_index	allele_ref	allele_alt
 6	7542280	disease_causing	G	A
 6	7566715	disease_causing	G	T
 6	7585490	disease_causing	G	A
-6	7580564	disease_causing	A	T
+6	7581031	disease_causing	ACGCC	
 6	7581196	disease_causing	G	A
 6	7580488	disease_causing	T	C
 6	7568079	disease_causing	G	A
 6	7559558	disease_causing	T	C
-6	7581641	disease_causing	G	A
 6	7574487	disease_causing	T	A
 6	7580346	polymorphism	G	A
 6	7581338	polymorphism	G	A
@@ -120,11 +122,11 @@ chromosome	position	pred_index	allele_ref	allele_alt
 6	7570655	polymorphism	C	G
 6	7572058	polymorphism	C	G
 6	7575517	polymorphism	T	
-6	7565727	polymorphism_automatic	A	T
-6	7585670	polymorphism_automatic	C	A
-6	7556063	polymorphism_automatic	C	T
-6	7542274	polymorphism_automatic	T	C
-6	112499336	disease_causing_automatic		A
+6	7565727	polymorphism	A	T
+6	7585670	polymorphism	C	A
+6	7556063	polymorphism	C	T
+6	7542274	polymorphism	T	C
+6	112499336	disease_causing		A
 6	112513009	disease_causing	T	C
 6	112441569	disease_causing	G	C
 6	112460443	disease_causing	C	T
@@ -164,31 +166,31 @@ chromosome	position	pred_index	allele_ref	allele_alt
 6	112537641	polymorphism	C	T
 6	112450109	polymorphism	G	A
 6	112450108	polymorphism	C	T
-6	112496690	polymorphism_automatic	G	C
-6	112450238	polymorphism_automatic	A	G
-1	209811896	disease_causing_automatic	C	T
+6	112496690	polymorphism	G	C
+6	112450238	polymorphism	A	G
+1	209811896	disease_causing	C	T
 1	209805972	polymorphism	C	T
 1	209792017	polymorphism	A	CA
-23	119580217	disease_causing_automatic	A	
+23	119580217	disease_causing	A	
 23	119575713	disease_causing	T	AT
 23	119581776	disease_causing	C	T
 23	119575587	disease_causing	G	A
 23	119589400	polymorphism	C	A
 23	119589270	polymorphism	G	A
 23	119590644	polymorphism	T	A
-23	119580269	polymorphism_automatic	A	C
-23	153297712	disease_causing_automatic	A	
+23	119580269	polymorphism	A	C
+23	153297712	disease_causing	A	
+23	153297712	disease_causing	A	
 23	153295937	disease_causing	C	G
-23	153296728	disease_causing	G	C
 23	153296137	disease_causing	G	A
 23	153297692	disease_causing	G	T
 23	153296622	disease_causing	C	T
 23	153296418	disease_causing	G	A
 23	153295809	polymorphism	C	T
-11	47370059	disease_causing_automatic	G	
-11	47359283	disease_causing_automatic		C
-11	47354389	disease_causing_automatic	C	TC
-11	47359282	disease_causing_automatic	T	CT
+11	47370059	disease_causing	G	
+11	47359283	disease_causing		C
+11	47354389	disease_causing	C	TC
+11	47359282	disease_causing	T	CT
 11	47371589	disease_causing	G	A
 11	47367871	disease_causing	C	T
 11	47354869	disease_causing	G	C
@@ -228,11 +230,11 @@ chromosome	position	pred_index	allele_ref	allele_alt
 11	47360911	polymorphism	G	A
 11	47355573	polymorphism	G	C
 11	47355308	polymorphism	G	C
-11	47371598	polymorphism_automatic	C	T
-11	47357416	polymorphism_automatic	G	A
-11	47358997	polymorphism_automatic	G	A
-11	47371442	polymorphism_automatic	G	A
-14	23859391	disease_causing_automatic		C
+11	47371598	polymorphism	C	T
+11	47357416	polymorphism	G	A
+11	47358997	polymorphism	G	A
+11	47371442	polymorphism	G	A
+14	23859391	disease_causing		C
 14	23862232	disease_causing	C	T
 14	23859571	disease_causing	G	A
 14	23871807	disease_causing	G	C
@@ -290,19 +292,25 @@ chromosome	position	pred_index	allele_ref	allele_alt
 14	23858273	polymorphism	G	T
 14	23858272	polymorphism	G	C
 14	23858271	polymorphism	A	G
+14	23858272	polymorphism	G	AG
 14	23857139	polymorphism	G	A
 14	23856728	polymorphism	C	T
 14	23858278	polymorphism	G	T
+14	23858278	polymorphism	G	C
 14	23858281	polymorphism	G	
 14	23874050	polymorphism	A	T
 14	23863267	polymorphism	G	A
 14	23859252	polymorphism	C	G
 14	23855349	polymorphism	C	T
+14	23858271	polymorphism	AGG	
+14	23858273	polymorphism		A
 14	23852543	polymorphism	G	T
+14	23857139	polymorphism	G	C
 14	23858275	polymorphism	G	C
 14	23873602	polymorphism	G	A
 14	23866155	polymorphism	G	T
-14	23895255	disease_causing_automatic	G	ACACCATTGCAGCG
+14	23858273	polymorphism	G	C
+14	23895255	disease_causing	G	ACACCATTGCAGCG
 14	23886409	disease_causing	G	C
 14	23902351	disease_causing	A	T
 14	23891521	disease_causing	A	G
@@ -365,25 +373,24 @@ chromosome	position	pred_index	allele_ref	allele_alt
 14	23885046	polymorphism	G	A
 14	23886702	polymorphism	C	T
 14	23886695	polymorphism	C	T
-14	23900093	polymorphism_automatic	C	T
-14	23902974	polymorphism_automatic	C	A
-14	23899060	polymorphism_automatic	G	A
-10	69881549	disease_causing_automatic	C	A
-10	69881295	disease_causing_automatic		C
-10	69881640	disease_causing_automatic		A
+14	23900093	polymorphism	C	T
+14	23902974	polymorphism	C	A
+14	23899060	polymorphism	G	A
+10	69881295	disease_causing		C
+10	69881640	disease_causing		A
 10	69881406	disease_causing	GAA	
 10	69934302	disease_causing	C	T
-10	69905283	disease_causing	G	A
 10	69881388	disease_causing	G	A
 10	69934372	disease_causing	A	T
 10	69933847	disease_causing	T	G
+10	69881640	disease_causing		A
+10	69881295	disease_causing		C
 10	69881318	disease_causing	T	C
 10	69948796	disease_causing	C	T
 10	69881590	polymorphism	C	T
 10	69934062	polymorphism	C	T
-10	69882038	polymorphism_automatic	A	G
-12	95397381	disease_causing_automatic	C	AC
-1	78399087	disease_causing_automatic	C	T
+10	69882038	polymorphism	A	G
+1	78399087	disease_causing	C	T
 1	78383891	disease_causing	G	A
 1	78408482	disease_causing	A	G
 1	78401709	disease_causing	G	A
@@ -396,14 +403,14 @@ chromosome	position	pred_index	allele_ref	allele_alt
 1	78407911	polymorphism	C	G
 1	78392589	polymorphism	T	A
 1	78394984	polymorphism	A	G
-23	99662756	disease_causing_automatic	G	C
+23	99662756	disease_causing	G	C
 23	99662356	disease_causing	C	T
-23	99551442	polymorphism_automatic	G	C
-23	99596953	polymorphism_automatic	G	A
-7	92132484	disease_causing_automatic		A
-6	51824681	disease_causing_automatic		T
-12	33003868	disease_causing_automatic	G	AG
-12	33030896	disease_causing_automatic	GG	
+23	99551442	polymorphism	G	C
+23	99596953	polymorphism	G	A
+7	92132484	disease_causing		A
+6	51824681	disease_causing		T
+12	33003868	disease_causing	G	AG
+12	33030896	disease_causing	GG	
 12	32949054	disease_causing	A	
 12	33003790	disease_causing	T	C
 12	32994058	disease_causing	A	C
@@ -431,12 +438,10 @@ chromosome	position	pred_index	allele_ref	allele_alt
 12	32949030	polymorphism	C	GC
 12	32977110	polymorphism	C	AC
 12	33030770	polymorphism	G	A
-16	29825005	disease_causing_automatic	A	CA
-16	29825025	disease_causing_automatic	G	CG
 16	29825022	disease_causing	C	T
 16	29824360	disease_causing	C	T
 16	29825242	disease_causing	T	A
-10	112541213	disease_causing_automatic	TTACGGAC	
+10	112541213	disease_causing	TTACGGAC	
 10	112583294	disease_causing	G	A
 10	112572050	disease_causing	G	A
 10	112581039	disease_causing	G	A
@@ -469,9 +474,9 @@ chromosome	position	pred_index	allele_ref	allele_alt
 10	112541650	polymorphism	G	T
 10	112581702	polymorphism	C	T
 10	112595620	polymorphism	C	G
-10	112541062	polymorphism_automatic	G	A
-10	112581521	polymorphism_automatic	C	T
-3	38646344	disease_causing_automatic	G	
+10	112541062	polymorphism	G	A
+10	112581521	polymorphism	C	T
+3	38646344	disease_causing	G	
 3	38628904	disease_causing	C	T
 3	38627457	disease_causing	C	T
 3	38595877	disease_causing	G	ATGG
@@ -509,67 +514,68 @@ chromosome	position	pred_index	allele_ref	allele_alt
 3	38627545	polymorphism	G	A
 3	38618142	polymorphism	G	A
 3	38627165	polymorphism	G	TGTGTGTGTGTGTGTGTGG
+3	38627165	polymorphism	G	TGTGTGTGTGTGTGTGG
 3	38645189	polymorphism	C	T
 3	38628879	polymorphism	C	T
 3	38620831	polymorphism	G	A
+3	38627165	polymorphism	G	TGTGTGTGTGTGTGG
 3	38647435	polymorphism	C	G
 3	38597127	polymorphism	A	G
-15	34532862	disease_causing_automatic	C	
-5	1210589	disease_causing_automatic	TGGG	
+15	34532862	disease_causing	C	
+5	1210589	disease_causing	TGGG	
 5	1213689	disease_causing	G	A
 5	1201921	disease_causing	C	T
 5	1213682	disease_causing	G	A
 5	1216769	disease_causing	C	T
 5	1201769	polymorphism	G	T
 5	1217006	polymorphism	G	A
-7	35289798	disease_causing_automatic	A	GA
+7	35289798	disease_causing	A	GA
 7	35242380	disease_causing	A	T
 7	35242369	disease_causing	T	G
 7	35293089	polymorphism	G	T
-2	179634455	disease_causing_automatic	G	T
-2	179426793	disease_causing_automatic	AATA	
-2	179395822	disease_causing_automatic	G	
-2	179425050	disease_causing_automatic	T	
-2	179427963	disease_causing_automatic	TG	
-2	179426074	disease_causing_automatic	G	
-2	179634868	disease_causing_automatic	G	A
-2	179430544	disease_causing_automatic	AC	
-2	179452435	disease_causing_automatic	G	A
-2	179482631	disease_causing_automatic	A	
-2	179462301	disease_causing_automatic	C	A
-2	179434142	disease_causing_automatic	G	A
-2	179441870	disease_causing_automatic		G
-2	179605063	disease_causing_automatic		T
-2	179439011	disease_causing_automatic		CCAGTATA
-2	179416533	disease_causing_automatic		CTTT
-2	179481289	disease_causing_automatic	C	A
-2	179423314	disease_causing_automatic		T
-2	179428604	disease_causing_automatic	G	A
-2	179482726	disease_causing_automatic	A	C
-2	179605944	disease_causing_automatic		CACT
-2	179632509	disease_causing_automatic	G	A
-2	179418418	disease_causing_automatic	C	A
-2	179605292	disease_causing_automatic	T	
-2	179422207	disease_causing_automatic	G	
-2	179595437	disease_causing_automatic	T	
-2	179416475	disease_causing_automatic	A	T
-2	179452692	disease_causing_automatic	G	
-2	179431175	disease_causing_automatic	G	A
-2	179632777	disease_causing_automatic	C	T
-2	179449547	disease_causing_automatic	C	T
-2	179412919	disease_causing_automatic	A	
-2	179605626	disease_causing_automatic	G	A
-2	179644174	disease_causing_automatic	AAGA	
-2	179571453	disease_causing_automatic	G	
-2	179414506	disease_causing_automatic	C	
-2	179458732	disease_causing_automatic	T	
-2	179435468	disease_causing_automatic	C	
-2	179606055	disease_causing_automatic	C	
-2	179469005	disease_causing_automatic	ACTG	
-2	179494977	disease_causing_automatic	G	A
-2	179433407	disease_causing_automatic	C	A
-2	179467272	disease_causing_automatic	T	
-2	179437540	disease_causing_automatic		A
+2	179634455	disease_causing	G	T
+2	179426793	disease_causing	AATA	
+2	179395822	disease_causing	G	
+2	179425050	disease_causing	T	
+2	179427963	disease_causing	TG	
+2	179426074	disease_causing	G	
+2	179634868	disease_causing	G	A
+2	179430544	disease_causing	AC	
+2	179452435	disease_causing	G	A
+2	179482631	disease_causing	A	
+2	179462301	disease_causing	C	A
+2	179434142	disease_causing	G	A
+2	179441870	disease_causing		G
+2	179605063	disease_causing		T
+2	179439011	disease_causing		CCAGTATA
+2	179416533	disease_causing		CTTT
+2	179481289	disease_causing	C	A
+2	179423314	disease_causing		T
+2	179428604	disease_causing	G	A
+2	179482726	disease_causing	A	C
+2	179605944	disease_causing		CACT
+2	179632509	disease_causing	G	A
+2	179418418	disease_causing	C	A
+2	179605292	disease_causing	T	
+2	179422207	disease_causing	G	
+2	179595437	disease_causing	T	
+2	179416475	disease_causing	A	T
+2	179452692	disease_causing	G	
+2	179431175	disease_causing	G	A
+2	179632777	disease_causing	C	T
+2	179449547	disease_causing	C	T
+2	179412919	disease_causing	A	
+2	179644174	disease_causing	AAGA	
+2	179571453	disease_causing	G	
+2	179414506	disease_causing	C	
+2	179458732	disease_causing	T	
+2	179435468	disease_causing	C	
+2	179606055	disease_causing	C	
+2	179469005	disease_causing	ACTG	
+2	179494977	disease_causing	G	A
+2	179433407	disease_causing	C	A
+2	179467272	disease_causing	T	
+2	179437540	disease_causing		A
 2	179430158	disease_causing	T	C
 2	179404402	disease_causing	T	C
 2	179438692	disease_causing	C	T
@@ -601,7 +607,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179581971	disease_causing	C	T
 2	179594059	disease_causing	T	C
 2	179472319	disease_causing	C	T
-2	179549407	disease_causing	G	A
 2	179598553	disease_causing	T	G
 2	179446381	disease_causing	C	T
 2	179600367	disease_causing	T	A
@@ -613,14 +618,11 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179455731	disease_causing	C	G
 2	179481618	disease_causing	C	G
 2	179605991	disease_causing	G	A
-2	179665163	disease_causing	C	T
-2	179642552	disease_causing	T	A
 2	179448393	disease_causing	G	A
 2	179395813	disease_causing	C	T
 2	179468618	disease_causing	C	A
 2	179396965	disease_causing	T	G
 2	179446406	disease_causing	G	A
-2	179645976	disease_causing	T	A
 2	179431633	disease_causing	C	T
 2	179425966	disease_causing	C	T
 2	179567340	disease_causing	G	A
@@ -650,7 +652,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179590329	disease_causing	C	T
 2	179579977	disease_causing	G	A
 2	179404498	disease_causing	G	C
-2	179658175	disease_causing	C	T
 2	179395761	disease_causing	G	A
 2	179486345	disease_causing	T	A
 2	179500777	disease_causing	C	T
@@ -658,11 +659,9 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179477634	disease_causing	A	C
 2	179435968	disease_causing	G	A
 2	179426507	disease_causing	G	A
-2	179398780	disease_causing	C	T
 2	179596554	disease_causing	T	C
 2	179482089	disease_causing	C	T
 2	179428967	disease_causing	C	T
-2	179604101	disease_causing	C	T
 2	179399539	disease_causing	T	C
 2	179647533	disease_causing	C	T
 2	179404550	disease_causing	G	A
@@ -672,6 +671,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179599473	disease_causing	C	G
 2	179414321	disease_causing	G	T
 2	179412307	disease_causing	C	T
+2	179436257	disease_causing	TTG	
 2	179436260	disease_causing	T	C
 2	179441932	disease_causing	G	A
 2	179432515	disease_causing	T	G
@@ -683,9 +683,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179599667	disease_causing	G	C
 2	179441119	disease_causing	G	A
 2	179414177	disease_causing	G	A
-2	179632598	disease_causing	C	T
-2	179640171	disease_causing	A	T
-2	179604795	disease_causing	C	T
 2	179441295	disease_causing	T	C
 2	179599233	disease_causing	A	G
 2	179474667	disease_causing	C	T
@@ -695,6 +692,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179396159	disease_causing	C	T
 2	179403770	disease_causing	G	A
 2	179392456	disease_causing	G	A
+2	179571453	disease_causing	G	
 2	179506020	disease_causing	T	C
 2	179490076	disease_causing	A	G
 2	179452242	disease_causing	C	T
@@ -706,7 +704,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179413791	disease_causing	A	T
 2	179454067	disease_causing	G	T
 2	179516707	disease_causing	G	A
-2	179585312	disease_causing	G	A
 2	179605978	disease_causing	T	G
 2	179422889	disease_causing	A	C
 2	179569964	disease_causing	G	A
@@ -717,7 +714,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179422412	disease_causing	A	G
 2	179435418	disease_causing	T	C
 2	179407621	disease_causing	A	G
-2	179582760	disease_causing	T	C
 2	179426406	disease_causing	T	C
 2	179640849	disease_causing	C	T
 2	179440208	disease_causing	G	A
@@ -730,16 +726,14 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179575832	disease_causing	G	A
 2	179393900	disease_causing	A	T
 2	179429301	disease_causing	A	G
-2	179593449	disease_causing	T	C
 2	179399417	disease_causing	T	C
 2	179517086	disease_causing	A	T
 2	179424558	disease_causing	C	T
-2	179584831	disease_causing	G	C
 2	179428362	disease_causing	G	A
 2	179647085	disease_causing	T	C
 2	179460433	disease_causing	G	A
 2	179441386	disease_causing	G	A
-2	179584154	disease_causing	A	G
+2	179605063	disease_causing		T
 2	179616783	disease_causing	AAA	
 2	179438976	disease_causing	A	G
 2	179605417	disease_causing	G	A
@@ -748,7 +742,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179511787	disease_causing	ATA	
 2	179481917	disease_causing	A	C
 2	179403941	disease_causing	G	T
-2	179587955	disease_causing	G	T
 2	179412372	disease_causing	G	C
 2	179456080	disease_causing	G	A
 2	179511786	disease_causing	TATA	
@@ -756,10 +749,8 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179617833	disease_causing	C	T
 2	179602936	disease_causing	A	G
 2	179433654	disease_causing	C	T
-2	179517605	disease_causing	G	A
 2	179594067	disease_causing	A	G
 2	179446446	disease_causing	G	A
-2	179621503	disease_causing	C	T
 2	179583967	disease_causing	G	A
 2	179424399	disease_causing	A	G
 2	179408199	disease_causing	A	G
@@ -768,10 +759,9 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179424807	disease_causing	A	G
 2	179628899	disease_causing	C	T
 2	179546181	disease_causing	C	T
-2	179591917	disease_causing	T	C
+2	179605944	disease_causing		CACT
 2	179590159	disease_causing	C	T
 2	179547455	disease_causing	T	C
-2	179594107	disease_causing	G	C
 2	179640768	disease_causing	T	C
 2	179432004	disease_causing	A	G
 2	179490019	disease_causing	G	A
@@ -796,7 +786,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179398358	disease_causing	G	A
 2	179400278	disease_causing	A	G
 2	179448583	disease_causing	G	A
-2	179605725	disease_causing	T	C
 2	179594905	disease_causing	G	A
 2	179554580	disease_causing	G	A
 2	179535018	disease_causing	C	T
@@ -826,7 +815,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179597847	disease_causing	A	G
 2	179547503	disease_causing	T	G
 2	179501351	disease_causing	G	A
-2	179597743	disease_causing	C	T
 2	179429754	disease_causing	G	T
 2	179593462	disease_causing	C	T
 2	179425977	disease_causing	T	C
@@ -859,8 +847,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179434137	disease_causing	A	G
 2	179478639	disease_causing	T	A
 2	179517019	disease_causing	A	T
-2	179517230	disease_causing	C	T
-2	179537200	disease_causing	C	T
 2	179577440	disease_causing	T	C
 2	179588838	disease_causing	G	A
 2	179440728	disease_causing	T	C
@@ -888,12 +874,10 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179411212	disease_causing	G	A
 2	179589277	disease_causing	C	T
 2	179393840	disease_causing	C	T
-2	179558336	disease_causing	C	T
 2	179395874	disease_causing	C	T
 2	179452520	disease_causing	C	T
 2	179447755	disease_causing	G	A
 2	179438919	disease_causing	C	T
-2	179540461	disease_causing	G	T
 2	179428911	disease_causing	A	G
 2	179498336	disease_causing	C	T
 2	179422601	disease_causing	C	T
@@ -907,14 +891,11 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179578691	disease_causing	C	A
 2	179623903	disease_causing	C	T
 2	179391754	disease_causing	A	G
-2	179539812	disease_causing	T	G
-2	179621353	disease_causing	G	A
 2	179469715	disease_causing	A	G
 2	179456796	disease_causing	G	A
 2	179434149	disease_causing	A	G
 2	179425683	disease_causing	G	A
 2	179547937	disease_causing	C	G
-2	179604698	disease_causing	T	C
 2	179459294	disease_causing	C	T
 2	179423252	disease_causing	G	A
 2	179575624	disease_causing	G	A
@@ -932,14 +913,13 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179621511	disease_causing	A	G
 2	179496998	disease_causing	C	T
 2	179396279	disease_causing	G	A
+2	179606055	disease_causing	C	
 2	179579062	disease_causing	G	A
 2	179467226	disease_causing	G	C
 2	179665279	disease_causing	G	A
 2	179403881	disease_causing	A	G
-2	179595372	disease_causing	T	C
 2	179594419	disease_causing	C	T
 2	179440005	disease_causing	T	C
-2	179582853	disease_causing	T	C
 2	179454274	disease_causing	A	G
 2	179434014	disease_causing	T	C
 2	179606590	disease_causing	T	C
@@ -956,9 +936,9 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179566761	disease_causing	A	C
 2	179594590	disease_causing	T	A
 2	179598564	disease_causing	G	A
-2	179605380	disease_causing	T	A
 2	179584900	disease_causing	T	C
 2	179623826	disease_causing	T	C
+2	179511788	disease_causing	T	
 2	179408691	disease_causing	A	G
 2	179586779	disease_causing	A	G
 2	179457524	disease_causing	T	C
@@ -977,7 +957,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179575471	disease_causing	G	A
 2	179404197	disease_causing	T	C
 2	179604589	disease_causing	G	A
-2	179549707	disease_causing	G	A
 2	179460227	disease_causing	T	
 2	179416616	disease_causing	A	G
 2	179396573	disease_causing	T	G
@@ -990,11 +969,10 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179426730	disease_causing	G	A
 2	179398289	disease_causing	G	A
 2	179463515	disease_causing	T	C
-2	179510641	disease_causing	T	CATTT
 2	179404293	disease_causing	G	A
 2	179391949	disease_causing	A	G
-2	179549131	disease_causing	C	T
 2	179417633	disease_causing	C	T
+2	179595437	disease_causing	T	
 2	179656928	disease_causing	C	T
 2	179654695	disease_causing	C	G
 2	179452804	disease_causing	C	T
@@ -1013,6 +991,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179563606	polymorphism	C	A
 2	179418415	polymorphism	T	A
 2	179544701	polymorphism		TCT
+2	179544688	polymorphism		TCT
 2	179414992	polymorphism	T	C
 2	179393691	polymorphism	G	A
 2	179447787	polymorphism	G	T
@@ -1038,6 +1017,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179435887	polymorphism	A	G
 2	179528582	polymorphism	C	G
 2	179547465	polymorphism	C	T
+2	179544701	polymorphism	A	TCTA
 2	179628918	polymorphism	C	T
 2	179528759	polymorphism	T	C
 2	179522861	polymorphism	C	T
@@ -1062,6 +1042,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179588427	polymorphism	T	C
 2	179514922	polymorphism	T	C
 2	179578113	polymorphism	A	TACAAAACAAA
+2	179400586	polymorphism	A	GA
 2	179584372	polymorphism	G	A
 2	179486478	polymorphism	T	C
 2	179544321	polymorphism	T	C
@@ -1115,6 +1096,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179631091	polymorphism	A	T
 2	179477744	polymorphism	T	C
 2	179582237	polymorphism	G	C
+2	179605292	polymorphism	T	
 2	179569147	polymorphism	T	C
 2	179422286	polymorphism	C	A
 2	179600638	polymorphism	G	A
@@ -1124,15 +1106,16 @@ chromosome	position	pred_index	allele_ref	allele_alt
 2	179476696	polymorphism	A	G
 2	179523214	polymorphism	C	T
 2	179539032	polymorphism	C	A
-2	179582063	polymorphism_automatic	A	T
-2	179527095	polymorphism_automatic	G	A
-2	179449131	polymorphism_automatic	G	A
-2	179586604	polymorphism_automatic	C	G
-2	179634390	polymorphism_automatic	A	
-2	179424048	polymorphism_automatic	T	C
-2	179605180	polymorphism_automatic	C	A
-2	179412966	polymorphism_automatic	G	A
-22	19865895	disease_causing_automatic	A	C
+2	179582063	polymorphism	A	T
+2	179527095	polymorphism	G	A
+2	179449131	polymorphism	G	A
+2	179586604	polymorphism	C	G
+2	179634390	polymorphism	A	
+2	179424048	polymorphism	T	C
+2	179605180	polymorphism	C	A
+2	179412966	polymorphism	G	A
+2	179634392	polymorphism	A	
+22	19865895	disease_causing	A	C
 22	19868177	disease_causing	C	T
 22	19865708	disease_causing	C	A
 22	19868153	disease_causing	A	G
@@ -1164,8 +1147,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 22	19907141	polymorphism	C	
 22	19868261	polymorphism	G	
 22	19870839	polymorphism	A	G
-22	19906370	polymorphism_automatic	G	A
-10	75867110	disease_causing_automatic	C	T
+22	19906370	polymorphism	G	A
 10	75849799	disease_causing	A	C
 10	75873961	disease_causing	C	T
 10	75834615	disease_causing	G	A
@@ -1260,7 +1242,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 1	236917370	polymorphism	A	C
 1	236889330	polymorphism	C	T
 1	236923108	polymorphism	T	C
-1	236849952	polymorphism_automatic	C	T
+1	236849952	polymorphism	C	T
 12	52307028	disease_causing	C	T
 1	154569418	disease_causing	G	A
 1	154574443	polymorphism	C	T
@@ -1274,10 +1256,10 @@ chromosome	position	pred_index	allele_ref	allele_alt
 3	123166568	disease_causing	C	T
 3	123066758	polymorphism	G	T
 6	24532392	disease_causing	T	C
-6	24495234	disease_causing	T	G
 6	24520643	disease_causing	C	T
 5	125929037	disease_causing	T	ACACACACT
 5	125929035	disease_causing	AC	
+5	125929037	disease_causing	T	ACACT
 5	125929033	disease_causing	ACAC	
 5	125890105	polymorphism	G	C
 11	26463582	disease_causing	C	T
@@ -1290,6 +1272,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 11	26682000	polymorphism	T	C
 11	26574777	polymorphism	G	
 11	26463455	polymorphism	G	C
+11	26574777	polymorphism	G	T
 11	22296102	disease_causing	TTTT	
 11	22296135	disease_causing	G	A
 11	22242756	disease_causing	G	A
@@ -1363,6 +1346,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 10	105815609	polymorphism	G	T
 17	14110179	disease_causing	C	T
 17	14110121	disease_causing	G	CCCG
+17	14110121	polymorphism	G	CCCCG
 17	14110120	polymorphism	C	T
 10	101486759	disease_causing	C	T
 10	101486833	disease_causing	A	G
@@ -1370,6 +1354,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 1	245005493	disease_causing	A	GA
 1	244999069	polymorphism	G	C
 1	245006497	polymorphism	G	AAGAAG
+1	245006497	polymorphism		AAGAA
 3	148899824	disease_causing	G	C
 3	148917570	disease_causing	G	A
 3	148925248	disease_causing	G	A
@@ -1414,7 +1399,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 23	32841450	disease_causing	T	C
 23	31196087	disease_causing	A	T
 23	32591859	disease_causing	C	T
-23	31854849	disease_causing	T	C
 23	32407762	disease_causing	A	G
 23	32614000	disease_causing	G	C
 23	32408197	disease_causing	A	G
@@ -1435,12 +1419,13 @@ chromosome	position	pred_index	allele_ref	allele_alt
 23	31792316	polymorphism	T	C
 23	32486844	polymorphism	T	
 23	31747737	polymorphism	A	C
-23	32408257	polymorphism_automatic	T	C
-23	31497197	polymorphism_automatic	A	G
-23	31165400	polymorphism_automatic	G	A
+23	32408257	polymorphism	T	C
+23	31497197	polymorphism	A	G
+23	31165400	polymorphism	G	A
 18	28648001	disease_causing		TC
 18	28648003	disease_causing	G	CTG
 18	28648005	disease_causing		CT
+18	28648003	disease_causing		CT
 18	28666616	disease_causing	G	A
 18	28660261	disease_causing	C	T
 18	28663027	disease_causing	C	T
@@ -1459,7 +1444,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 18	28670976	polymorphism	G	A
 18	28666528	polymorphism	G	AATG
 18	28672148	polymorphism	C	T
-18	28648975	polymorphism_automatic	C	T
+18	28648975	polymorphism	C	T
 18	29101156	disease_causing	T	G
 18	29100771	disease_causing	T	C
 18	29104689	disease_causing	T	C
@@ -1479,7 +1464,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 18	29122692	polymorphism	C	T
 18	29100761	polymorphism	G	T
 18	29118702	polymorphism	C	T
-18	29122618	polymorphism_automatic	G	A
+18	29122618	polymorphism	G	A
 18	32374005	disease_causing	C	G
 18	32462067	disease_causing	G	A
 18	32391956	disease_causing	T	C
@@ -1499,7 +1484,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 18	32428317	disease_causing	G	A
 18	32431776	polymorphism	T	C
 18	32392092	polymorphism	T	C
-23	153608116	disease_causing	C	A
 23	153608577	polymorphism	C	ATGCCCCCTCTGCTACCGC
 23	153609287	polymorphism	G	A
 23	153609395	polymorphism	C	T
@@ -1526,7 +1510,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 20	6075585	disease_causing	C	A
 23	135289238	disease_causing	C	T
 23	135291389	disease_causing	T	CTTTTT
-23	135288561	polymorphism_automatic	C	T
+23	135288561	polymorphism	C	T
 9	108397456	disease_causing	A	G
 9	108397496	disease_causing	A	G
 14	29237808	disease_causing	C	T
@@ -1550,6 +1534,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 18	11862415	disease_causing	C	T
 18	11689681	polymorphism		TGGCCC
 18	11689675	polymorphism	TGGCCC	
+18	11689681	polymorphism	C	TGGCCCC
 14	66975271	disease_causing	C	G
 14	67610127	disease_causing	T	C
 5	89990155	disease_causing	C	T
@@ -1607,12 +1592,10 @@ chromosome	position	pred_index	allele_ref	allele_alt
 17	39925382	disease_causing	C	T
 17	39925841	disease_causing	C	T
 17	39919355	disease_causing	C	A
-17	39780388	disease_causing	G	A
 17	39914747	disease_causing	A	G
 17	39912026	disease_causing	C	T
 17	39923625	disease_causing	G	A
 17	39913908	disease_causing	C	A
-17	39913689	disease_causing	T	C
 17	39915057	disease_causing	T	C
 17	39925442	disease_causing	C	T
 17	39928098	disease_causing	C	G
@@ -1623,7 +1606,8 @@ chromosome	position	pred_index	allele_ref	allele_alt
 17	39914042	polymorphism	G	A
 17	39919586	polymorphism	G	T
 17	39911978	polymorphism	G	T
-17	39925713	polymorphism_automatic	C	T
+17	39776829	polymorphism		A
+17	39925713	polymorphism	C	T
 20	62038585	disease_causing	C	T
 9	138651655	disease_causing	C	T
 9	138678036	disease_causing	TGCCC	
@@ -1631,12 +1615,13 @@ chromosome	position	pred_index	allele_ref	allele_alt
 9	138678177	disease_causing	G	A
 9	138678248	polymorphism	C	T
 9	138606586	polymorphism	TG	GGCG
+9	138606586	polymorphism	T	G
 9	138669160	polymorphism	CCTGACTCCAGC	
 9	138648989	polymorphism	C	G
 9	138662301	polymorphism	C	T
 9	138594134	polymorphism	G	A
 17	38978703	disease_causing	T	C
-17	38975308	polymorphism_automatic	GCCGCCGTGGCC	
+17	38975308	polymorphism	GCCGCCGTGGCC	
 12	52912921	disease_causing	G	T
 12	52914051	disease_causing	C	T
 12	52845531	disease_causing	C	T
@@ -1650,16 +1635,14 @@ chromosome	position	pred_index	allele_ref	allele_alt
 12	52867416	polymorphism	T	C
 12	52867059	polymorphism	C	T
 12	52867151	polymorphism	C	A
-12	52867342	polymorphism_automatic	A	G
+12	52867342	polymorphism	A	G
 12	52756671	disease_causing	C	T
 18	21492734	disease_causing	C	T
 18	21293880	disease_causing	T	
 18	21269704	disease_causing	G	C
 18	21441785	polymorphism	G	A
 18	21393086	polymorphism	G	C
-18	21394384	polymorphism_automatic	G	A
-10	88451715	disease_causing	A	G
-10	88451790	disease_causing	G	A
+18	21394384	polymorphism	G	A
 10	88439895	disease_causing	C	T
 10	88485941	disease_causing	G	A
 10	88447027	disease_causing	T	C
@@ -1705,6 +1688,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 23	70352670	disease_causing	CTTCTCTTCT	
 23	70361172	polymorphism	G	CCAGCAGCAACAG
 23	70352680	polymorphism	T	CTTCTCTTCTT
+23	70352680	polymorphism	T	CTTCTT
 18	19378062	disease_causing	C	A
 18	19418308	polymorphism	T	C
 6	39876860	disease_causing	T	C
@@ -1718,6 +1702,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 12	111351976	polymorphism		GA
 12	111351034	polymorphism	C	
 12	111350966	polymorphism	C	T
+12	111351034	polymorphism	C	T
 12	111351975	polymorphism	C	GAC
 12	111351970	polymorphism	A	G
 20	30414640	disease_causing	G	A
@@ -1747,6 +1732,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 8	96059283	disease_causing	C	T
 8	96047820	polymorphism	T	AT
 8	96053785	polymorphism	CT	
+8	96047820	polymorphism		A
 19	1388862	disease_causing	C	T
 19	1388877	disease_causing	C	T
 11	67803762	disease_causing	C	T
@@ -1765,9 +1751,10 @@ chromosome	position	pred_index	allele_ref	allele_alt
 18	21134704	polymorphism	T	C
 18	21124910	polymorphism	C	GC
 18	21119756	polymorphism	A	G
+18	21124910	polymorphism	C	TCCCCC
 18	21124917	polymorphism		CC
-18	21124908	polymorphism_automatic		CC
-18	21124914	polymorphism_automatic	C	G
+18	21124908	polymorphism		CC
+18	21124914	polymorphism	C	G
 14	74951111	disease_causing	C	T
 14	74946968	polymorphism	A	G
 2	50724817	disease_causing	G	A
@@ -1782,7 +1769,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 6	161970012	disease_causing	A	G
 1	55518418	disease_causing	C	T
 23	19367441	disease_causing	G	A
-23	19373890	polymorphism_automatic	C	T
+23	19373890	polymorphism	C	T
 3	58417610	disease_causing	T	C
 3	58417676	disease_causing	A	G
 3	58417304	polymorphism	A	G
@@ -1811,13 +1798,17 @@ chromosome	position	pred_index	allele_ref	allele_alt
 8	144997849	polymorphism	G	A
 8	144997023	polymorphism	C	T
 8	145005694	polymorphism	T	CT
+8	145005694	polymorphism		C
 19	50365718	disease_causing	A	G
 15	89864369	disease_causing	A	G
 15	89866646	disease_causing	G	A
 15	89860653	disease_causing	G	T
 15	89864125	disease_causing	G	A
 15	89876861	polymorphism	C	TGCTGCC
+15	89876861	polymorphism		TGCTGC
 15	89872227	polymorphism	G	A
+15	89876861	polymorphism		TGC
+15	89876861	polymorphism	C	TGCC
 15	89871960	polymorphism	G	A
 15	89867146	polymorphism	A	C
 15	89862237	polymorphism	C	T
@@ -1850,9 +1841,9 @@ chromosome	position	pred_index	allele_ref	allele_alt
 7	151257629	disease_causing	G	A
 7	151573647	polymorphism	C	A
 7	151267248	polymorphism	C	G
+7	151267248	polymorphism	C	AC
 7	151261157	polymorphism	G	A
 14	73683960	disease_causing	T	C
-14	73678538	disease_causing	A	G
 1	227071517	disease_causing	G	C
 1	227073305	disease_causing	C	T
 1	227076569	disease_causing	C	G
@@ -1930,7 +1921,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 1	237811889	disease_causing	C	T
 1	237947870	disease_causing	C	T
 1	237711878	disease_causing	T	C
-1	237955485	disease_causing	C	T
 1	237850814	disease_causing	C	T
 1	237777882	disease_causing	T	C
 1	237774118	disease_causing	G	A
@@ -2009,8 +1999,8 @@ chromosome	position	pred_index	allele_ref	allele_alt
 1	237829823	polymorphism	C	T
 1	237934206	polymorphism	C	T
 1	237791088	polymorphism	A	G
-1	237972323	polymorphism_automatic	C	T
-1	237961357	polymorphism_automatic	G	A
+1	237972323	polymorphism	C	T
+1	237961357	polymorphism	G	A
 20	35563479	disease_causing	G	A
 2	166930100	disease_causing	G	T
 2	166895930	disease_causing	T	
@@ -2042,12 +2032,12 @@ chromosome	position	pred_index	allele_ref	allele_alt
 17	78188556	disease_causing	C	T
 23	73745662	disease_causing	C	A
 2	228564122	disease_causing	C	T
-2	228564010	disease_causing	C	T
 2	228563530	polymorphism	T	C
 2	113404974	disease_causing	A	C
 2	113405303	disease_causing	C	T
 1	43393447	disease_causing	G	A
 1	43393252	polymorphism	T	AAATGGTGAGT
+1	43393252	polymorphism		AAATGGTGAG
 1	220088800	disease_causing	C	T
 1	220101267	polymorphism	G	C
 5	1411433	disease_causing	G	A
@@ -2076,6 +2066,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 16	89603162	disease_causing	TCT	
 16	89614451	disease_causing	C	T
 16	89592874	disease_causing	A	G
+16	89603162	polymorphism	TCT	
 16	89574834	polymorphism	G	T
 16	89603153	polymorphism	C	T
 5	147491324	disease_causing	T	C
@@ -2096,14 +2087,13 @@ chromosome	position	pred_index	allele_ref	allele_alt
 23	70642954	disease_causing	T	C
 23	70598283	polymorphism	A	T
 23	70598069	polymorphism	CTT	
-23	70644043	polymorphism_automatic	C	T
+23	70644043	polymorphism	C	T
 23	153648381	disease_causing	C	T
 23	153641885	disease_causing	G	A
 23	153649044	disease_causing	C	T
-23	153642432	disease_causing	C	A
 23	153648515	polymorphism	C	T
 23	153648024	polymorphism	C	T
-23	153649337	polymorphism_automatic	G	A
+23	153649337	polymorphism	G	A
 16	2547034	disease_causing	C	G
 16	2546353	disease_causing	G	A
 16	2548257	disease_causing	C	T
@@ -2112,7 +2102,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 17	37822346	polymorphism		CTCCATGTCCCAGG
 17	37821953	polymorphism	C	G
 17	37821732	polymorphism	G	C
-17	37822174	polymorphism_automatic	C	T
+17	37822174	polymorphism	C	T
 11	2186495	disease_causing	G	C
 11	2189124	disease_causing	T	G
 11	2189718	disease_causing	C	T
@@ -2145,8 +2135,8 @@ chromosome	position	pred_index	allele_ref	allele_alt
 19	55663229	disease_causing	C	T
 19	55667982	disease_causing	A	G
 19	55668029	polymorphism	G	T
-19	55665410	polymorphism_automatic	C	T
-19	55667647	polymorphism_automatic	C	A
+19	55665410	polymorphism	C	T
+19	55667647	polymorphism	C	A
 1	201334399	disease_causing	C	T
 1	201333454	disease_causing	C	T
 1	201336893	disease_causing	C	T
@@ -2162,7 +2152,6 @@ chromosome	position	pred_index	allele_ref	allele_alt
 15	25584285	disease_causing	T	C
 9	79820261	disease_causing	C	A
 9	79968362	disease_causing	T	C
-9	80020874	disease_causing	C	A
 9	79897155	disease_causing	A	G
 9	79954425	disease_causing	A	TA
 9	79821001	disease_causing	GAAAACAGTA	
@@ -2174,6 +2163,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 9	79890579	polymorphism	C	T
 9	79865158	polymorphism	T	C
 9	79862319	polymorphism	C	A
+9	79898266	polymorphism	T	
 9	79954415	polymorphism	T	G
 9	79922856	polymorphism	A	TA
 23	48934174	disease_causing	G	A
@@ -2199,8 +2189,9 @@ chromosome	position	pred_index	allele_ref	allele_alt
 17	59533867	disease_causing	G	A
 17	59557507	disease_causing	A	G
 9	132576387	disease_causing	C	A
+12	53069224	polymorphism	CCTCCGGAGCCGTAGCTGCT	CCTCCGGAGCCGTAGCTGCC
 12	53070836	polymorphism	C	A
-12	53069223	polymorphism_automatic	ACCTCCGGAGCCGTAGCTGCT	
+12	53069223	polymorphism	ACCTCCGGAGCCGTAGCTGCT	
 2	21235252	polymorphism	A	G
 1	160090685	polymorphism	TCCT	
 1	160109411	polymorphism	T	CT
@@ -2226,6 +2217,7 @@ chromosome	position	pred_index	allele_ref	allele_alt
 5	52954474	polymorphism	G	TG
 20	3897561	polymorphism	T	CCCCCTT
 20	3897562	polymorphism	C	TC
+20	3897561	polymorphism		CCCCCT
 20	3897566	polymorphism	C	TTCCCCC
 1	201282635	polymorphism	G	A
 23	103045435	polymorphism	C	A
@@ -2238,19 +2230,19 @@ chromosome	position	pred_index	allele_ref	allele_alt
 7	94227275	polymorphism	C	T
 7	94227273	polymorphism	C	T
 23	135080636	polymorphism		T
-23	135122231	polymorphism_automatic	G	A
+23	135122231	polymorphism	G	A
 11	36518832	polymorphism	T	AT
 11	71906438	polymorphism	C	T
 17	48158680	polymorphism	A	G
 1	183209311	polymorphism	C	T
 1	183205708	polymorphism	G	C
 1	8030994	polymorphism	G	A
-23	18582659	polymorphism_automatic	A	G
-23	18671574	polymorphism_automatic	C	T
-23	18671655	polymorphism_automatic	G	A
-23	153580576	polymorphism_automatic	G	A
-10	70775959	polymorphism_automatic	C	T
-23	152037592	polymorphism_automatic	C	T
-23	22010795	polymorphism_automatic	A	C
-23	100603658	polymorphism_automatic	G	A
-23	76937207	polymorphism_automatic	C	G
+23	18582659	polymorphism	A	G
+23	18671574	polymorphism	C	T
+23	18671655	polymorphism	G	A
+23	153580576	polymorphism	G	A
+10	70775959	polymorphism	C	T
+23	152037592	polymorphism	C	T
+23	22010795	polymorphism	A	C
+23	100603658	polymorphism	G	A
+23	76937207	polymorphism	C	G
