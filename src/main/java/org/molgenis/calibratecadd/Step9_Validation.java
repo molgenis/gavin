@@ -131,7 +131,7 @@ public class Step9_Validation
 		}
 		if (mode.equals("mutationtaster2"))
 		{
-			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_MutationTaster2_output_minimized.tsv"));
+			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_MutationTaster2_output_minimized_conflictsRemoved.tsv"));
 		}
 		if (mode.equals("provean") || mode.equals("sift"))
 		{
