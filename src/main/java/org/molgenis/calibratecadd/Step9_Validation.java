@@ -251,7 +251,8 @@ public class Step9_Validation
 			//check if we have any conflicts
 			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
 			{
-				System.out.println("WARNING: conflicting classification! not adding this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
+				System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
+				addToMVLResults(null, mvlClassfc, mvlName, record);
 			}
 			else
 			{
