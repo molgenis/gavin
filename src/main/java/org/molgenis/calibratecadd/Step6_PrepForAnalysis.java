@@ -5,6 +5,8 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import org.molgenis.calibratecadd.support.LoadCADDWebserviceOutput;
+
 /**
  * Example usage:
  * E:\Data\clinvarcadd\cadd_output.txt
@@ -46,24 +48,26 @@ public class Step6_PrepForAnalysis
 
 	public static void main(String[] args) throws Exception
 	{
-		Scanner cadd = new Scanner(new File(args[0]));
+//		Scanner cadd = new Scanner(new File(args[0]));
 		Scanner info = new Scanner(new File(args[1]));
 		PrintWriter pw = new PrintWriter(new File(args[2]));
 		
-		HashMap<String, Double> caddScores = new HashMap<String, Double>();
+		HashMap<String, Double> caddScores = LoadCADDWebserviceOutput.load(new File(args[0]));
 		
+//		HashMap<String, Double> caddScores = new HashMap<String, Double>();
+//		
 		String line = null;
-		while(cadd.hasNextLine())
-		{
-			line = cadd.nextLine();
-			if(line.startsWith("#"))
-			{
-				continue;
-			}
-			String[] split = line.split("\t", -1);
-			caddScores.put(split[0] + "_" + split[1] + "_" + split[2] + "_" + split[3], Double.parseDouble(split[5]));
-		}
-		cadd.close();
+//		while(cadd.hasNextLine())
+//		{
+//			line = cadd.nextLine();
+//			if(line.startsWith("#"))
+//			{
+//				continue;
+//			}
+//			String[] split = line.split("\t", -1);
+//			caddScores.put(split[0] + "_" + split[1] + "_" + split[2] + "_" + split[3], Double.parseDouble(split[5]));
+//		}
+//		cadd.close();
 		
 		//write header of output
 		pw.println("gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group" + "\t" + "cadd");
