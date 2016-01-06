@@ -37,6 +37,7 @@ public class CalibratedExomeAnalysis
 	
 	private int variantRefAltGenePatho = 0;
 	private int variantRefAltGeneBenign = 0;
+	private int variantSkippedBadFilter = 0;
 	private int failedToClassify = 0;
 	private int conflictingClassifications = 0;
 	private int totalVariantSeen = 0;
@@ -81,6 +82,7 @@ public class CalibratedExomeAnalysis
 
 			if (filter != null && !filter.equals("PASS"))
 			{
+				variantSkippedBadFilter++;
 				continue;
 			}
 			
@@ -264,6 +266,7 @@ public class CalibratedExomeAnalysis
 		
 		System.out.println("\n## COUNTS ##\n");
 		System.out.println("total variant seen = " + totalVariantSeen);
+		System.out.println("variants that did not pass QC and were skipped: " + variantSkippedBadFilter);
 		System.out.println("total variants incl. altallele/gene combinations seen = " + totalVariantRefAltGeneCombinationsSeen);
 		System.out.println("relevant combinations, classified benign = " + variantRefAltGeneBenign);
 		System.out.println("relevant combinations, classified pathogenic = " + variantRefAltGenePatho);
