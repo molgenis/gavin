@@ -143,7 +143,8 @@ public class CalibratedExomeAnalysis
 				{
 					if(mode.equals(MODE_CREATECADDFILE))
 					{
-						pw.println(chr + "\t" + pos + "\t" + "." + "\t" + ref + "\t" + alt);
+						String trimmedRefAlt = LoadCADDWebserviceOutput.trimRefAlt(ref, alt, "\t");
+						pw.println(chr + "\t" + pos + "\t" + "." + "\t" + trimmedRefAlt);
 					}
 					else if(mode.equals(MODE_ANALYSIS))
 					{
@@ -154,7 +155,17 @@ public class CalibratedExomeAnalysis
 						}
 						else
 						{
-							System.out.println("WARNING: CADD score missing for " + chr + " " + pos + " " + ref + " " + alt + " !");
+							String trimmedRefAlt = LoadCADDWebserviceOutput.trimRefAlt(ref, alt, "_");
+							key = chr + "_" + pos + "_" + trimmedRefAlt;
+							if(caddScores.containsKey(key))
+							{
+								cadd = caddScores.get(key);
+							}
+							else
+							{
+								System.out.println("WARNING: CADD score missing for " + chr + " " + pos + " " + ref + " " + alt + " ! (even when using trimmed key '"+key+"')");
+							}
+							
 						}
 					}
 				}
@@ -165,6 +176,11 @@ public class CalibratedExomeAnalysis
 					totalVariantRefAltGeneCombinationsSeen++;
 					
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
+					if(impact == null)
+					{
+						continue;
+					}
+					
 					Judgment judgment = null;
 					try
 					{
@@ -185,12 +201,16 @@ public class CalibratedExomeAnalysis
 
 				}
 				
-				//if no judgment, add null for this variant
+				//if no classification, warn only if we are in analysis mode (and we think we have most CADD scores)
+				//TODO: this will go badly for whole genome data, when a lot fails and we put it all in memory?
 				if(multipleCandidatesForAllele.size() == 0)
 				{
-					System.out.println("WARNING: no classification could be made for " + chr + ":" + pos + " " + ref + "/" + alt);
+					if(mode.equals(MODE_ANALYSIS))
+					{
+						//System.out.println("WARNING: in analysis mode, but no classification could be made for " + chr + ":" + pos + " " + ref + "/" + alt);
+						//noJudgmentVariants.add(record);
+					}
 					failedToClassify++;
-					noJudgmentVariants.add(record);
 					continue;
 				}
 				
@@ -335,6 +355,11 @@ public class CalibratedExomeAnalysis
 				continue;
 			}
 
+			if(sample.get("DP") == null)
+			{
+				continue;
+			}
+			
 			// quality filter: we want depth X or more
 			int depthOfCoverage = Integer.parseInt(sample.get("DP").toString());
 			if (depthOfCoverage < 10)
