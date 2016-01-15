@@ -45,6 +45,7 @@ public class CalibratedExomeAnalysis
 	
 	public void go(String mode, File vcfFile, File patientGroups, File ccggFile, File caddFile) throws Exception
 	{
+		long startTime = System.currentTimeMillis();
 		pathogenicVariants = new ArrayList<CandidateVariant>();
 		noJudgmentVariants = new ArrayList<Entity>();
 		conflictingJudgmentVariants = new ArrayList<Entity>();
@@ -284,6 +285,8 @@ public class CalibratedExomeAnalysis
 
 		printResults(pathogenicVariants);
 		
+		long endTime = System.currentTimeMillis();
+		
 		System.out.println("\n## COUNTS ##\n");
 		System.out.println("total variant seen = " + totalVariantSeen);
 		System.out.println("variants that did not pass QC and were skipped: " + variantSkippedBadFilter);
@@ -292,7 +295,8 @@ public class CalibratedExomeAnalysis
 		System.out.println("relevant combinations, classified pathogenic = " + variantRefAltGenePatho);
 		System.out.println("classification failed = " + failedToClassify);
 		System.out.println("classification conflicting = " + conflictingClassifications);
-
+		System.out.println("runtime: " + (endTime-startTime)/1000.0 + " seconds, " + totalVariantRefAltGeneCombinationsSeen/((endTime-startTime)/1000.0) + " interpretations per second");
+	
 	}
 	
 	public void printResults(List<CandidateVariant> pathogenicVariants) throws Exception
