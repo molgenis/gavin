@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.molgenis.calibratecadd.support.MSCResults;
 import org.molgenis.calibratecadd.support.MutationTaster2Results;
 import org.molgenis.calibratecadd.support.PONP2Results;
 import org.molgenis.calibratecadd.support.PolyPhen2Results;
@@ -97,7 +98,7 @@ public class Step9_Validation
 	 */
 	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
 	{
-		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "mutationtaster2", "provean", "sift", "polyphen2"});
+		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "mutationtaster2", "provean", "sift", "polyphen2", "msc"});
 		if(!modes.contains(mode))
 		{
 			throw new Exception("mode needs to be one of : " + modes.toString());
@@ -127,6 +128,7 @@ public class Step9_Validation
 		MutationTaster2Results m2r = null;
 		ProveanAndSiftResults ps2r = null;
 		PolyPhen2Results pf2r = null;
+		MSCResults mscr = null;
 		if (mode.equals("ponp2"))
 		{
 			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PONP2_output.tsv"));
@@ -142,6 +144,10 @@ public class Step9_Validation
 		if (mode.equals("polyphen2"))
 		{
 			pf2r = new PolyPhen2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PolyPhen2_output_minimized.tsv"));
+		}
+		if (mode.equals("msc"))
+		{
+			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
 		}
 
 		while (vcfRepoIter.hasNext())
@@ -209,6 +215,10 @@ public class Step9_Validation
 						else if (mode.equals("polyphen2"))
 						{
 							judgment = pf2r.classifyVariantUsingPolyPhen2Results(chr, pos, ref, alt);
+						}
+						else if (mode.equals("msc"))
+						{
+							judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
 						}
 						else
 						{
