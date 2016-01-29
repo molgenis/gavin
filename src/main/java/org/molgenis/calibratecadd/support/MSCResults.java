@@ -41,7 +41,6 @@ public class MSCResults
 	{
 		if(caddScore == null)
 		{
-			System.out.println(geneName);
 			throw new VariantClassificationException("CADD score of variant null");
 		}
 		else if(mscFile.containsKey(geneName))
