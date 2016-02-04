@@ -5,17 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 
 /**
- * Structure to store allele counts per gene, per patient group.
- * For each combination, we store counts for pathogenic and VOUS variants.
- * Then we store 3 values: total allele count, recessive genotype count, dominant genotype count.
- * 
- * So the format is:
- * 			group1			group2
- * gene1	2,0,2|23,5,13	5,1,3|42,10,22
- * gene2	etc
+ * Structure to store allele count objects per gene, per patient group.
+ * Has helper functions to easily add counts to each gene/patient combination.
+ * Can also read and write from file.
  * 
  * @author jvelde
  *
@@ -24,24 +20,76 @@ public class GeneGroupsAlleleCountUtils
 {
 	public GeneGroupsAlleleCountUtils()
 	{
-		genesToGroupsToAlleleCounts = new HashMap<String, HashMap<String, AlleleCounts>>();
-		groups = new HashSet<String>();
+		this.genesToGroupsToAlleleCounts = new HashMap<String, HashMap<String, AlleleCounts>>();
+		this.groups = new HashSet<String>();
 		
 	}
 	
-	HashMap<String, HashMap<String, AlleleCounts>> genesToGroupsToAlleleCounts;
+	private HashMap<String, HashMap<String, AlleleCounts>> genesToGroupsToAlleleCounts;
 	private Set<String> groups;
-	private PrintWriter pw;
 	
 	
-	public void readFromFile()
+	
+	public HashMap<String, HashMap<String, AlleleCounts>> getGenesToGroupsToAlleleCounts()
 	{
+		return genesToGroupsToAlleleCounts;
+	}
+
+	public Set<String> getGroups()
+	{
+		return groups;
+	}
+
+	public void readFromFile(String fileLoc) throws Exception
+	{
+		File f = new File(fileLoc);
+		Scanner s = new Scanner(f);
+		String header = s.nextLine();
+		String[] headerSplit = header.split("\t");
+		for(String groupInHeader : headerSplit)
+		{
+			if(!groupInHeader.isEmpty())
+			{
+				this.groups.add(groupInHeader);
+			}
+		}
+		
+		String[] groups = this.getGroups().toArray(new String[this.getGroups().size()]);
+		String line = null;
+		while(s.hasNextLine())
+		{
+			line = s.nextLine();
+			String[] lineSplit = line.split("\t");
+			String gene = null;
+			for(int i = 0; i < lineSplit.length; i++)
+			{
+				if(i == 0)
+				{
+					gene = lineSplit[i];
+					continue;
+				}
+				
+				String group = groups[i-1];
+				String acString = lineSplit[i];
+				
+			//	System.out.println(gene + " - " + group + " - " + lineSplit[i]);
+				
+				AlleleCounts ac = new AlleleCounts(acString);
+				
+				
+				addToTable(gene, group);
+				
+				this.genesToGroupsToAlleleCounts.get(gene).put(group, ac);
+				
+			}
+		}
+		
 		
 	}
 	
 	public void writeToFile(File writeTo) throws FileNotFoundException
 	{
-		pw = new PrintWriter(writeTo);
+		PrintWriter pw = new PrintWriter(writeTo);
 		
 		for(String group : groups)
 		{
@@ -49,15 +97,15 @@ public class GeneGroupsAlleleCountUtils
 		}
 		pw.print("\n");
 		
-		for(String gene : genesToGroupsToAlleleCounts.keySet())
+		for(String gene : this.genesToGroupsToAlleleCounts.keySet())
 		{
 			StringBuffer printLine = new StringBuffer();
 			printLine.append(gene);
 			for(String group : groups)
 			{
-				if(genesToGroupsToAlleleCounts.get(gene).containsKey(group))
+				if(this.genesToGroupsToAlleleCounts.get(gene).containsKey(group))
 				{
-					printLine.append("\t" + genesToGroupsToAlleleCounts.get(gene).get(group).toString());
+					printLine.append("\t" + this.genesToGroupsToAlleleCounts.get(gene).get(group).toString());
 				}
 				else
 				{
@@ -71,62 +119,78 @@ public class GeneGroupsAlleleCountUtils
 		pw.close();
 	}
 	
-	public void addToPathoAlleleTable(String gene, String group, int addAmount)
+	
+	
+
+	@Override
+	public String toString()
 	{
-		groups.add(group);
+		return "GeneGroupsAlleleCountUtils [genesToGroupsToAlleleCounts=" + genesToGroupsToAlleleCounts + ", groups="
+				+ groups + "]";
+	}
+
+	public void addToActingDominant(String gene, String group, int addAmount)
+	{
 		addToTable(gene, group);
-		AlleleCounts ac = genesToGroupsToAlleleCounts.get(gene).get(group);
-		ac.pathoTotalAlleles += addAmount;
+		AlleleCounts ac = this.genesToGroupsToAlleleCounts.get(gene).get(group);
+		ac.setActingDominant(ac.getActingDominant() + addAmount);
+		this.genesToGroupsToAlleleCounts.get(gene).put(group, ac);
 	}
 	
-	public void addToPathoRecessiveTable(String gene, String group, int addAmount)
+	public void addToActingAdditive(String gene, String group, int addAmount)
 	{
+		
 		addToTable(gene, group);
-		AlleleCounts ac = genesToGroupsToAlleleCounts.get(gene).get(group);
-		ac.pathoRecessiveGenotypes += addAmount;
+		AlleleCounts ac = this.genesToGroupsToAlleleCounts.get(gene).get(group);
+		ac.setActingAdditive(ac.getActingAdditive() + addAmount);
 	}
 	
-	public void addToPathoDominantTable(String gene, String group, int addAmount)
+	public void addToActingRecessive(String gene, String group, int addAmount)
 	{
 		addToTable(gene, group);
-		AlleleCounts ac = genesToGroupsToAlleleCounts.get(gene).get(group);
-		ac.pathoDominantGenotypes += addAmount;
+		AlleleCounts ac = this.genesToGroupsToAlleleCounts.get(gene).get(group);
+		ac.setActingRecessive(ac.getActingRecessive() + addAmount);
 	}
 	
-	public void addToVOUSAlleleTable(String gene, String group, int addAmount)
+	public void addToNonActingDominant(String gene, String group, int addAmount)
 	{
 		addToTable(gene, group);
-		AlleleCounts ac = genesToGroupsToAlleleCounts.get(gene).get(group);
-		ac.vousTotalAlleles += addAmount;
+		AlleleCounts ac = this.genesToGroupsToAlleleCounts.get(gene).get(group);
+		ac.setNonActingDominant(ac.getNonActingDominant() + addAmount);
 	}
 	
-	public void addToVOUSRecessiveTable(String gene, String group, int addAmount)
+	public void addToNonActingAdditive(String gene, String group, int addAmount)
 	{
 		addToTable(gene, group);
-		AlleleCounts ac = genesToGroupsToAlleleCounts.get(gene).get(group);
-		ac.vousRecessiveGenotypes += addAmount;
+		AlleleCounts ac = this.genesToGroupsToAlleleCounts.get(gene).get(group);
+		ac.setNonActingAdditive(ac.getNonActingAdditive() + addAmount);
 	}
 	
-	public void addToVOUSDominantTable(String gene, String group, int addAmount)
+	public void addToNonActingRecessive(String gene, String group, int addAmount)
 	{
 		addToTable(gene, group);
-		AlleleCounts ac = genesToGroupsToAlleleCounts.get(gene).get(group);
-		ac.vousDominantGenotypes += addAmount;
+		AlleleCounts ac = this.genesToGroupsToAlleleCounts.get(gene).get(group);
+		ac.setNonActingRecessive(ac.getNonActingRecessive() + addAmount);
 	}
 	
 	private void addToTable(String gene, String group)
 	{
-		if(!genesToGroupsToAlleleCounts.containsKey(gene))
+		groups.add(group);
+		
+		if(!this.genesToGroupsToAlleleCounts.containsKey(gene))
 		{
 			HashMap<String, AlleleCounts> newGene = new HashMap<String, AlleleCounts>();
-			genesToGroupsToAlleleCounts.put(gene, newGene);
+			this.genesToGroupsToAlleleCounts.put(gene, newGene);
 		}
 		
-		if(!genesToGroupsToAlleleCounts.get(gene).containsKey(group))
+		if(!this.genesToGroupsToAlleleCounts.get(gene).containsKey(group))
 		{
 			AlleleCounts newGroup = new AlleleCounts();
-			genesToGroupsToAlleleCounts.get(gene).put(group, newGroup);
+			this.genesToGroupsToAlleleCounts.get(gene).put(group, newGroup);
 		}
+		
+		
+	//	System.out.println("current AC for " + gene + " in group " + group + " = " + this.genesToGroupsToAlleleCounts.get(gene).get(group).toString());
 	}
 	
 	

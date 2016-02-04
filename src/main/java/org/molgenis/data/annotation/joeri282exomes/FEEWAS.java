@@ -33,6 +33,10 @@ import org.springframework.stereotype.Component;
  * when we have gathered this data, use fisher exact test to find any genes with
  * overrepresented pathogenic (or VOUS) variants for specific patient groups
  * 
+ * We partition the data per gene, so that the test is "1 group & other groups" vs. "nr of pathogenic genotypes & other genotypes".
+ * This means the total amount of tests equals:
+ * N genes * M groups * 3 inheritance modes * 2 types (patho/vous)
+ * 
  * @author jvelde
  *
  */
@@ -66,7 +70,8 @@ public class FEEWAS
 		conflictingJudgmentVariants = new ArrayList<Entity>();
 		
 		loadSampleToGroup(patientGroups);
-		GeneGroupsAlleleCountUtils genegroupcounts = new GeneGroupsAlleleCountUtils();
+		GeneGroupsAlleleCountUtils geneGroupCountsPathogenic = new GeneGroupsAlleleCountUtils();
+		GeneGroupsAlleleCountUtils geneGroupCountsVOUS = new GeneGroupsAlleleCountUtils();
 
 		CCGGUtils ccgg = new CCGGUtils(ccggFile);
 		
@@ -89,9 +94,10 @@ public class FEEWAS
 		{
 			if(totalVariantSeen % 1000 == 0)
 			{
-				System.out.println("Seen " + totalVariantSeen + " variants, in a total of " + totalVariantRefAltGeneCombinationsSeen + " ref/alt/gene combinations. Classified " + variantRefAltGenePatho+ " as pathogenic, " + variantRefAltGeneBenign + " as benign, failed to classify " + failedToClassify + ".");
+				System.out.println("Seen " + totalVariantSeen + " variants, in a total of " + totalVariantRefAltGeneCombinationsSeen + " ref/alt/gene combinations.");
 			}
 			totalVariantSeen++;
+		
 			
 			Entity record = it.next();
 			String filter = record.getString("FILTER");
@@ -120,10 +126,12 @@ public class FEEWAS
 			for (int i = 0; i < alts.length; i++)
 			{
 				String alt = alts[i];
+				double exac_af = (exac_af_split != null && !exac_af_split[i].equals(".")) ? Double.parseDouble(exac_af_split[i]) : 0;
 				
-				double exac_af = (exac_af_split[i] != null && !exac_af_split[i].equals(".")) ? Double.parseDouble(exac_af_split[i]) : 0;
-				Double cadd = (cadd_split[i] != null && !cadd_split[i].equals(".")) ? Double.parseDouble(cadd_split[i]) : null;
-					
+				/**
+				 * Sort out CADD score for this variant/allele
+				 */
+				Double cadd = (cadd_split != null && !cadd_split[i].equals(".")) ? Double.parseDouble(cadd_split[i]) : null;
 				if(cadd == null)
 				{
 					if(mode.equals(MODE_CREATECADDFILE))
@@ -155,7 +163,7 @@ public class FEEWAS
 					}
 				}
 				
-				ArrayList<CandidateVariant> multipleCandidatesForAllele = new ArrayList<CandidateVariant>();
+
 				for(String gene : genes)
 				{
 					totalVariantRefAltGeneCombinationsSeen++;
@@ -170,90 +178,22 @@ public class FEEWAS
 					try
 					{
 						judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
-
-						HashMap<String, Entity> samples = findInterestingSamples(record, i, genegroupcounts, gene, judgment);
-						if (samples.size() > 0)
+						
+						if(judgment.classification.equals(Judgment.Classification.Pathogn))
 						{
-							CandidateVariant cv = new CandidateVariant(record, alt, gene, judgment, samples);
-							multipleCandidatesForAllele.add(cv);
+							
+							countGroupSamples(record, i, geneGroupCountsPathogenic, gene);
+							
+					//		System.out.println("geneGroupCountsPathogenic=" + geneGroupCountsPathogenic.toString());
 						}
 
 					}
 					catch(VariantClassificationException e)
 					{
-						
+					//	countGroupSamples(record, i, geneGroupCountsVOUS, gene);
 					}
 
 				}
-				
-				//if no classification, warn only if we are in analysis mode (and we think we have most CADD scores)
-				//TODO: this will go badly for whole genome data, when a lot fails and we put it all in memory?
-				if(multipleCandidatesForAllele.size() == 0)
-				{
-					if(mode.equals(MODE_ANALYSIS))
-					{
-						//System.out.println("WARNING: in analysis mode, but no classification could be made for " + chr + ":" + pos + " " + ref + "/" + alt);
-						//noJudgmentVariants.add(record);
-					}
-					failedToClassify++;
-					continue;
-				}
-				
-				
-				//go through the possible classifications and check if any of them are conflicting
-				//also, if we have a calibrated judgment, 
-				int nrOfBenignClsf = 0;
-				int nrOfPathognClsf = 0;
-				boolean hasCalibratedJudgment = false;
-				for(CandidateVariant cv : multipleCandidatesForAllele)
-				{
-					if(cv.judgment.getClassification().equals(Classification.Benign))
-					{
-						nrOfBenignClsf++;
-					}
-					if(cv.judgment.getClassification().equals(Classification.Pathogn))
-					{
-						nrOfPathognClsf++;
-					}
-					if(cv.judgment.getConfidence().equals(Method.calibrated))
-					{
-						hasCalibratedJudgment = true;
-					}
-				}
-				
-				//check if we have any conflicts
-				if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
-				{
-					System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleCandidatesForAllele.toString() );
-					conflictingClassifications++;
-					conflictingJudgmentVariants.add(record);
-				}
-				else
-				{
-					for(CandidateVariant cv : multipleCandidatesForAllele)
-					{
-						if(cv.judgment.classification.equals(Classification.Benign))
-						{
-							variantRefAltGeneBenign++;
-							break;
-						}
-						//if we know we have calibrated results, wait for it, then add it, and then break
-						if(hasCalibratedJudgment && cv.judgment.getConfidence().equals(Method.calibrated) && cv.judgment.classification.equals(Classification.Pathogn))
-						{
-							variantRefAltGenePatho++;
-							pathogenicVariants.add(cv);
-							break;
-						}
-						//if not, might as well add this one and be done
-						else if(!hasCalibratedJudgment && cv.judgment.classification.equals(Classification.Pathogn))
-						{
-							variantRefAltGenePatho++;
-							pathogenicVariants.add(cv);
-							break;
-						}
-					}
-				}
-				
 				
 				
 			}
@@ -266,8 +206,8 @@ public class FEEWAS
 			pw.flush();
 			pw.close();
 		}
-
-		printResults(pathogenicVariants);
+		geneGroupCountsPathogenic.writeToFile(new File("/Users/jvelde/FEEWAS_Patho.tsv"));
+		geneGroupCountsVOUS.writeToFile(new File("/Users/jvelde/FEEWAS_VOUS.tsv"));
 		
 		long endTime = System.currentTimeMillis();
 		
@@ -283,56 +223,12 @@ public class FEEWAS
 	
 	}
 	
-	public void printResults(List<CandidateVariant> pathogenicVariants) throws Exception
+	public void countGroupSamples(Entity record, int altIndex, GeneGroupsAlleleCountUtils genegroupcounts, String gene)
 	{
-		System.out.println("\n## RESULTS ##\n");
-		
-		for(Method conf : Method.values())
-		{
-			System.out.println("\nPathogenic candidates, method: " + conf);
-			for(CandidateVariant cv : pathogenicVariants)
-			{
-				if(cv.judgment.method.equals(conf))
-				{
-			//		System.out.println(cv.toString());
-					
-					String ann = CCGGUtils.getAnn(cv.getVcfRecord().getString("ANN"), cv.gene, cv.allele);
-					String[] annSplit = ann.split("\\|", -1);
-					String cDNA = annSplit[9];
-					String aaChange = annSplit[10];
-					String effect = annSplit[1];
-					String genomic = cv.vcfRecord.getString("#CHROM") + ":" + cv.vcfRecord.getString("POS") + " " + cv.vcfRecord.getString("REF") + " to " + cv.vcfRecord.getString("ALT");
-					String id = (cv.vcfRecord.getString("ID") != null && !cv.vcfRecord.getString("ID").equals("") && !cv.vcfRecord.getString("ID").equals(".")) ? (", " + cv.vcfRecord.getString("ID")) : "";
-					String gonlAF = cv.vcfRecord.getString("GoNL_AF").equals(".") ? "0" : cv.vcfRecord.getString("GoNL_AF");
-					String exacAF = cv.vcfRecord.getString("EXAC_AF") == null ? "0" : cv.vcfRecord.getString("EXAC_AF");
-					String _1kgAF = cv.vcfRecord.getString("Thousand_Genomes_AF") == null ? "0" : cv.vcfRecord.getString("Thousand_Genomes_AF");
-					
-					System.out.println("Variant: " + cv.gene + ":" + cDNA + " (" + aaChange + id + "), genomic: " +genomic + " (pathogenic allele: " + cv.allele + ")");
-					System.out.println("Effect: " + effect + ", GoNL MAF: " + gonlAF+ ", ExAC MAF: " + exacAF+ ", 1KG MAF: " + _1kgAF);
-					System.out.println("Reason: " + cv.getJudgment().reason);
-					
-					System.out.println("Samples carrying this allele:");
-					for(String sampleId : cv.getSampleIds().keySet())
-					{
-						System.out.println(sampleId + ", genotype: " + cv.getSampleIds().get(sampleId).getString("GT") + ", cov: " + cv.getSampleIds().get(sampleId).getString("DP") + ", allelic cov: " + cv.getSampleIds().get(sampleId).getString("AD"));
-					}
-					System.out.println();
-				}
-				
-			}
-		}
-	}
-	
-	public HashMap<String, Entity> findInterestingSamples(Entity record, int altIndex, GeneGroupsAlleleCountUtils genegroupcounts, String gene, Judgment judgment)
-	{
-		HashMap<String, Entity> homSampleIds = new HashMap<String, Entity>();
-		HashMap<String, Entity> hetSampleIds = new HashMap<String, Entity>();
 		Iterable<Entity> sampleEntities = record.getEntities(VcfRepository.SAMPLES);
+		
 		//first alt has index 0, but we want to check 0/1, 1/1 etc. So +1.
 		altIndex = altIndex + 1;
-		
-		int hetCount = 0;
-		int homCount = 0;
 		
 		for (Entity sample : sampleEntities)
 		{
@@ -355,44 +251,50 @@ public class FEEWAS
 				continue;
 			}
 
+			String sampleName = sample.get("ORIGINAL_NAME").toString();
+			String group = sampleToGroup != null ? sampleToGroup.get(sampleName) : "default";
 			
-			if (genotype.equals("0/" + altIndex) || genotype.equals(altIndex + "/0")
+		//	System.out.println("sample: " + sampleName + "\t" + genotype );
+			
+			/**
+			 * Homozygous reference
+			 */
+			if (genotype.equals("0/0") || genotype.equals("0|0"))
+			{
+				genegroupcounts.addToNonActingDominant(gene, group, 1);
+				genegroupcounts.addToNonActingAdditive(gene, group, 2);
+				genegroupcounts.addToNonActingRecessive(gene, group, 1);
+			}
+			
+			/**
+			 * Heterozygous
+			 */
+			else if (genotype.equals("0/" + altIndex) || genotype.equals(altIndex + "/0")
 					|| genotype.equals("0|" + altIndex) || genotype.equals(altIndex + "|0") )
 			{
-				//interesting!
-				String sampleName = sample.get("ORIGINAL_NAME").toString();
-				String group = sampleToGroup.get(sampleName);
-				//TODO
-				genegroupcounts.addToPathoAlleleTable(gene, group, 1);
-				hetSampleIds.put(sampleName, sample);
-				hetCount++;
+				genegroupcounts.addToNonActingAdditive(gene, group, 1);
+				genegroupcounts.addToNonActingRecessive(gene, group, 1);
+				genegroupcounts.addToActingDominant(gene, group, 1);
+				genegroupcounts.addToActingAdditive(gene, group, 1);
+				
 			}
 			
-			
-			if ( genotype.equals(altIndex + "/" + altIndex) || genotype.equals(altIndex + "|" + altIndex) )
+			/**
+			 * Homozygous alternative
+			 */
+			else if ( genotype.equals(altIndex + "/" + altIndex) || genotype.equals(altIndex + "|" + altIndex) )
 			{
-				//interesting!
-				String sampleName = sample.get("ORIGINAL_NAME").toString();
-				homSampleIds.put(sampleName, sample);
-				homCount++;
+				genegroupcounts.addToActingDominant(gene, group, 1);
+				genegroupcounts.addToActingAdditive(gene, group, 2);
+				genegroupcounts.addToActingRecessive(gene, group, 1);
 			}
 
-			
+			else
+			{
+				//funky genotype, e.g. 1/2 or 2/3. found in hypervariable regions such as HLA a lot.
+			}
 		}
-		
-		//TODO
-		//do something based on exac genotype counts? e.g. delete heterozygous set when > 10 GTC or so
-//		if(exacHoms > 10)
-//		{
-//			return new ArrayList<String>();
-//		}
-		
-//		System.out.println("homs: " + homCount +" , hets: " + hetCount);
-//		System.out.println("exachoms: " + exacHoms +" , exachets: " + exacHets);
-		HashMap<String, Entity> sampleIds = new HashMap<String, Entity>();
-		sampleIds.putAll(homSampleIds);
-		sampleIds.putAll(hetSampleIds);
-		return sampleIds;
+
 	}
 
 	public static void main(String[] args) throws Exception
@@ -410,17 +312,20 @@ public class FEEWAS
 
 	private void loadSampleToGroup(File patientGroups) throws FileNotFoundException
 	{
-		HashMap<String, String> sampleToGroup = new HashMap<String, String>();
-		Scanner s = new Scanner(patientGroups);
-		String line = null;
-		while (s.hasNextLine())
+		if(patientGroups.exists())
 		{
-			line = s.nextLine();
-			String[] lineSplit = line.split("\t", -1);
-			sampleToGroup.put(lineSplit[0], lineSplit[1]);
+			HashMap<String, String> sampleToGroup = new HashMap<String, String>();
+			Scanner s = new Scanner(patientGroups);
+			String line = null;
+			while (s.hasNextLine())
+			{
+				line = s.nextLine();
+				String[] lineSplit = line.split("\t", -1);
+				sampleToGroup.put(lineSplit[0], lineSplit[1]);
+			}
+			s.close();
+			this.sampleToGroup = sampleToGroup;
 		}
-		s.close();
-		this.sampleToGroup = sampleToGroup;
 	}
 
 	public void run(String[] args) throws Exception
@@ -449,7 +354,7 @@ public class FEEWAS
 		File patientGroups = new File(args[2]);
 		if (!patientGroups.isFile())
 		{
-			throw new Exception("Patient groups file does not exist or directory: " + patientGroups.getAbsolutePath());
+			System.out.println("WARNING: patient groups file does not exist or directory: " + patientGroups.getAbsolutePath() +", not going to use patient groups!!");
 		}
 		
 		File ccggFile = new File(args[3]);
