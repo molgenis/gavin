@@ -684,8 +684,9 @@ public class Helper
 	 * 
 	 * @param loc
 	 * @return
+	 * @throws Exception 
 	 */
-	public static String changeChromLetterToNumber(String loc)
+	public static String changeChromLetterToNumber(String loc) throws Exception
 	{
 		String[] locSplit = loc.split("\t", -1);
 		String chr = locSplit[0];
@@ -711,9 +712,9 @@ public class Helper
 		}
 		else
 		{
-			System.out.println("WARNING: could not change chromosome letter " + chr
+			throw new Exception("WARNING: could not change chromosome letter " + chr
 					+ " to a number! R plot using qqman will fail");
-			return loc;
+		//	return loc;
 		}
 	}
 

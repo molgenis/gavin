@@ -29,7 +29,7 @@ public class DifferentialExomes
 {
 	private File vcfFile;
 	private File patientGroups;
-	private File outputDataFrame;
+	private File outputDatataFrameFile;
 	private TabixVcfRepository vcfReader;
 	private HashMap<String, String> sampleToGroup;
 	private Set<String> groups;
@@ -66,7 +66,7 @@ public class DifferentialExomes
 		Date date = new Date();
 		String inheritance = "recessive";
 		String impact = "high";
-		this.outputDataFrame = new File("fisherdiffexomes_" + dateFormat.format(date) + "_" + inheritance + "_"
+		this.outputDatataFrameFile = new File("fisherdiffexomes_" + dateFormat.format(date) + "_" + inheritance + "_"
 				+ impact + ".tsv");
 	}
 
@@ -121,7 +121,40 @@ public class DifferentialExomes
 		
 		
 		
-		System.out.println("Writing output dataframe to " + outputDataFrame.getAbsolutePath());
+		System.out.println("Writing output dataframe to " + outputDatataFrameFile.getAbsolutePath());
+		writeDataSetForPlotScript(outputDatataFrameFile, sequenceFeatureLocations, groups, pvals);
+
+		// SNP CHR BP P
+		// rs1 1 100000 0.9148
+		// rs2 1 200000 0.9371
+		// rs3 1 400000 0.2861
+		// rs4 1 300000 0.8304
+		// rs5 1 500000 0.6417
+		// rs6 1 600000 0.5191
+
+		plot(outputDatataFrameFile, groups);
+
+	}
+	
+	public static void plot(File outputDataFrame, Set<String> groups) throws FileNotFoundException, UnsupportedEncodingException, IOException
+	{
+
+		String scriptLocation = outputDataFrame.getAbsolutePath() + ".R";
+		String plotLocation = outputDataFrame.getAbsolutePath();
+		System.out.println("Creating plot at " + plotLocation + " using " + scriptLocation);
+		Rscript(groups, scriptLocation, plotLocation, outputDataFrame.getCanonicalPath());
+	}
+	
+	/**
+	 * 
+	 * @param outputDataFrame
+	 * @param sequenceFeatureLocations - gene to "chr + "\t" + pos"
+	 * @param groups
+	 * @param pvals - gene to group, group to pval
+	 * @throws Exception 
+	 */
+	public static void writeDataSetForPlotScript(File outputDataFrame, LinkedHashMap<String, String> sequenceFeatureLocations, Set<String> groups, HashMap<String, HashMap<String, Double>> pvals) throws Exception
+	{
 		PrintWriter pwDF = new PrintWriter(outputDataFrame, "UTF-8");
 		
 		StringBuilder header = new StringBuilder();
@@ -146,21 +179,6 @@ public class DifferentialExomes
 		}
 		pwDF.flush();
 		pwDF.close();
-
-		// SNP CHR BP P
-		// rs1 1 100000 0.9148
-		// rs2 1 200000 0.9371
-		// rs3 1 400000 0.2861
-		// rs4 1 300000 0.8304
-		// rs5 1 500000 0.6417
-		// rs6 1 600000 0.5191
-
-		String scriptLocation = outputDataFrame.getAbsolutePath() + ".R";
-		String plotLocation = outputDataFrame.getAbsolutePath() + ".png";
-		System.out.println("Creating plot at " + plotLocation + " using " + scriptLocation);
-		Rscript(scriptLocation, plotLocation, outputDataFrame.getCanonicalPath());
-		
-
 	}
 
 	private HashMap<String, Double> calculateGroupChiSq(HashMap<String, Boolean> sampleToLOF, String geneName)
@@ -502,7 +520,7 @@ public class DifferentialExomes
 	 * @throws UnsupportedEncodingException
 	 * @throws FileNotFoundException
 	 */
-	public void Rscript(String scriptLocation, String plotLocation, String dataframeLocation)
+	public static void Rscript(Set<String> groups, String scriptLocation, String plotLocation, String dataframeLocation)
 			throws FileNotFoundException, UnsupportedEncodingException
 	{
 
@@ -513,12 +531,12 @@ public class DifferentialExomes
 		for(String group : groups)
 		{
 			scriptPw.println("hits$P_"+group+" <- as.numeric(hits$P_"+group+")");
+			scriptPw.println("hits$P <- as.numeric(hits$P_"+group+")");
+			scriptPw.println("png(\""+plotLocation+"_"+group+".png\", res=200, width=1920, height=1080)");
+			scriptPw.println("manhattan(hits, col = c(\"blue4\", \"orange3\"))");
+			scriptPw.println("dev.off()");
 		}
-		//preselect 1 group as "the P-value"
-		scriptPw.println("hits$P <- as.numeric(hits$P_"+groups.toArray()[0].toString()+")");
-		scriptPw.println("png(\"" + plotLocation + "\", res=200, width=1920, height=1080)");
-		scriptPw.println("manhattan(hits, col = c(\"blue4\", \"orange3\"))");
-		scriptPw.println("dev.off()");
+		//select 1 group as "the P-value" and plot
 		scriptPw.flush();
 		scriptPw.close();
 

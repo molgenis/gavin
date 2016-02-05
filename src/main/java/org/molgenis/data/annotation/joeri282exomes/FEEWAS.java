@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -15,8 +16,6 @@ import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.annotation.joeri282exomes.struct.GeneGroupsAlleleCountUtils;
 import org.molgenis.data.vcf.VcfRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -53,6 +52,7 @@ public class FEEWAS
 	private List<CandidateVariant> pathogenicVariants;
 	private List<Entity> noJudgmentVariants;
 	private List<Entity> conflictingJudgmentVariants;
+	private LinkedHashMap<String,String> geneLocs = new LinkedHashMap<String,String>();
 	
 	private int variantRefAltGenePatho = 0;
 	private int variantRefAltGeneBenign = 0;
@@ -183,14 +183,15 @@ public class FEEWAS
 						{
 							
 							countGroupSamples(record, i, geneGroupCountsPathogenic, gene);
-							
+							if(!geneLocs.containsKey(gene)) { geneLocs.put(gene, chr + "\t" + pos); }
 					//		System.out.println("geneGroupCountsPathogenic=" + geneGroupCountsPathogenic.toString());
 						}
 
 					}
 					catch(VariantClassificationException e)
 					{
-					//	countGroupSamples(record, i, geneGroupCountsVOUS, gene);
+						countGroupSamples(record, i, geneGroupCountsVOUS, gene);
+						if(!geneLocs.containsKey(gene)) { geneLocs.put(gene, chr + "\t" + pos); }
 					}
 
 				}
@@ -206,6 +207,8 @@ public class FEEWAS
 			pw.flush();
 			pw.close();
 		}
+		geneGroupCountsPathogenic.setGeneLocs(geneLocs);
+		geneGroupCountsVOUS.setGeneLocs(geneLocs);
 		geneGroupCountsPathogenic.writeToFile(new File("/Users/jvelde/FEEWAS_Patho.tsv"));
 		geneGroupCountsVOUS.writeToFile(new File("/Users/jvelde/FEEWAS_VOUS.tsv"));
 		

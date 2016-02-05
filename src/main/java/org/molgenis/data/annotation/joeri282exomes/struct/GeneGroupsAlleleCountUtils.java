@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -22,14 +23,25 @@ public class GeneGroupsAlleleCountUtils
 	{
 		this.genesToGroupsToAlleleCounts = new HashMap<String, HashMap<String, AlleleCounts>>();
 		this.groups = new HashSet<String>();
-		
+		this.geneLocs = new LinkedHashMap<String,String>();
 	}
 	
 	private HashMap<String, HashMap<String, AlleleCounts>> genesToGroupsToAlleleCounts;
 	private Set<String> groups;
+	private LinkedHashMap<String,String> geneLocs;
 	
 	
 	
+	public LinkedHashMap<String, String> getGeneLocs()
+	{
+		return geneLocs;
+	}
+
+	public void setGeneLocs(LinkedHashMap<String, String> geneLocs)
+	{
+		this.geneLocs = geneLocs;
+	}
+
 	public HashMap<String, HashMap<String, AlleleCounts>> getGenesToGroupsToAlleleCounts()
 	{
 		return genesToGroupsToAlleleCounts;
@@ -40,18 +52,19 @@ public class GeneGroupsAlleleCountUtils
 		return groups;
 	}
 
-	public void readFromFile(String fileLoc) throws Exception
+	public void readFromFile(File f) throws Exception
 	{
-		File f = new File(fileLoc);
+		LinkedHashMap<String,String> geneLocsFromFile = new LinkedHashMap<String,String>();
 		Scanner s = new Scanner(f);
 		String header = s.nextLine();
 		String[] headerSplit = header.split("\t");
-		for(String groupInHeader : headerSplit)
+		//0 = gene
+		//1 = chr
+		//2 = pos
+		// 3+ = groups
+		for(int i = 3; i < headerSplit.length; i++)
 		{
-			if(!groupInHeader.isEmpty())
-			{
-				this.groups.add(groupInHeader);
-			}
+			this.groups.add(headerSplit[i]);
 		}
 		
 		String[] groups = this.getGroups().toArray(new String[this.getGroups().size()]);
@@ -60,16 +73,16 @@ public class GeneGroupsAlleleCountUtils
 		{
 			line = s.nextLine();
 			String[] lineSplit = line.split("\t");
-			String gene = null;
-			for(int i = 0; i < lineSplit.length; i++)
+
+			String gene = lineSplit[0];
+			String chr = lineSplit[1];
+			String pos = lineSplit[2];
+			geneLocsFromFile.put(gene, chr + "\t" + pos);
+			
+			for(int i = 3; i < lineSplit.length; i++)
 			{
-				if(i == 0)
-				{
-					gene = lineSplit[i];
-					continue;
-				}
-				
-				String group = groups[i-1];
+
+				String group = groups[i-3];
 				String acString = lineSplit[i];
 				
 			//	System.out.println(gene + " - " + group + " - " + lineSplit[i]);
@@ -83,7 +96,7 @@ public class GeneGroupsAlleleCountUtils
 				
 			}
 		}
-		
+		this.geneLocs = geneLocsFromFile;
 		
 	}
 	
@@ -91,6 +104,7 @@ public class GeneGroupsAlleleCountUtils
 	{
 		PrintWriter pw = new PrintWriter(writeTo);
 		
+		pw.print("gene" + "\t" + "chr" + "\t" + "pos");
 		for(String group : groups)
 		{
 			pw.print("\t" + group);
@@ -100,7 +114,7 @@ public class GeneGroupsAlleleCountUtils
 		for(String gene : this.genesToGroupsToAlleleCounts.keySet())
 		{
 			StringBuffer printLine = new StringBuffer();
-			printLine.append(gene);
+			printLine.append(gene + "\t" + this.geneLocs.get(gene));
 			for(String group : groups)
 			{
 				if(this.genesToGroupsToAlleleCounts.get(gene).containsKey(group))
