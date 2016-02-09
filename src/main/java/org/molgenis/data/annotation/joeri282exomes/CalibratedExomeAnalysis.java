@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
@@ -28,28 +29,76 @@ public class CalibratedExomeAnalysis
 	private static final String MODE_ANALYSIS = "analysis";
 	private static final String MODE_CREATECADDFILE = "create_file_for_cadd";
 	
+	private Set<String> genesForVcfStats = new HashSet<String>();
+	private Set<String> samplesForVcfStats = new HashSet<String>();
+	
 	private HashMap<String, String> sampleToGroup;
 //	private HashMap<String, List<CandidateVariant>> sampleToPathogenicVariants;
 	
-	private List<CandidateVariant> pathogenicVariants;
-	private List<Entity> noJudgmentVariants;
-	private List<Entity> conflictingJudgmentVariants;
+	private List<CandidateVariant> pathoVariants;
+	private List<CandidateVariant> vousVariants;
 	
 	private int variantRefAltGenePatho = 0;
+	private int variantRefAltGeneVOUS = 0;
 	private int variantRefAltGeneBenign = 0;
 	private int variantSkippedBadFilter = 0;
-	private int failedToClassify = 0;
-	private int conflictingClassifications = 0;
-	private int totalVariantSeen = 0;
+	private int noImpact = 0;
+	private int noSamples = 0;
+	private int totalPositionsSeen = 0;
 	private int totalVariantRefAltGeneCombinationsSeen = 0;
+	
+	public void printResultsAsMatrix(List<CandidateVariant> pathoVariants, List<CandidateVariant> vousVariants)
+	{
+		for(String sample : samplesForVcfStats)
+		{
+			System.out.print("\t" + sample);
+		}
+		System.out.print("\n");
+		for(CandidateVariant cvPatho : pathoVariants)
+		{
+			String[] annSplit = cvPatho.getVcfRecord().get("ANN").toString().split("\\|", -1);
+			String cDNA = annSplit[9];
+			System.out.print(cvPatho.gene + ":" + cDNA);
+			for(String sample : samplesForVcfStats)
+			{
+				if(cvPatho.getSampleIds().containsKey(sample))
+				{
+					System.out.print("\t" + "1");
+				}
+				else
+				{
+					System.out.print("\t" + "0");
+				}
+				
+			}
+			System.out.print("\n");
+		}
+		for(CandidateVariant cvVous : vousVariants)
+		{
+			String[] annSplit = cvVous.getVcfRecord().get("ANN").toString().split("\\|", -1);
+			String cDNA = annSplit[9];
+			System.out.print(cvVous.gene + ":" + cDNA);
+			for(String sample : samplesForVcfStats)
+			{
+				if(cvVous.getSampleIds().containsKey(sample))
+				{
+					System.out.print("\t" + "1");
+				}
+				else
+				{
+					System.out.print("\t" + "0");
+				}
+				
+			}
+			System.out.print("\n");
+		}
+	}
 	
 	public void go(String mode, File vcfFile, File patientGroups, File ccggFile, File caddFile) throws Exception
 	{
 		long startTime = System.currentTimeMillis();
-		pathogenicVariants = new ArrayList<CandidateVariant>();
-		noJudgmentVariants = new ArrayList<Entity>();
-		conflictingJudgmentVariants = new ArrayList<Entity>();
-		
+		pathoVariants = new ArrayList<CandidateVariant>();
+		vousVariants = new ArrayList<CandidateVariant>();
 		loadSampleToGroup(patientGroups);
 
 		CCGGUtils ccgg = new CCGGUtils(ccggFile);
@@ -71,11 +120,11 @@ public class CalibratedExomeAnalysis
 		
 		while (it.hasNext())
 		{
-			if(totalVariantSeen % 1000 == 0)
+			if(totalPositionsSeen % 1000 == 0)
 			{
-				System.out.println("Seen " + totalVariantSeen + " variants, in a total of " + totalVariantRefAltGeneCombinationsSeen + " ref/alt/gene combinations. Classified " + variantRefAltGenePatho+ " as pathogenic, " + variantRefAltGeneBenign + " as benign, failed to classify " + failedToClassify + ".");
+				System.out.println("Seen " + totalPositionsSeen + " variants, in a total of " + totalVariantRefAltGeneCombinationsSeen + " ref/alt/gene combinations. Classified " + variantRefAltGenePatho+ " as pathogenic, " + variantRefAltGeneBenign + " as benign, failed to classify/VOUS " + (noSamples+noImpact+variantRefAltGeneVOUS) + ".");
 			}
-			totalVariantSeen++;
+			totalPositionsSeen++;
 			
 			Entity record = it.next();
 
@@ -174,106 +223,48 @@ public class CalibratedExomeAnalysis
 				ArrayList<CandidateVariant> multipleCandidatesForAllele = new ArrayList<CandidateVariant>();
 				for(String gene : genes)
 				{
+					genesForVcfStats.add(gene);
 					totalVariantRefAltGeneCombinationsSeen++;
 					
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 					if(impact == null)
 					{
+						noImpact++;
 						continue;
 					}
 					
 					Judgment judgment = null;
-					try
-					{
-						judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
+				
+					judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
 
+					if (judgment.classification.equals(Judgment.Classification.Pathogn) || judgment.classification.equals(Judgment.Classification.VOUS))
+					{
 						HashMap<String, Entity> samples = findInterestingSamples(record, i, exac_het, exac_hom);
-						if (samples.size() > 0)
+						if(samples.size() > 0)
 						{
 							CandidateVariant cv = new CandidateVariant(record, alt, gene, judgment, samples);
-							multipleCandidatesForAllele.add(cv);
+							if(judgment.classification.equals(Judgment.Classification.Pathogn))
+							{
+								pathoVariants.add(cv);
+								variantRefAltGenePatho++;
+							}
+							if(judgment.classification.equals(Judgment.Classification.VOUS))
+							{
+								vousVariants.add(cv);
+								variantRefAltGeneVOUS++;
+							}
 						}
-
-					}
-					catch(VariantClassificationException e)
-					{
-						
-					}
-
-				}
-				
-				//if no classification, warn only if we are in analysis mode (and we think we have most CADD scores)
-				//TODO: this will go badly for whole genome data, when a lot fails and we put it all in memory?
-				if(multipleCandidatesForAllele.size() == 0)
-				{
-					if(mode.equals(MODE_ANALYSIS))
-					{
-						//System.out.println("WARNING: in analysis mode, but no classification could be made for " + chr + ":" + pos + " " + ref + "/" + alt);
-						//noJudgmentVariants.add(record);
-					}
-					failedToClassify++;
-					continue;
-				}
-				
-				
-				//go through the possible classifications and check if any of them are conflicting
-				//also, if we have a calibrated judgment, 
-				int nrOfBenignClsf = 0;
-				int nrOfPathognClsf = 0;
-				boolean hasCalibratedJudgment = false;
-				for(CandidateVariant cv : multipleCandidatesForAllele)
-				{
-					if(cv.judgment.getClassification().equals(Classification.Benign))
-					{
-						nrOfBenignClsf++;
-					}
-					if(cv.judgment.getClassification().equals(Classification.Pathogn))
-					{
-						nrOfPathognClsf++;
-					}
-					if(cv.judgment.getConfidence().equals(Method.calibrated))
-					{
-						hasCalibratedJudgment = true;
-					}
-				}
-				
-				//check if we have any conflicts
-				if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
-				{
-					System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleCandidatesForAllele.toString() );
-					conflictingClassifications++;
-					conflictingJudgmentVariants.add(record);
-				}
-				else
-				{
-					for(CandidateVariant cv : multipleCandidatesForAllele)
-					{
-						if(cv.judgment.classification.equals(Classification.Benign))
+						else
 						{
-							variantRefAltGeneBenign++;
-							break;
-						}
-						//if we know we have calibrated results, wait for it, then add it, and then break
-						if(hasCalibratedJudgment && cv.judgment.getConfidence().equals(Method.calibrated) && cv.judgment.classification.equals(Classification.Pathogn))
-						{
-							variantRefAltGenePatho++;
-							pathogenicVariants.add(cv);
-							break;
-						}
-						//if not, might as well add this one and be done
-						else if(!hasCalibratedJudgment && cv.judgment.classification.equals(Classification.Pathogn))
-						{
-							variantRefAltGenePatho++;
-							pathogenicVariants.add(cv);
-							break;
+							noSamples++;
 						}
 					}
+					else if(judgment.classification.equals(Judgment.Classification.Benign))
+					{
+						variantRefAltGeneBenign++;
+					}
 				}
-				
-				
-				
 			}
-
 		}
 		vcf.close();
 		
@@ -283,30 +274,36 @@ public class CalibratedExomeAnalysis
 			pw.close();
 		}
 
-		printResults(pathogenicVariants);
+		printResults(pathoVariants, "Pathogenic");
+		printResults(vousVariants, "VOUS");
+		
+		printResultsAsMatrix(pathoVariants, vousVariants);
 		
 		long endTime = System.currentTimeMillis();
 		
 		System.out.println("\n## COUNTS ##\n");
-		System.out.println("total variant seen = " + totalVariantSeen);
-		System.out.println("variants that did not pass QC and were skipped: " + variantSkippedBadFilter);
-		System.out.println("total variants incl. altallele/gene combinations seen = " + totalVariantRefAltGeneCombinationsSeen);
-		System.out.println("relevant combinations, classified benign = " + variantRefAltGeneBenign);
-		System.out.println("relevant combinations, classified pathogenic = " + variantRefAltGenePatho);
-		System.out.println("classification failed = " + failedToClassify);
-		System.out.println("classification conflicting = " + conflictingClassifications);
+		System.out.println("total nr of samples in vcf = " + samplesForVcfStats.size());
+		System.out.println("total nr of genes in vcf = " + genesForVcfStats.size());
+		System.out.println("total positions seen = " + totalPositionsSeen);
+		System.out.println("total positions that did not pass QC and were skipped: " + variantSkippedBadFilter);
+		System.out.println("total variant combinations of alleles and genes seen = " + totalVariantRefAltGeneCombinationsSeen);
+		System.out.println("any combinations classified benign = " + variantRefAltGeneBenign);
+		System.out.println("any combinations classified pathogenic = " + variantRefAltGenePatho);
+		System.out.println("classification failed / VOUS = " + variantRefAltGeneVOUS);
+		System.out.println("classification failed (no samples) = " + noSamples);
+		System.out.println("classification failed (no impact) = " + noImpact);
 		System.out.println("runtime: " + (endTime-startTime)/1000.0 + " seconds, " + totalVariantRefAltGeneCombinationsSeen/((endTime-startTime)/1000.0) + " interpretations per second");
 	
 	}
 	
-	public void printResults(List<CandidateVariant> pathogenicVariants) throws Exception
+	public void printResults(List<CandidateVariant> candVariants, String name) throws Exception
 	{
 		System.out.println("\n## RESULTS ##\n");
 		
 		for(Method conf : Method.values())
 		{
-			System.out.println("\nPathogenic candidates, method: " + conf);
-			for(CandidateVariant cv : pathogenicVariants)
+			System.out.println(name + " candidates, method: " + conf);
+			for(CandidateVariant cv : candVariants)
 			{
 				if(cv.judgment.method.equals(conf))
 				{
@@ -315,15 +312,15 @@ public class CalibratedExomeAnalysis
 					String ann = CCGGUtils.getAnn(cv.getVcfRecord().getString("ANN"), cv.gene, cv.allele);
 					String[] annSplit = ann.split("\\|", -1);
 					String cDNA = annSplit[9];
-					String aaChange = annSplit[10];
+					String aaChange = annSplit[10].isEmpty() ? null : annSplit[10];
 					String effect = annSplit[1];
 					String genomic = cv.vcfRecord.getString("#CHROM") + ":" + cv.vcfRecord.getString("POS") + " " + cv.vcfRecord.getString("REF") + " to " + cv.vcfRecord.getString("ALT");
-					String id = (cv.vcfRecord.getString("ID") != null && !cv.vcfRecord.getString("ID").equals("") && !cv.vcfRecord.getString("ID").equals(".")) ? (", " + cv.vcfRecord.getString("ID")) : "";
-					String gonlAF = cv.vcfRecord.getString("GoNL_AF").equals(".") ? "0" : cv.vcfRecord.getString("GoNL_AF");
+					String id = (cv.vcfRecord.getString("ID") != null && !cv.vcfRecord.getString("ID").equals("") && !cv.vcfRecord.getString("ID").equals(".")) ? cv.vcfRecord.getString("ID") : null;
+					String gonlAF = cv.vcfRecord.getString("GoNL_AF") == null ? "0" : cv.vcfRecord.getString("GoNL_AF");
 					String exacAF = cv.vcfRecord.getString("EXAC_AF") == null ? "0" : cv.vcfRecord.getString("EXAC_AF");
 					String _1kgAF = cv.vcfRecord.getString("Thousand_Genomes_AF") == null ? "0" : cv.vcfRecord.getString("Thousand_Genomes_AF");
 					
-					System.out.println("Variant: " + cv.gene + ":" + cDNA + " (" + aaChange + id + "), genomic: " +genomic + " (pathogenic allele: " + cv.allele + ")");
+					System.out.println("Variant: " + cv.gene + ":" + cDNA + " (" + (aaChange != null ? aaChange + (id != null ? ", " + id: "") : "") + "), genomic: " +genomic + " (pathogenic allele: " + cv.allele + ")");
 					System.out.println("Effect: " + effect + ", GoNL MAF: " + gonlAF+ ", ExAC MAF: " + exacAF+ ", 1KG MAF: " + _1kgAF);
 					System.out.println("Reason: " + cv.getJudgment().reason);
 					
@@ -353,6 +350,9 @@ public class CalibratedExomeAnalysis
 		for (Entity sample : sampleEntities)
 		{
 			String genotype = sample.get("GT").toString();
+			
+			String sampleName = sample.get("ORIGINAL_NAME").toString();
+			samplesForVcfStats.add(sampleName);
 
 			if (genotype.equals("./."))
 			{
@@ -376,7 +376,7 @@ public class CalibratedExomeAnalysis
 					|| genotype.equals("0|" + altIndex) || genotype.equals(altIndex + "|0") )
 			{
 				//interesting!
-				String sampleName = sample.get("ORIGINAL_NAME").toString();
+				
 				hetSampleIds.put(sampleName, sample);
 				hetCount++;
 			}
@@ -385,7 +385,6 @@ public class CalibratedExomeAnalysis
 			if ( genotype.equals(altIndex + "/" + altIndex) || genotype.equals(altIndex + "|" + altIndex) )
 			{
 				//interesting!
-				String sampleName = sample.get("ORIGINAL_NAME").toString();
 				homSampleIds.put(sampleName, sample);
 				homCount++;
 			}

@@ -3,8 +3,7 @@ package org.molgenis.data.annotation.joeri282exomes;
 public class Judgment
 {
 	public enum Classification{
-		Benign, Pathogn
-		//VOUS,
+		Benign, Pathogn, VOUS
 	}
 	
 	public enum Method{

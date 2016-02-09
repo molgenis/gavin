@@ -50,7 +50,7 @@ public class CCGGUtils
 		return geneToEntry.containsKey(gene) ? true : false;
 	}
 	
-	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
+	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore)
 	{
 		//if we have no data for this gene, immediately fall back to the naive method
 		if(!geneToEntry.containsKey(gene))
@@ -122,7 +122,7 @@ public class CCGGUtils
 	}
 	
 	
-	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore) throws Exception
+	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore)
 	{
 		if(MAF > 0.00474)
 		{
@@ -144,7 +144,7 @@ public class CCGGUtils
 			}
 			else
 			{
-				throw new VariantClassificationException("Unable to classify " + gene + "! ");
+				return new Judgment(Judgment.Classification.VOUS, Method.naive, "Unable to classify variant as benign or pathogenic. The combination of "+impact+" impact, a CADD score "+CADDscore +" and MAF of " + MAF + " in " + gene + " is inconclusive.");
 			}
 		}
 	}
