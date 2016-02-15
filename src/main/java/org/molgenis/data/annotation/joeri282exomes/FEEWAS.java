@@ -175,25 +175,23 @@ public class FEEWAS
 					}
 					
 					Judgment judgment = null;
-					try
+					
+					judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
+					
+					if(judgment.classification.equals(Judgment.Classification.Pathogn))
 					{
-						judgment = ccgg.classifyVariant(gene, exac_af, impact, cadd);
 						
-						if(judgment.classification.equals(Judgment.Classification.Pathogn))
-						{
-							
-							countGroupSamples(record, i, geneGroupCountsPathogenic, gene);
-							if(!geneLocs.containsKey(gene)) { geneLocs.put(gene, chr + "\t" + pos); }
-					//		System.out.println("geneGroupCountsPathogenic=" + geneGroupCountsPathogenic.toString());
-						}
-
+						countGroupSamples(record, i, geneGroupCountsPathogenic, gene);
+						if(!geneLocs.containsKey(gene)) { geneLocs.put(gene, chr + "\t" + pos); }
+				//		System.out.println("geneGroupCountsPathogenic=" + geneGroupCountsPathogenic.toString());
 					}
-					catch(VariantClassificationException e)
+					else if(judgment.classification.equals(Judgment.Classification.VOUS))
 					{
 						countGroupSamples(record, i, geneGroupCountsVOUS, gene);
 						if(!geneLocs.containsKey(gene)) { geneLocs.put(gene, chr + "\t" + pos); }
 					}
 
+				
 				}
 				
 				

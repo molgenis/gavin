@@ -49,6 +49,7 @@ public class CalibratedExomeAnalysis
 	
 	public void printResultsAsMatrix(List<CandidateVariant> pathoVariants, List<CandidateVariant> vousVariants)
 	{
+		System.out.print("Gene:variant");
 		for(String sample : samplesForVcfStats)
 		{
 			System.out.print("\t" + sample);
