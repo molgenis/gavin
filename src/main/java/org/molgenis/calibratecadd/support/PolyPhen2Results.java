@@ -61,12 +61,12 @@ public class PolyPhen2Results
 			}
 			else
 			{
-				throw new VariantClassificationException("Unknown PolyPhen2 result: " + pc);
+				return new Judgment(Classification.VOUS, Method.calibrated, "Unknown PolyPhen2 result: " + pc);
 			}
 		}
 		else
 		{
-			throw new VariantClassificationException("No PolyPhen2 result");
+			return new Judgment(Classification.VOUS, Method.calibrated, "No PolyPhen2 result");
 		}
 	}
 	

@@ -41,7 +41,7 @@ public class MSCResults
 	{
 		if(caddScore == null)
 		{
-			throw new VariantClassificationException("CADD score of variant null");
+			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score NULL for" + geneName);
 		}
 		else if(mscFile.containsKey(geneName))
 		{
@@ -56,7 +56,7 @@ public class MSCResults
 		}
 		else
 		{
-			System.out.println("WARNING: no MSC threshold for gene " + geneName);
+			System.out.println("WARNING: no MSC threshold for gene " + geneName + ", try to add it?");
 			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score "+caddScore+" but no MSC threshold for gene " + geneName);
 		}
 	}
