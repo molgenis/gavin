@@ -38,5 +38,15 @@ public class JudgedVariant
 	{
 		return e.getString("ID") + " (" + e.getString("#CHROM") + ":" + e.getString("POS") + " " + e.getString("REF") + " to " + e.getString("ALT") + "), reason: " + judgment.getReason();
 	}
+	@Override
+	public String toString()
+	{
+		return "JudgedVariant [judgment=" + judgment + ", e=" + e + ", expertClassification=" + expertClassification
+				+ ", getJudgment()=" + getJudgment() + ", getE()=" + getE() + ", getExpertClassification()="
+				+ getExpertClassification() + ", printVariant()=" + printVariant() + ", getClass()=" + getClass()
+				+ ", hashCode()=" + hashCode() + ", toString()=" + super.toString() + "]";
+	}
+	
+	
 	
 }

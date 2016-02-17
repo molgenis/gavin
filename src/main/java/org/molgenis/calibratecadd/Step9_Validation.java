@@ -98,11 +98,12 @@ public class Step9_Validation
 	 */
 	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
 	{
-		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "mutationtaster2", "provean", "sift", "polyphen2", "msc"});
+		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "cadd", "mutationtaster2", "provean", "sift", "polyphen2", "msc"});
 		if(!modes.contains(mode))
 		{
 			throw new Exception("mode needs to be one of : " + modes.toString());
 		}
+
 		loadCCGG(ccggLoc);
 		scanMVL(mvlLoc, mode);
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants);
@@ -149,6 +150,8 @@ public class Step9_Validation
 		{
 			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
 		}
+		
+		System.out.println("Running in mode: " + mode);
 
 		while (vcfRepoIter.hasNext())
 		{
@@ -189,62 +192,72 @@ public class Step9_Validation
 				{
 					geneToIdMatchFound = true;
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
-					try
+
+					Judgment judgment;
+					if(mode.equals("naive"))
 					{
-						Judgment judgment;
-						if(mode.equals("naive"))
-						{
-							judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
-						}
-						else if (mode.equals("ponp2"))
-						{
-							judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
-						}
-						else if (mode.equals("mutationtaster2"))
-						{
-							judgment = m2r.classifyVariantUsingMutationTaster2Results(chr, pos, ref, alt);
-						}
-						else if (mode.equals("provean"))
-						{
-							judgment = ps2r.classifyVariantUsingProveanResults(chr, pos, ref, alt);
-						}
-						else if (mode.equals("sift"))
-						{
-							judgment = ps2r.classifyVariantUsingSiftResults(chr, pos, ref, alt);
-						}
-						else if (mode.equals("polyphen2"))
-						{
-							judgment = pf2r.classifyVariantUsingPolyPhen2Results(chr, pos, ref, alt);
-						}
-						else if (mode.equals("msc"))
-						{
-							judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
-						}
-						else
-						{
-							//"ccgg" mode, the default
-							judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
-						}
-						multipleJudgments.add(judgment);
-						//addToMVLResults(judgment, mvlClassfc, mvlName, record);
+						judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
 					}
-					catch(VariantClassificationException e)
+					else if (mode.equals("ponp2"))
 					{
-						//addToMVLResults(null, mvlClassfc, mvlName, record);
+						judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
 					}
+					else if (mode.equals("mutationtaster2"))
+					{
+						judgment = m2r.classifyVariantUsingMutationTaster2Results(chr, pos, ref, alt);
+					}
+					else if (mode.equals("provean"))
+					{
+						judgment = ps2r.classifyVariantUsingProveanResults(chr, pos, ref, alt);
+					}
+					else if (mode.equals("sift"))
+					{
+						judgment = ps2r.classifyVariantUsingSiftResults(chr, pos, ref, alt);
+					}
+					else if (mode.equals("polyphen2"))
+					{
+						judgment = pf2r.classifyVariantUsingPolyPhen2Results(chr, pos, ref, alt);
+					}
+					else if (mode.equals("msc"))
+					{
+						judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
+					}
+					else if (mode.equals("cadd"))
+					{
+						if(CADDscore > 15)
+						{
+							judgment = new Judgment(Classification.Pathogn, Method.calibrated, "CADD score > 15");
+						}
+						else if(CADDscore <= 15)
+						{
+							judgment = new Judgment(Classification.Benign, Method.calibrated, "CADD score <= 15");
+						}
+						else{
+							judgment = new Judgment(Classification.VOUS, Method.calibrated, "CADD score not available");
+						}
+					}
+					else
+					{
+						//"ccgg" mode, the default
+						judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
+					}
+					multipleJudgments.add(judgment);
+					//addToMVLResults(judgment, mvlClassfc, mvlName, record);
 				}
 			}
 			if(hasGeneId && !geneToIdMatchFound)
 			{
 				System.out.println("WARNING: bad data for variant " + chr + ":" + pos + " " + ref + "/" + alt + ", no match from ID field gene to snpeff annotations!");
+				multipleJudgments.add(new Judgment(Classification.VOUS, Method.calibrated, "Bad data!"));
 				//throw new Exception("no gene to id match for " + record.toString());
 			}
 			
 			//if no judgment, add null for this variant
 			if(multipleJudgments.size() == 0)
 			{
-				addToMVLResults(null, mvlClassfc, mvlName, record);
-				continue;
+				throw new Exception("No judgments!");
+			//	addToMVLResults(null, mvlClassfc, mvlName, record);
+		//		continue;
 			}
 			
 			//go through the possible classifications and check if any of them are conflicting

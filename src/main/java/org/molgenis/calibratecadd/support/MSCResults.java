@@ -56,7 +56,8 @@ public class MSCResults
 		}
 		else
 		{
-			throw new VariantClassificationException("No MSC gene threshold available!");
+			System.out.println("WARNING: no MSC threshold for gene " + geneName);
+			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score "+caddScore+" but no MSC threshold for gene " + geneName);
 		}
 	}
 	

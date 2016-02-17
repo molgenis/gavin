@@ -290,6 +290,8 @@ public class ProcessJudgedVariantMVLResults
 	{
 		System.out.println("\nCounts, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;
+		int totalBenign = 0;
+		int totalPathogenic = 0;
 		for(String mvl : judgedMVLVariants.keySet())
 		{
 			System.out.print("\t" + mvl);
@@ -304,8 +306,16 @@ public class ProcessJudgedVariantMVLResults
 			{	
 				for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 				{
-					if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(cl) && (method == null || jv.getJudgment().getConfidence().equals(method)))
+					if(jv.getJudgment().getClassification().equals(cl) && (method == null || jv.getJudgment().getConfidence().equals(method)))
 					{
+						if(jv.getJudgment().getClassification().equals(Classification.Benign))
+						{
+							totalBenign++;
+						}
+						if(jv.getJudgment().getClassification().equals(Classification.Pathogn))
+						{
+							totalPathogenic++;
+						}
 						count++;
 					}
 				}
@@ -323,7 +333,7 @@ public class ProcessJudgedVariantMVLResults
 		{	
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && (method == null || jv.getJudgment().getConfidence().equals(method)))
+				if(method == null || jv.getJudgment().getConfidence().equals(method))
 				{
 					count++;
 				}
@@ -332,7 +342,7 @@ public class ProcessJudgedVariantMVLResults
 			count = 0;
 		}
 		System.out.println("\t" + grandTotal);
-		grandTotalOursClassified = grandTotal;
+		grandTotalOursClassified = totalBenign + totalPathogenic;
 	}
 	
 	
