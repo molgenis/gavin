@@ -13,8 +13,9 @@ public class ProcessJudgedVariantMVLResults
 	private static Integer grandTotalExpertClassified;
 	private static Integer grandTotalOursClassified;
 	private static Double nMCCofAllMVLs;
+	private static Integer _TN_all, _TP_all, _FP_all, _FN_all;
 	
-	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants) throws Exception
+	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, String toolName, String datasetName) throws Exception
 	{
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, null);
@@ -30,6 +31,27 @@ public class ProcessJudgedVariantMVLResults
 		printVOUSresults(judgedMVLVariants, Method.naive);
 		printFalseResults(judgedMVLVariants, Method.calibrated);
 		printFalseResults(judgedMVLVariants, Method.naive);
+		printCodeForPieChart(toolName, datasetName);
+	}
+	
+	public static void printCodeForPieChart(String toolName, String datasetName) throws Exception
+	{
+		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || grandTotalExpertClassified == null)
+		{
+			throw new Exception("Can only print piechart R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified");
+		}
+		
+		System.out.println("TOTAL <- " + grandTotalExpertClassified);
+		System.out.println("TN <- "+_TN_all+"; TP <- "+_TP_all+"; FP <- "+_FP_all+"; FN <- "+_FN_all+"");
+		System.out.println("NC <- TOTAL-TN-TP-FP-FN");
+		System.out.println("slices <- c(TN, TP, FP, FN, NC)");
+		System.out.println("lbls <- c(\"TN\",\"TP\",\"FP\",\"FN\", \"Not cl.\")");
+		System.out.println("pct <- round(slices/sum(slices)*100)");
+		System.out.println("lbls <- paste(lbls, pct)");
+		System.out.println("lbls <- paste(lbls,\"%\",sep=\"\")");
+		System.out.println("png(filename=\"~/"+toolName+"_"+datasetName+".png\",res=100, width=600, height=600)");
+		System.out.println("pie(slices,labels = lbls, col=c(\"#008800\",\"#00ff00\",\"#ff0000\",\"#880000\",\"#cccccc\"), main=\"Applied "+toolName+" on "+datasetName+" (total "+grandTotalExpertClassified+" variants)\")");
+		System.out.println("dev.off() ;");
 	}
 	
 	public static void printYield() throws Exception
@@ -205,6 +227,14 @@ public class ProcessJudgedVariantMVLResults
 		
 		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + nMCCtoString(getNMCC(TP_all, TN_all, FP_all, FN_all)) + "\t" + getOPM(TP_all, TN_all, FP_all, FN_all));
 		nMCCofAllMVLs = getNMCC(TP_all, TN_all, FP_all, FN_all);
+		if(method == null) //mode = 'all'
+		{
+			_TN_all = TN_all;
+			_TP_all = TP_all;
+			_FP_all = FP_all;
+			_FN_all = FN_all;
+		}
+		
 	}
 	
 	private static String getTPR(int TP, int FN)
