@@ -103,19 +103,19 @@ public class Step9_Validation
 		{
 			throw new Exception("mode needs to be one of : " + modes.toString());
 		}
-
-		loadCCGG(ccggLoc);
-		scanMVL(mvlLoc, mode);
-		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants);
-	}
-	
-	public void scanMVL(String mvlLoc, String mode) throws Exception
-	{
 		File mvlFile = new File(mvlLoc);
 		if(!mvlFile.exists())
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
+		loadCCGG(ccggLoc);
+		scanMVL(mvlFile, mode);
+		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, (mvlFile.getName().length() > 10 ? mvlFile.getName().substring(0, 9) : mvlFile.getName()));
+	}
+	
+	public void scanMVL(File mvlFile, String mode) throws Exception
+	{
+		
 		VcfRepository vcfRepo = new VcfRepository(mvlFile, "mvl");
 		
 		java.util.Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
@@ -224,11 +224,11 @@ public class Step9_Validation
 					}
 					else if (mode.equals("cadd"))
 					{
-						if(CADDscore > 15)
+						if(CADDscore != null && CADDscore > 15)
 						{
 							judgment = new Judgment(Classification.Pathogn, Method.calibrated, "CADD score > 15");
 						}
-						else if(CADDscore <= 15)
+						else if(CADDscore != null && CADDscore <= 15)
 						{
 							judgment = new Judgment(Classification.Benign, Method.calibrated, "CADD score <= 15");
 						}
@@ -285,7 +285,7 @@ public class Step9_Validation
 			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
 			{
 				System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
-				addToMVLResults(null, mvlClassfc, mvlName, record);
+				addToMVLResults(new Judgment(Classification.VOUS, Method.calibrated, "Conflict!"), mvlClassfc, mvlName, record);
 			}
 			else
 			{

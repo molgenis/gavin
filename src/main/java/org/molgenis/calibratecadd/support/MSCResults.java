@@ -33,6 +33,10 @@ public class MSCResults
 			{
 				mscFile.put(linesplit[0], Double.parseDouble(linesplit[1]));
 			}
+			else
+			{
+				mscFile.put(linesplit[0], -1.0);
+			}
 		}
 		s.close();
 	}
@@ -43,7 +47,7 @@ public class MSCResults
 		{
 			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score NULL for" + geneName);
 		}
-		else if(mscFile.containsKey(geneName))
+		else if(mscFile.containsKey(geneName) && mscFile.get(geneName) > 0)
 		{
 			if(caddScore > mscFile.get(geneName))
 			{
@@ -53,6 +57,10 @@ public class MSCResults
 			{
 				return new Judgment(Classification.Benign, Method.calibrated, "CADD score "+caddScore+" below MSC threshold " + mscFile.get(geneName));
 			}
+		}
+		else if(mscFile.containsKey(geneName) && mscFile.get(geneName) < 0)
+		{
+			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score "+caddScore+", gene in MSC list but threshold unknown for " + geneName);
 		}
 		else
 		{
