@@ -47,10 +47,16 @@ public class ProveanAndSiftResults
 		{
 			String line = s.nextLine();
 			String[] linesplit = line.split("\t", -1);
-			ProveanClassification proveanPred = ProveanClassification.valueOf(linesplit[1]);
-			SiftClassification siftPred = SiftClassification.valueOf(linesplit[2]);
-			proveanFile.put(linesplit[0], proveanPred);
-			siftFile.put(linesplit[0], siftPred);
+			if(!linesplit[1].isEmpty())
+			{
+				ProveanClassification proveanPred = ProveanClassification.valueOf(linesplit[1]);
+				proveanFile.put(linesplit[0], proveanPred);
+			}
+			if(!linesplit[2].isEmpty())
+			{
+				SiftClassification siftPred = SiftClassification.valueOf(linesplit[2]);
+				siftFile.put(linesplit[0], siftPred);
+			}
 		}
 		s.close();
 	}
@@ -71,12 +77,12 @@ public class ProveanAndSiftResults
 			}
 			else
 			{
-				throw new VariantClassificationException("Unknown PROVEAN result: " + pc);
+				return new Judgment(Classification.VOUS, Method.calibrated, "Unknown PROVEAN result: " + pc);
 			}
 		}
 		else
 		{
-			throw new VariantClassificationException("No PROVEAN result");
+			return new Judgment(Classification.VOUS, Method.calibrated, "No PROVEAN result");
 		}
 	}
 	
@@ -96,12 +102,12 @@ public class ProveanAndSiftResults
 			}
 			else
 			{
-				throw new VariantClassificationException("Unknown SIFT result: " + pc);
+				return new Judgment(Classification.VOUS, Method.calibrated, "SIFT result '"+pc+"'");
 			}
 		}
 		else
 		{
-			throw new VariantClassificationException("No SIFT result");
+			return new Judgment(Classification.VOUS, Method.calibrated, "No SIFT result");
 		}
 	}
 	

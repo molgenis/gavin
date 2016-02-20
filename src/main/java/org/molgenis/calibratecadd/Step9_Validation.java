@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.molgenis.calibratecadd.support.CondelResults;
 import org.molgenis.calibratecadd.support.MSCResults;
 import org.molgenis.calibratecadd.support.MutationTaster2Results;
 import org.molgenis.calibratecadd.support.PONP2Results;
@@ -98,7 +99,7 @@ public class Step9_Validation
 	 */
 	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
 	{
-		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "cadd", "mutationtaster2", "provean", "sift", "polyphen2", "msc"});
+		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "cadd", "mutationtaster2", "provean", "sift", "polyphen2", "msc", "condel"});
 		if(!modes.contains(mode))
 		{
 			throw new Exception("mode needs to be one of : " + modes.toString());
@@ -130,9 +131,10 @@ public class Step9_Validation
 		ProveanAndSiftResults ps2r = null;
 		PolyPhen2Results pf2r = null;
 		MSCResults mscr = null;
+		CondelResults condelr = null;
 		if (mode.equals("ponp2"))
 		{
-			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PONP2_output.tsv"));
+			p2r = new PONP2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/ponp2/5832819162656_prediction.txt"));
 		}
 		if (mode.equals("mutationtaster2"))
 		{
@@ -140,15 +142,19 @@ public class Step9_Validation
 		}
 		if (mode.equals("provean") || mode.equals("sift"))
 		{
-			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PROVEAN_SIFT_output_minimized.tsv"));
+			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/provean/PREDICTIONS_minimized.txt"));
 		}
 		if (mode.equals("polyphen2"))
 		{
-			pf2r = new PolyPhen2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_PolyPhen2_output_minimized.tsv"));
+			pf2r = new PolyPhen2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/polyphen/POLYPHENRESULT-clean.txt"));
 		}
 		if (mode.equals("msc"))
 		{
 			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
+		}
+		if (mode.equals("condel"))
+		{
+			condelr = new CondelResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/condel/condel-results-cleaned.tsv"));
 		}
 		
 		System.out.println("Running in mode: " + mode);
@@ -222,6 +228,10 @@ public class Step9_Validation
 					{
 						judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
 					}
+					else if (mode.equals("condel"))
+					{
+						judgment = condelr.classifyVariantUsingCondelResults(chr, pos, ref, alt);
+					}
 					else if (mode.equals("cadd"))
 					{
 						if(CADDscore != null && CADDscore > 15)
@@ -255,7 +265,7 @@ public class Step9_Validation
 			//if no judgment, add null for this variant
 			if(multipleJudgments.size() == 0)
 			{
-				throw new Exception("No judgments!");
+				throw new Exception("No judgments! should not occur.");
 			//	addToMVLResults(null, mvlClassfc, mvlName, record);
 		//		continue;
 			}
@@ -298,6 +308,7 @@ public class Step9_Validation
 						break;
 					}
 					//if not, might as well add this one and be done
+					//TODO: this means there may be multiple verdicts, e.g. 2x BENIGN for context in two genes, but we only add 1 of them, to keep things a bit more simple
 					else if(!hasCalibratedJudgment)
 					{
 						addToMVLResults(judgment, mvlClassfc, mvlName, record);

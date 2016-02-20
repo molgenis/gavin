@@ -43,6 +43,7 @@ public class MSCResults
 	
 	public Judgment classifyVariantUsingMSCResults(String geneName, Double caddScore) throws Exception
 	{
+		geneName = geneName.toUpperCase();
 		if(caddScore == null)
 		{
 			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score NULL for" + geneName);

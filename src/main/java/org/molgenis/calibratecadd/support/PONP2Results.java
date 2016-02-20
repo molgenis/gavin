@@ -52,7 +52,7 @@ public class PONP2Results
 			PonpClassification pc = ponpFile.get(key);
 			if(pc.equals(PonpClassification.Unknown))
 			{
-				throw new VariantClassificationException("PONP2 result is 'unknown'a");
+				return new Judgment(Classification.VOUS, Method.calibrated, "PON-P2 'unknown'");
 			}
 			else if(pc.equals(PonpClassification.Neutral))
 			{
@@ -69,7 +69,7 @@ public class PONP2Results
 		}
 		else
 		{
-			throw new VariantClassificationException("No PONP2 result");
+			return new Judgment(Classification.VOUS, Method.calibrated, "No PON-P2 result");
 		}
 	}
 	
