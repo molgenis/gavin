@@ -99,7 +99,7 @@ public class Step9_Validation
 	 */
 	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
 	{
-		List<String> modes = Arrays.asList(new String[]{"ccgg", "naive", "ponp2", "cadd", "mutationtaster2", "provean", "sift", "polyphen2", "msc", "condel"});
+		List<String> modes = Arrays.asList(new String[]{"OurTool", "OurToolGenomeWide", "PONP2", "CADD", "MutationTaster2", "PROVEAN", "SIFT", "PolyPhen2", "MSC", "Condel"});
 		if(!modes.contains(mode))
 		{
 			throw new Exception("mode needs to be one of : " + modes.toString());
@@ -111,7 +111,7 @@ public class Step9_Validation
 		}
 		loadCCGG(ccggLoc);
 		scanMVL(mvlFile, mode);
-		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, (mvlFile.getName().length() > 10 ? mvlFile.getName().substring(0, 9) : mvlFile.getName()));
+		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName());
 	}
 	
 	public void scanMVL(File mvlFile, String mode) throws Exception
@@ -132,27 +132,27 @@ public class Step9_Validation
 		PolyPhen2Results pf2r = null;
 		MSCResults mscr = null;
 		CondelResults condelr = null;
-		if (mode.equals("ponp2"))
+		if (mode.equals("PONP2"))
 		{
 			p2r = new PONP2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/ponp2/5832819162656_prediction.txt"));
 		}
-		if (mode.equals("mutationtaster2"))
+		if (mode.equals("MutationTaster2"))
 		{
 			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_MutationTaster2_output_minimized_conflictsRemoved.tsv"));
 		}
-		if (mode.equals("provean") || mode.equals("sift"))
+		if (mode.equals("PROVEAN") || mode.equals("SIFT"))
 		{
 			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/provean/PREDICTIONS_minimized.txt"));
 		}
-		if (mode.equals("polyphen2"))
+		if (mode.equals("PolyPhen2"))
 		{
 			pf2r = new PolyPhen2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/polyphen/POLYPHENRESULT-clean.txt"));
 		}
-		if (mode.equals("msc"))
+		if (mode.equals("MSC"))
 		{
 			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
 		}
-		if (mode.equals("condel"))
+		if (mode.equals("Condel"))
 		{
 			condelr = new CondelResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/condel/condel-results-cleaned.tsv"));
 		}
@@ -200,39 +200,39 @@ public class Step9_Validation
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 
 					Judgment judgment;
-					if(mode.equals("naive"))
+					if(mode.equals("OurToolGenomeWide"))
 					{
 						judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
 					}
-					else if (mode.equals("ponp2"))
+					else if (mode.equals("PONP2"))
 					{
 						judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals("mutationtaster2"))
+					else if (mode.equals("MutationTaster2"))
 					{
 						judgment = m2r.classifyVariantUsingMutationTaster2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals("provean"))
+					else if (mode.equals("PROVEAN"))
 					{
 						judgment = ps2r.classifyVariantUsingProveanResults(chr, pos, ref, alt);
 					}
-					else if (mode.equals("sift"))
+					else if (mode.equals("SIFT"))
 					{
 						judgment = ps2r.classifyVariantUsingSiftResults(chr, pos, ref, alt);
 					}
-					else if (mode.equals("polyphen2"))
+					else if (mode.equals("PolyPhen2"))
 					{
 						judgment = pf2r.classifyVariantUsingPolyPhen2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals("msc"))
+					else if (mode.equals("MSC"))
 					{
 						judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
 					}
-					else if (mode.equals("condel"))
+					else if (mode.equals("Condel"))
 					{
 						judgment = condelr.classifyVariantUsingCondelResults(chr, pos, ref, alt);
 					}
-					else if (mode.equals("cadd"))
+					else if (mode.equals("CADD"))
 					{
 						if(CADDscore != null && CADDscore > 15)
 						{
