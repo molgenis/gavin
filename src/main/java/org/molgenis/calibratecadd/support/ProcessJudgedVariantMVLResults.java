@@ -1,5 +1,8 @@
 package org.molgenis.calibratecadd.support;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,9 +34,20 @@ public class ProcessJudgedVariantMVLResults
 		printVOUSresults(judgedMVLVariants, Method.naive);
 		printFalseResults(judgedMVLVariants, Method.calibrated);
 		printFalseResults(judgedMVLVariants, Method.naive);
-		printCodeForPieChart(toolName, datasetName);
+		//printCodeForPieChart(toolName, datasetName);
+		printCodeForDF(toolName, datasetName);
 	}
 	
+	public static void printCodeForDF(String toolName, String datasetName) throws Exception
+	{
+		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || grandTotalExpertClassified == null)
+		{
+			throw new Exception("Can only print R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified");
+		}
+		
+		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", Total = "+grandTotalExpertClassified+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+"); df <- rbind(df, row)\n";
+		Files.write(Paths.get("/Users/jvelde/dfrows.r"), toR.getBytes(), StandardOpenOption.APPEND);
+	}
 	public static void printCodeForPieChart(String toolName, String datasetName) throws Exception
 	{
 		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || grandTotalExpertClassified == null)
