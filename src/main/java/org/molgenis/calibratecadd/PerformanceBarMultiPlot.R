@@ -47,7 +47,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 }
 
 
-df <- data.frame(Tool=character(), Data=character(), Total=integer(), TN=integer(), TP=integer(), FP=integer(), FN=integer()) 
+df <- data.frame() 
 
 # update this with contents of "dfrows.R" as produced by Step9_Validation
 
