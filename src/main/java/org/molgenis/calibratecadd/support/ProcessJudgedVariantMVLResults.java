@@ -16,7 +16,7 @@ public class ProcessJudgedVariantMVLResults
 	private static Integer grandTotalExpertClassified;
 	private static Integer grandTotalOursClassified;
 	private static Double nMCCofAllMVLs;
-	private static Integer _TN_all, _TP_all, _FP_all, _FN_all;
+	private static Integer _TN_all, _TP_all, _FP_all, _FN_all, _vousB, _vousP;
 	
 	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, String toolName, String datasetName) throws Exception
 	{
@@ -40,12 +40,12 @@ public class ProcessJudgedVariantMVLResults
 	
 	public static void printCodeForDF(String toolName, String datasetName) throws Exception
 	{
-		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || grandTotalExpertClassified == null)
+		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || _vousB == null || _vousP == null || grandTotalExpertClassified == null)
 		{
 			throw new Exception("Can only print R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified");
 		}
 		
-		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", Total = "+grandTotalExpertClassified+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+"); df <- rbind(df, row)\n";
+		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", Total = "+grandTotalExpertClassified+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+", VB = "+_vousB+", VP = "+_vousP+"); df <- rbind(df, row)\n";
 		Files.write(Paths.get("/Users/jvelde/dfrows.r"), toR.getBytes(), StandardOpenOption.APPEND);
 	}
 	public static void printCodeForPieChart(String toolName, String datasetName) throws Exception
@@ -200,6 +200,8 @@ public class ProcessJudgedVariantMVLResults
 		int TP_all = 0;
 		int FP_all = 0;
 		int FN_all = 0;
+		int vousB_all = 0;
+		int vousP_all = 0;
 		
 		for(String mvl : judgedMVLVariants.keySet())
 		{
@@ -231,6 +233,14 @@ public class ProcessJudgedVariantMVLResults
 						FN ++;
 						FN_all ++;
 					}
+					else if((jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getClassification().equals(Classification.VOUS))
+					{
+						vousP_all ++;
+					}
+					else if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.VOUS))
+					{
+						vousB_all ++;
+					}
 				}
 			}
 			
@@ -247,6 +257,8 @@ public class ProcessJudgedVariantMVLResults
 			_TP_all = TP_all;
 			_FP_all = FP_all;
 			_FN_all = FN_all;
+			_vousB = vousB_all;
+			_vousP = vousP_all;
 		}
 		
 	}
