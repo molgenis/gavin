@@ -134,13 +134,13 @@ public class CCGGUtils
 		}
 		else
 		{
-			if(CADDscore != null && CADDscore > 34)
+			if(CADDscore != null && CADDscore > 25)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Method.naive, "CADDscore > 34");
+				return new Judgment(Judgment.Classification.Pathogn, Method.naive, "CADDscore > 25");
 			}
-			else if(CADDscore != null && CADDscore < 2)
+			else if(CADDscore != null && CADDscore < 5)
 			{
-				return new Judgment(Judgment.Classification.Benign, Method.naive, "CADDscore < 2");
+				return new Judgment(Judgment.Classification.Benign, Method.naive, "CADDscore < 5");
 			}
 			else
 			{
