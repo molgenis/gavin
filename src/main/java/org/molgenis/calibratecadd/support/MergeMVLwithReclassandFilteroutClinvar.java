@@ -1,5 +1,6 @@
 package org.molgenis.calibratecadd.support;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.molgenis.data.Entity;
+import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.vcf.VcfRepository;
 import org.molgenis.data.vcf.utils.VcfUtils;
 
@@ -41,12 +43,13 @@ public class MergeMVLwithReclassandFilteroutClinvar
 		print(mergedFilteredRecords, output);
 	}
 	
-	public void print(HashMap<String, Entity> printMe, File output) throws FileNotFoundException
+	public void print(HashMap<String, Entity> printMe, File output) throws MolgenisDataException, IOException
 	{
-		PrintWriter pw = new PrintWriter(output);
+		BufferedWriter pw = new BufferedWriter(new PrintWriter(output));
 		for(String key : printMe.keySet())
 		{
-			pw.println(VcfUtils.convertToVCF(printMe.get(key)));
+			VcfUtils.writeToVcf(printMe.get(key), pw);
+			pw.write('\n');
 		}
 		pw.flush();
 		pw.close();
