@@ -37,6 +37,7 @@ public class CalibratedExomeAnalysis
 	
 	private List<CandidateVariant> pathoVariants;
 	private List<CandidateVariant> vousVariants;
+	private List<CandidateVariant> benignVariants;
 	
 	private int variantRefAltGenePatho = 0;
 	private int variantRefAltGeneVOUS = 0;
@@ -47,7 +48,7 @@ public class CalibratedExomeAnalysis
 	private int totalPositionsSeen = 0;
 	private int totalVariantRefAltGeneCombinationsSeen = 0;
 	
-	public void printResultsAsMatrix(List<CandidateVariant> pathoVariants, List<CandidateVariant> vousVariants)
+	public void printResultsAsMatrix(List<CandidateVariant> pathoVariants, List<CandidateVariant> vousVariants, List<CandidateVariant> benignVariants)
 	{
 		System.out.print("Gene:variant");
 		for(String sample : samplesForVcfStats)
@@ -55,33 +56,21 @@ public class CalibratedExomeAnalysis
 			System.out.print("\t" + sample);
 		}
 		System.out.print("\n");
-		for(CandidateVariant cvPatho : pathoVariants)
+		printVariantListAsMatrix(pathoVariants);
+		printVariantListAsMatrix(vousVariants);
+		printVariantListAsMatrix(benignVariants);
+	}
+	
+	public void printVariantListAsMatrix(List<CandidateVariant> variants)
+	{
+		for(CandidateVariant cv : variants)
 		{
-			String[] annSplit = cvPatho.getVcfRecord().get("ANN").toString().split("\\|", -1);
+			String[] annSplit = cv.getVcfRecord().get("ANN").toString().split("\\|", -1);
 			String cDNA = annSplit[9];
-			System.out.print(cvPatho.gene + ":" + cDNA);
+			System.out.print(cv.gene + ":" + cDNA);
 			for(String sample : samplesForVcfStats)
 			{
-				if(cvPatho.getSampleIds().containsKey(sample))
-				{
-					System.out.print("\t" + "1");
-				}
-				else
-				{
-					System.out.print("\t" + "0");
-				}
-				
-			}
-			System.out.print("\n");
-		}
-		for(CandidateVariant cvVous : vousVariants)
-		{
-			String[] annSplit = cvVous.getVcfRecord().get("ANN").toString().split("\\|", -1);
-			String cDNA = annSplit[9];
-			System.out.print(cvVous.gene + ":" + cDNA);
-			for(String sample : samplesForVcfStats)
-			{
-				if(cvVous.getSampleIds().containsKey(sample))
+				if(cv.getSampleIds().containsKey(sample))
 				{
 					System.out.print("\t" + "1");
 				}
@@ -100,6 +89,7 @@ public class CalibratedExomeAnalysis
 		long startTime = System.currentTimeMillis();
 		pathoVariants = new ArrayList<CandidateVariant>();
 		vousVariants = new ArrayList<CandidateVariant>();
+		benignVariants = new ArrayList<CandidateVariant>();
 		loadSampleToGroup(patientGroups);
 
 		CCGGUtils ccgg = new CCGGUtils(ccggFile);
@@ -270,6 +260,9 @@ public class CalibratedExomeAnalysis
 					}
 					else if(judgment.classification.equals(Judgment.Classification.Benign))
 					{
+						HashMap<String, Entity> samples = findInterestingSamples(record, i, exac_het, exac_hom);
+						CandidateVariant cv = new CandidateVariant(record, alt, gene, judgment, samples);
+						benignVariants.add(cv);
 						variantRefAltGeneBenign++;
 						VcfUtils.writeToVcf(record, benignVariantsVCF);
 						benignVariantsVCF.write('\n');
@@ -292,7 +285,7 @@ public class CalibratedExomeAnalysis
 		printResults(pathoVariants, "Pathogenic");
 		printResults(vousVariants, "VOUS");
 		
-		printResultsAsMatrix(pathoVariants, vousVariants);
+		printResultsAsMatrix(pathoVariants, vousVariants, benignVariants);
 		
 		long endTime = System.currentTimeMillis();
 		
