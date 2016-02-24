@@ -1,5 +1,6 @@
 package org.molgenis.data.annotation.joeri282exomes;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -12,13 +13,12 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.molgenis.calibratecadd.support.LoadCADDWebserviceOutput;
-import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
+import org.molgenis.data.vcf.utils.VcfUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -103,6 +103,10 @@ public class CalibratedExomeAnalysis
 		loadSampleToGroup(patientGroups);
 
 		CCGGUtils ccgg = new CCGGUtils(ccggFile);
+		
+		BufferedWriter pathogenicVariantsVCF = new BufferedWriter(new PrintWriter(new File(vcfFile.getParent(), "pathogenicVariants.vcf")));
+		BufferedWriter benignVariantsVCF = new BufferedWriter(new PrintWriter(new File(vcfFile.getParent(), "benignVariants.vcf")));
+		BufferedWriter vousVariantsVCF = new BufferedWriter(new PrintWriter(new File(vcfFile.getParent(), "vousVariants.vcf")));
 		
 		VcfRepository vcf = new VcfRepository(vcfFile, "vcf");
 		Iterator<Entity> it = vcf.iterator();
@@ -248,11 +252,15 @@ public class CalibratedExomeAnalysis
 							{
 								pathoVariants.add(cv);
 								variantRefAltGenePatho++;
+								VcfUtils.writeToVcf(record, pathogenicVariantsVCF);
+								pathogenicVariantsVCF.write('\n');
 							}
 							if(judgment.classification.equals(Judgment.Classification.VOUS))
 							{
 								vousVariants.add(cv);
 								variantRefAltGeneVOUS++;
+								VcfUtils.writeToVcf(record, vousVariantsVCF);
+								vousVariantsVCF.write('\n');
 							}
 						}
 						else
@@ -263,11 +271,17 @@ public class CalibratedExomeAnalysis
 					else if(judgment.classification.equals(Judgment.Classification.Benign))
 					{
 						variantRefAltGeneBenign++;
+						VcfUtils.writeToVcf(record, benignVariantsVCF);
+						benignVariantsVCF.write('\n');
 					}
 				}
+				
 			}
 		}
 		vcf.close();
+		pathogenicVariantsVCF.close();
+		benignVariantsVCF.close();
+		vousVariantsVCF.close();
 		
 		if(mode.equals(MODE_CREATECADDFILE))
 		{
