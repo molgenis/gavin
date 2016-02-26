@@ -1,5 +1,13 @@
 library(ggplot2)
 
+
+#### COLOURS ####
+## from: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ + lightgray ##
+lightgray <- "#cccccc"; gray <- "#999999"; orange <- "#E69F00"; skyblue <- "#56B4E9"; blueishgreen <- "#009E73"
+yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <- "#CC79A7"
+cbPalette <- c(gray, orange, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)
+
+
 # Multiple plot function
 #
 # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
@@ -100,6 +108,7 @@ row <- data.frame(Tool = "PolyPhen2", Data = "VariBenchTraining", MCC = 0.501623
 row <- data.frame(Tool = "MSC", Data = "VariBenchTraining", MCC = 0.419323295454974, TN = 6246, TP = 5156, FP = 4432, FN = 935, VB = 669, VP = 52); df <- rbind(df, row)
 row <- data.frame(Tool = "Condel", Data = "VariBenchTraining", MCC = 0.6905403588469213, TN = 8501, TP = 5465, FP = 2132, FN = 490, VB = 714, VP = 188); df <- rbind(df, row)
 
+
 #### DERIVED COLUMNS ####
 df$NrClassified <- 0
 df$Total <- 0
@@ -110,11 +119,10 @@ for(i in 1:nrow(df)) {
   df[i,]$Coverage <- df[i,]$NrClassified / df[i,]$Total
 }
 
+
 #### MULTIPLOT ####
 labels = c("TN", "VB", "FP", "FN", "VP", "TP");
-darkblue <- "#0072B2"; orange <- "#E69F00"; red <- "#D55E00"; lightblue <- "#56B4E9"; lightgray <- "#cccccc"; darkgray <- "#999999"
-palette <- c(red, orange, lightblue, darkblue, lightgray, darkgray)
-
+palette <- c(vermillion, orange, skyblue, blue, lightgray, gray)
 for(i in 1:nrow(df)) {
   dfrow <- df[i,]
   counts = c(dfrow$TN, dfrow$VB, dfrow$FP, dfrow$FN, dfrow$VP, dfrow$TP)
@@ -133,16 +141,14 @@ multiplot(
   UMCG_OncoOurToolPlot, UMCG_OncoCADDPlot, UMCG_OncoMSCPlot, UMCG_OncoPONP2Plot, UMCG_OncoSIFTPlot, UMCG_OncoPolyPhen2Plot, UMCG_OncoPROVEANPlot, UMCG_OncoCondelPlot, 
   ClinVarNewOurToolPlot, ClinVarNewCADDPlot, ClinVarNewMSCPlot, ClinVarNewPONP2Plot, ClinVarNewSIFTPlot, ClinVarNewPolyPhen2Plot, ClinVarNewPROVEANPlot, ClinVarNewCondelPlot, 
   MutationTaster2OurToolPlot, MutationTaster2CADDPlot, MutationTaster2MSCPlot, MutationTaster2PONP2Plot, MutationTaster2SIFTPlot, MutationTaster2PolyPhen2Plot, MutationTaster2PROVEANPlot, MutationTaster2CondelPlot, 
-  cols=6)
-
+  cols=6
+)
 
 
 #### MCC plot #### ,fill=factor(Type)
-mccbox <- ggplot() + geom_boxplot(data = df, aes(x = Tool, y = MCC))
-mccbox
-coveragebox <- ggplot() + geom_boxplot(data = df, aes(x = Tool, y = Coverage))
-coveragebox
-yieldbox <- ggplot() + geom_boxplot(data = df, aes(x = Tool, y = (MCC*Coverage)))
-yieldbox
-
+yieldbox <- ggplot() + geom_boxplot(data = df, fill = blueishgreen, aes(x = Tool, y = MCC*Coverage)) + theme_classic() + ggtitle("Overall yield per tool across datasets (correlation x coverage)")
+mccbox <- ggplot() + geom_boxplot(data = df, fill = yellow, aes(x = Tool, y = MCC)) + theme_classic() + ggtitle("Correlation per tool across datasets (Matthews Correlation Coefficient)")
+coveragebox <- ggplot() + geom_boxplot(data = df, fill = reddishpurple, aes(x = Tool, y = Coverage)) + theme_classic() + ggtitle("Coverage per tool across datasets (classified/classified+unclassified)")
+databox <- ggplot() + geom_boxplot(data = df, fill = gray, aes(x = Data, y = MCC*Coverage)) + theme_classic() + ggtitle("Dataset yield differences across tools")
+multiplot(yieldbox, coveragebox, mccbox, databox, cols=2)
 
