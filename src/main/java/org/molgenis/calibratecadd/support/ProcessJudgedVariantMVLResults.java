@@ -15,7 +15,7 @@ public class ProcessJudgedVariantMVLResults
 	
 	private static Integer grandTotalExpertClassified;
 	private static Integer grandTotalOursClassified;
-	private static Double nMCCofAllMVLs;
+	private static Double MCCofAllMVLs;
 	private static Integer _TN_all, _TP_all, _FP_all, _FN_all, _vousB, _vousP;
 	
 	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, String toolName, String datasetName) throws Exception
@@ -40,12 +40,12 @@ public class ProcessJudgedVariantMVLResults
 	
 	public static void printCodeForDF(String toolName, String datasetName) throws Exception
 	{
-		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || _vousB == null || _vousP == null || grandTotalExpertClassified == null)
+		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || _vousB == null || _vousP == null || MCCofAllMVLs == null)
 		{
-			throw new Exception("Can only print R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified");
+			throw new Exception("Can only print R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified, MCCofAllMVLs");
 		}
 		
-		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", Total = "+grandTotalExpertClassified+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+", VB = "+_vousB+", VP = "+_vousP+"); df <- rbind(df, row)\n";
+		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", MCC = "+MCCofAllMVLs+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+", VB = "+_vousB+", VP = "+_vousP+"); df <- rbind(df, row)\n";
 		Files.write(Paths.get("/Users/jvelde/dfrows.r"), toR.getBytes(), StandardOpenOption.APPEND);
 	}
 	public static void printCodeForPieChart(String toolName, String datasetName) throws Exception
@@ -55,7 +55,7 @@ public class ProcessJudgedVariantMVLResults
 			throw new Exception("Can only print piechart R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified");
 		}
 		
-		System.out.println("TOTAL <- " + grandTotalExpertClassified);
+		//System.out.println("TOTAL <- " + grandTotalExpertClassified);
 		System.out.println("TN <- "+_TN_all+"; TP <- "+_TP_all+"; FP <- "+_FP_all+"; FN <- "+_FN_all+"");
 		System.out.println("NC <- TOTAL-TN-TP-FP-FN");
 		System.out.println("slices <- c(TN, TP, FP, FN, NC)");
@@ -68,15 +68,16 @@ public class ProcessJudgedVariantMVLResults
 		System.out.println("dev.off() ;");
 	}
 	
+	//TODO is this correct? grandTotalExpertClassified may contain VOUS variants, which we cannot classify 'wrong' or 'right'.... hmm....
 	public static void printYield() throws Exception
 	{
-		if(grandTotalExpertClassified == null || grandTotalOursClassified == null || nMCCofAllMVLs == null)
+		if(grandTotalExpertClassified == null || grandTotalOursClassified == null || MCCofAllMVLs == null)
 		{
-			throw new Exception("Can only calculate yield when we have grandTotalExpertClassified, grandTotalOursClassified, nMCCofAllMVLs");
+			throw new Exception("Can only calculate yield when we have grandTotalExpertClassified, grandTotalOursClassified, MCCofAllMVLs");
 		}
 		else
 		{
-			System.out.println("\nYield:\n" + grandTotalOursClassified + " / " + grandTotalExpertClassified + " * " + nMCCofAllMVLs + " = " + ((double)grandTotalOursClassified/grandTotalExpertClassified*nMCCofAllMVLs));
+			System.out.println("\nYield:\n" + grandTotalOursClassified + " / " + grandTotalExpertClassified + " * " + MCCofAllMVLs + " = " + ((double)grandTotalOursClassified/grandTotalExpertClassified*MCCofAllMVLs));
 		}
 	}
 	
@@ -194,7 +195,7 @@ public class ProcessJudgedVariantMVLResults
 		System.out.println("\nFalse posities & false negatives, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;
 		
-		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC" + "\t" + "nMCC" + "\t" + "OPM");
+		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC" + "\t" + "OPM");
 		
 		int TN_all = 0;
 		int TP_all = 0;
@@ -244,15 +245,16 @@ public class ProcessJudgedVariantMVLResults
 				}
 			}
 			
-			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP) + "\t" + getNPV(TN, FN) + "\t" + getAcc(TP, TN, FP, FN) + "\t" + getMCC(TP, TN, FP, FN) + "\t" + nMCCtoString(getNMCC(TP, TN, FP, FN)) + "\t" + getOPM(TP, TN, FP, FN));
+			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP) + "\t" + getNPV(TN, FN) + "\t" + getAcc(TP, TN, FP, FN) + "\t" + getMCC(TP, TN, FP, FN) + "\t" + getOPM(TP, TN, FP, FN));
 			
 			
 		}
 		
-		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + nMCCtoString(getNMCC(TP_all, TN_all, FP_all, FN_all)) + "\t" + getOPM(TP_all, TN_all, FP_all, FN_all));
-		nMCCofAllMVLs = getNMCC(TP_all, TN_all, FP_all, FN_all);
+		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + getOPM(TP_all, TN_all, FP_all, FN_all));
+		
 		if(method == null) //mode = 'all'
 		{
+			MCCofAllMVLs = getMCC(TP_all, TN_all, FP_all, FN_all);
 			_TN_all = TN_all;
 			_TP_all = TP_all;
 			_FP_all = FP_all;
@@ -289,14 +291,7 @@ public class ProcessJudgedVariantMVLResults
 	}
 	
 	// https://en.wikipedia.org/wiki/Matthews_correlation_coefficient
-	private static String getMCC(int TP, int TN, int FP, int FN)
-	{
-		double aboveDiv = TP*TN-FP*FN;
-		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
-		return belowDiv == 0 ? "-" : (int)Math.round((aboveDiv/belowDiv)*100) + "%";
-	}
-	
-	private static double getNMCC(int TP, int TN, int FP, int FN)
+	private static double getMCC(int TP, int TN, int FP, int FN)
 	{
 		double aboveDiv = TP*TN-FP*FN;
 		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
@@ -305,19 +300,19 @@ public class ProcessJudgedVariantMVLResults
 			return 0; // arbitrarily set to 0, though could also return "-" or NULL or so..
 		}
 		double mcc = (aboveDiv/belowDiv);
-		double nMcc = ( 1 + mcc ) / 2;
-		return nMcc;
+		//double nMcc = ( 1 + mcc ) / 2;
+		return mcc;
 	}
 	
-	private static String nMCCtoString(double nMCC)
+	private static String MCCtoString(double MCC)
 	{
-		if(nMCC == 0)
+		if(MCC == 0)
 		{
 			return "-";
 		}
 		else
 		{
-			return (int)Math.round((nMCC)*100) + "%";
+			return (int)Math.round((MCC)*100) + "%";
 		}
 	}
 	
