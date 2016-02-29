@@ -285,7 +285,7 @@ public class CalibratedExomeAnalysis
 		printResults(pathoVariants, "Pathogenic");
 		printResults(vousVariants, "VOUS");
 		
-		printResultsAsMatrix(pathoVariants, vousVariants, benignVariants);
+	//	printResultsAsMatrix(pathoVariants, vousVariants, benignVariants);
 		
 		long endTime = System.currentTimeMillis();
 		

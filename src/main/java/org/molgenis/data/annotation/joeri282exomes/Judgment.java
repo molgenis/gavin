@@ -7,7 +7,7 @@ public class Judgment
 	}
 	
 	public enum Method{
-		calibrated, naive
+		calibrated, genomewide
 	}
 	
 	String reason;

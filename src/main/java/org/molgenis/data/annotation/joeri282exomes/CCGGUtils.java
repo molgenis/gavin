@@ -126,25 +126,25 @@ public class CCGGUtils
 	{
 		if(MAF > 0.00474)
 		{
-			return new Judgment(Judgment.Classification.Benign, Method.naive, "MAF > 0.00474");
+			return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, but variant MAF of "+MAF+" is not rare enough to generally be considered pathogenic.");
 		}
 		if(impact.equals(Impact.MODIFIER))
 		{
-			return new Judgment(Judgment.Classification.Benign, Method.naive, "Impact is MODIFIER");
+			return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Variant impact is MODIFIER.");
 		}
 		else
 		{
 			if(CADDscore != null && CADDscore > 25)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Method.naive, "CADDscore > 25");
+				return new Judgment(Judgment.Classification.Pathogn, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, but variant MAF of "+MAF+" is rare enough to be potentially pathogenic and the CADDscore of "+CADDscore+ " is greater than a global threshold of 25.");
 			}
 			else if(CADDscore != null && CADDscore < 5)
 			{
-				return new Judgment(Judgment.Classification.Benign, Method.naive, "CADDscore < 5");
+				return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, and although but variant MAF of "+MAF+" is rare enough to be potentially pathogenic, the CADDscore of "+CADDscore+ " is less than a global threshold of 5.");
 			}
 			else
 			{
-				return new Judgment(Judgment.Classification.VOUS, Method.naive, "Unable to classify variant as benign or pathogenic. The combination of "+impact+" impact, a CADD score "+CADDscore +" and MAF of " + MAF + " in " + gene + " is inconclusive.");
+				return new Judgment(Judgment.Classification.VOUS, Method.genomewide, "Unable to classify variant as benign or pathogenic. The combination of "+impact+" impact, a CADD score "+CADDscore +" and MAF of " + MAF + " in " + gene + " is inconclusive.");
 			}
 		}
 	}

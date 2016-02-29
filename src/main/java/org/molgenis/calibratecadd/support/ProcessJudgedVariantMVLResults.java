@@ -26,14 +26,14 @@ public class ProcessJudgedVariantMVLResults
 		printYield();
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.calibrated);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.calibrated);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.naive);
-		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.naive);
+		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.genomewide);
+		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.genomewide);
 		reportVOUScounts(judgedMVLVariants, Method.calibrated);
 		printVOUSresults(judgedMVLVariants, Method.calibrated);
-		reportVOUScounts(judgedMVLVariants, Method.naive);
-		printVOUSresults(judgedMVLVariants, Method.naive);
+		reportVOUScounts(judgedMVLVariants, Method.genomewide);
+		printVOUSresults(judgedMVLVariants, Method.genomewide);
 		printFalseResults(judgedMVLVariants, Method.calibrated);
-		printFalseResults(judgedMVLVariants, Method.naive);
+		printFalseResults(judgedMVLVariants, Method.genomewide);
 		//printCodeForPieChart(toolName, datasetName);
 		printCodeForDF(toolName, datasetName);
 	}
