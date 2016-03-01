@@ -12,7 +12,9 @@ public class CandidateVariant
 	
 	//allele and gene further specify the context in which this variant was judged
 	String allele;
+	int altIndex;
 	String gene;
+	Double cadd;
 	
 	//the final classification and reason
 	Judgment judgment;
@@ -20,14 +22,26 @@ public class CandidateVariant
 	//the samples with interesting genotypes for this variant (+allele/gene)
 	HashMap<String, Entity> sampleIds;
 
-	public CandidateVariant(Entity vcfRecord, String allele, String gene, Judgment judgment, HashMap<String, Entity> sampleIds)
+	public CandidateVariant(Entity vcfRecord, String allele, int altIndex, String gene, Double cadd, Judgment judgment, HashMap<String, Entity> sampleIds)
 	{
 		super();
 		this.vcfRecord = vcfRecord;
 		this.allele = allele;
+		this.altIndex = altIndex;
 		this.gene = gene;
+		this.cadd = cadd;
 		this.judgment = judgment;
 		this.sampleIds = sampleIds;
+	}
+	
+	public Double getCadd()
+	{
+		return cadd;
+	}
+
+	public int getAltIndex()
+	{
+		return altIndex;
 	}
 
 	public Entity getVcfRecord()
