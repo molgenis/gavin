@@ -310,7 +310,7 @@ public class CalibratedExomeAnalysis
 		
 		for(Method conf : Method.values())
 		{
-			System.out.println(name + " candidates, method: " + conf);
+			System.out.println("# " + name + " candidates, method: " + conf + "\n");
 			for(CandidateVariant cv : candVariants)
 			{
 				if(cv.judgment.method.equals(conf))
@@ -328,7 +328,7 @@ public class CalibratedExomeAnalysis
 					String exacAF = cv.vcfRecord.getString("EXAC_AF") == null ? "0" : cv.vcfRecord.getString("EXAC_AF");
 					String _1kgAF = cv.vcfRecord.getString("Thousand_Genomes_AF") == null ? "0" : cv.vcfRecord.getString("Thousand_Genomes_AF");
 					
-					System.out.println("Variant: " + cv.gene + ":" + cDNA + " (" + (aaChange != null ? aaChange + (id != null ? ", " + id: "") : "") + "), genomic: " +genomic + " (pathogenic allele: " + cv.allele + ")");
+					System.out.println("Variant: " + cv.gene + ":" + cDNA + (aaChange != null || id != null ? " (" : "") + (aaChange != null ? aaChange + (id != null ? ", " + id: "") : "") + (aaChange != null || id != null ? ")" : "") + ", genomic: " +genomic + " (pathogenic allele: " + cv.allele + ")");
 					System.out.println("Effect: " + effect + ", GoNL MAF: " + gonlAF+ ", ExAC MAF: " + exacAF+ ", 1KG MAF: " + _1kgAF);
 					System.out.println("Reason: " + cv.getJudgment().reason);
 					

@@ -64,10 +64,10 @@ public class CCGGUtils
 		// MAF based classification, calibrated
 		if(entry.PathoMAFThreshold != null && MAF > entry.PathoMAFThreshold)
 		{
-			return new Judgment(Classification.Benign, Method.calibrated, "Variant MAF of " + MAF + " is greater than the pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".");
+			return new Judgment(Classification.Benign, Method.calibrated, "Variant MAF of " + MAF + " is greater than the "+gene+" pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".");
 		}
 		
-		String mafReason = "the variant MAF of " + MAF + " is lesser than the pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".";
+		String mafReason = "the variant MAF of " + MAF + " is less than the "+gene+" pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".";
 		
 		// Impact based classification, calibrated
 		if(impact != null)
@@ -101,7 +101,7 @@ public class CCGGUtils
 				}
 				else if(CADDscore < entry.MeanPopulationCADDScore)
 				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
+					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is less than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
 				}
 			}
 			else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
@@ -112,7 +112,7 @@ public class CCGGUtils
 				}
 				else if(CADDscore < entry.Sens95thPerCADDThreshold)
 				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is lesser than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
+					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, "Variant CADD score of " + CADDscore + " is less than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
 				}
 			}
 		}
@@ -130,7 +130,7 @@ public class CCGGUtils
 		}
 		if(impact.equals(Impact.MODIFIER))
 		{
-			return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Variant impact is MODIFIER.");
+			return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Variant is of 'modifier' impact, and therefore unlikely to be pathogenic.");
 		}
 		else
 		{
@@ -140,7 +140,7 @@ public class CCGGUtils
 			}
 			else if(CADDscore != null && CADDscore < 5)
 			{
-				return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, and although but variant MAF of "+MAF+" is rare enough to be potentially pathogenic, the CADDscore of "+CADDscore+ " is less than a global threshold of 5.");
+				return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, but the CADDscore of "+CADDscore+ " is less than a global threshold of 5, although the variant MAF of "+MAF+" is rare enough to be potentially pathogenic.");
 			}
 			else
 			{
