@@ -126,7 +126,7 @@ public class CCGGUtils
 	{
 		if(MAF > 0.00474)
 		{
-			return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, but variant MAF of "+MAF+" is not rare enough to generally be considered pathogenic.");
+			return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Variant MAF of "+MAF+" is not rare enough to generally be considered pathogenic.");
 		}
 		if(impact.equals(Impact.MODIFIER))
 		{
@@ -136,11 +136,11 @@ public class CCGGUtils
 		{
 			if(CADDscore != null && CADDscore > 25)
 			{
-				return new Judgment(Judgment.Classification.Pathogn, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, but variant MAF of "+MAF+" is rare enough to be potentially pathogenic and the CADDscore of "+CADDscore+ " is greater than a global threshold of 25.");
+				return new Judgment(Judgment.Classification.Pathogn, Method.genomewide, "Variant MAF of "+MAF+" is rare enough to be potentially pathogenic and the CADDscore of "+CADDscore+ " is greater than a global threshold of 25.");
 			}
 			else if(CADDscore != null && CADDscore < 5)
 			{
-				return new Judgment(Judgment.Classification.Benign, Method.genomewide, "Not enough known pathogenic "+gene+" variants for in-depth calibration, but the CADDscore of "+CADDscore+ " is less than a global threshold of 5, although the variant MAF of "+MAF+" is rare enough to be potentially pathogenic.");
+				return new Judgment(Judgment.Classification.Benign, Method.genomewide, "CADDscore of "+CADDscore+ " is less than a global threshold of 5, although the variant MAF of "+MAF+" is rare enough to be potentially pathogenic.");
 			}
 			else
 			{
