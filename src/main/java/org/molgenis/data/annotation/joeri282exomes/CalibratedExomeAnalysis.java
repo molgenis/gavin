@@ -16,6 +16,7 @@ import org.molgenis.calibratecadd.support.LoadCADDWebserviceOutput;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
 import org.molgenis.data.vcf.utils.VcfUtils;
@@ -59,6 +60,43 @@ public class CalibratedExomeAnalysis
 		printVariantListAsMatrix(pathoVariants);
 		printVariantListAsMatrix(vousVariants);
 		printVariantListAsMatrix(benignVariants);
+	}
+	
+	public void printResultsAsTable(List<CandidateVariant> pathoVariants, List<CandidateVariant> vousVariants, List<CandidateVariant> benignVariants) throws Exception
+	{
+		System.out.println("Chrom" + "\t" + "Pos" + "\t" + "Ref" + "\t" + "Alt" + "\t" + "AffectingAlt" + "\t" + "AltIndexInVCF" + "\t" + "AffectedGene" + "\t" + "cDNA" + "\t" + "aaChange" + "\t" + "Effect" + "\t" + "ID" + "\t" + "GoNL-AF" + "\t" + "ExAC-AF" + "\t" + "1000G-AF" + "\t" + "CADD-score" + "\t" +  "Classification" + "\t" + "Method" + "\t" + "Reason");
+		printVariantListAsTable(pathoVariants);
+		printVariantListAsTable(vousVariants);
+		printVariantListAsTable(benignVariants);
+	}
+	
+	public void printVariantListAsTable(List<CandidateVariant> variants) throws Exception
+	{
+		for(CandidateVariant cv : variants)
+		{
+			String chr = cv.getVcfRecord().getString("#CHROM");
+			String pos = cv.getVcfRecord().getString("POS");
+			String ref = cv.getVcfRecord().getString("REF");
+			String alt = cv.getVcfRecord().getString("ALT");
+			String altAff = cv.allele;
+			int altIndex = cv.altIndex;
+			String gene = cv.gene;
+			Classification clsf = cv.judgment.classification;
+			Method method = cv.judgment.method;
+			String reason = cv.judgment.reason;
+			String ann = CCGGUtils.getAnn(cv.getVcfRecord().getString("ANN"), cv.gene, cv.allele);
+			String[] annSplit = ann.split("\\|", -1);
+			String cDNA = annSplit[9];
+			String aaChange = annSplit[10].isEmpty() ? "" : annSplit[10];
+			String effect = annSplit[1];
+			//String genomic = cv.vcfRecord.getString("#CHROM") + ":" + cv.vcfRecord.getString("POS") + " " + cv.vcfRecord.getString("REF") + " to " + cv.vcfRecord.getString("ALT");
+			String id = (cv.vcfRecord.getString("ID") != null && !cv.vcfRecord.getString("ID").equals("") && !cv.vcfRecord.getString("ID").equals(".")) ? cv.vcfRecord.getString("ID") : "";
+			String gonlAF = cv.vcfRecord.getString("GoNL_AF") == null ? "0" : (cv.vcfRecord.getString("GoNL_AF").split("\\|", -1)[altIndex].isEmpty() ? "0" : cv.vcfRecord.getString("GoNL_AF").split("\\|", -1)[altIndex]);
+			String exacAF = cv.vcfRecord.getString("EXAC_AF") == null ? "0" : cv.vcfRecord.getString("EXAC_AF").replace(".,", "0,").replace(",.", ",0").split(",", -1)[altIndex];
+			String _1kgAF = cv.vcfRecord.getString("Thousand_Genomes_AF") == null ? "0" : cv.vcfRecord.getString("Thousand_Genomes_AF").replace(".,", "0,").replace(",.", ",0").split(",", -1)[altIndex];
+			Double cadd_STR = cv.cadd;
+			System.out.println(chr + "\t" + pos + "\t" + ref + "\t" + alt + "\t" + altAff + "\t" + altIndex + "\t" + gene + "\t" + cDNA + "\t" + aaChange + "\t" + effect + "\t" + id + "\t" + gonlAF + "\t" + exacAF + "\t" + _1kgAF + "\t" + cadd_STR + "\t" + clsf + "\t" + method + "\t" + reason);
+		}
 	}
 	
 	public void printVariantListAsMatrix(List<CandidateVariant> variants)
@@ -237,7 +275,7 @@ public class CalibratedExomeAnalysis
 						HashMap<String, Entity> samples = findInterestingSamples(record, i, exac_het, exac_hom);
 						if(samples.size() > 0)
 						{
-							CandidateVariant cv = new CandidateVariant(record, alt, gene, judgment, samples);
+							CandidateVariant cv = new CandidateVariant(record, alt, i, gene, cadd, judgment, samples);
 							if(judgment.classification.equals(Judgment.Classification.Pathogn))
 							{
 								pathoVariants.add(cv);
@@ -261,7 +299,7 @@ public class CalibratedExomeAnalysis
 					else if(judgment.classification.equals(Judgment.Classification.Benign))
 					{
 						HashMap<String, Entity> samples = findInterestingSamples(record, i, exac_het, exac_hom);
-						CandidateVariant cv = new CandidateVariant(record, alt, gene, judgment, samples);
+						CandidateVariant cv = new CandidateVariant(record, alt, i, gene, cadd, judgment, samples);
 						benignVariants.add(cv);
 						variantRefAltGeneBenign++;
 						VcfUtils.writeToVcf(record, benignVariantsVCF);
@@ -282,10 +320,12 @@ public class CalibratedExomeAnalysis
 			pw.close();
 		}
 
-		printResults(pathoVariants, "Pathogenic");
-		printResults(vousVariants, "VOUS");
+	//	printResults(pathoVariants, "Pathogenic");
+	//	printResults(vousVariants, "VOUS");
 		
 	//	printResultsAsMatrix(pathoVariants, vousVariants, benignVariants);
+		
+		printResultsAsTable(pathoVariants, vousVariants, benignVariants);
 		
 		long endTime = System.currentTimeMillis();
 		
