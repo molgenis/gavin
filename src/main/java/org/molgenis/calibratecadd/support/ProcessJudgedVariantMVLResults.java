@@ -18,7 +18,7 @@ public class ProcessJudgedVariantMVLResults
 	private static Double MCCofAllMVLs;
 	private static Integer _TN_all, _TP_all, _FP_all, _FN_all, _vousB, _vousP;
 	
-	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, String toolName, String datasetName) throws Exception
+	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, String toolName, String datasetName, int judgmentsInCalibratedGenes) throws Exception
 	{
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, null);
@@ -35,17 +35,17 @@ public class ProcessJudgedVariantMVLResults
 		printFalseResults(judgedMVLVariants, Method.calibrated);
 		printFalseResults(judgedMVLVariants, Method.genomewide);
 		//printCodeForPieChart(toolName, datasetName);
-		printCodeForDF(toolName, datasetName);
+		printCodeForDF(toolName, datasetName, judgmentsInCalibratedGenes);
 	}
 	
-	public static void printCodeForDF(String toolName, String datasetName) throws Exception
+	public static void printCodeForDF(String toolName, String datasetName, int judgmentsInCalibratedGenes) throws Exception
 	{
 		if(_TN_all == null || _TP_all == null || _FP_all == null || _FN_all == null || _vousB == null || _vousP == null || MCCofAllMVLs == null)
 		{
 			throw new Exception("Can only print R code when we have TN_all, TP_all, FP_all, FN_all, grandTotalExpertClassified, MCCofAllMVLs");
 		}
 		
-		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", MCC = "+MCCofAllMVLs+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+", VB = "+_vousB+", VP = "+_vousP+"); df <- rbind(df, row)\n";
+		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", MCC = "+MCCofAllMVLs+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+", ExpBenignAsVOUS = "+_vousB+", ExpPathoAsVOUS = "+_vousP+", VCG = " + judgmentsInCalibratedGenes +", TotalExpertClsf = "+grandTotalExpertClassified+"); df <- rbind(df, row)\n";
 		Files.write(Paths.get("/Users/jvelde/dfrows.r"), toR.getBytes(), StandardOpenOption.APPEND);
 	}
 	public static void printCodeForPieChart(String toolName, String datasetName) throws Exception

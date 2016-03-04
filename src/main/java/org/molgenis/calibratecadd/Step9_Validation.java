@@ -90,7 +90,8 @@ public class Step9_Validation
 	
 	CCGGUtils ccgg;
 	HashMap<String, List<JudgedVariant>> judgedMVLVariants = new HashMap<String, List<JudgedVariant>>();
-
+	int judgmentsInCalibratedGenes = 0;
+	
 	/**
 	 * Take MVL (annotated with CADD, ExAC, SnpEff)
 	 * Take CCGG thresholds
@@ -111,7 +112,7 @@ public class Step9_Validation
 		}
 		loadCCGG(ccggLoc);
 		scanMVL(mvlFile, mode);
-		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName());
+		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes);
 	}
 	
 	public void scanMVL(File mvlFile, String mode) throws Exception
@@ -200,7 +201,11 @@ public class Step9_Validation
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 
 					Judgment judgment;
-					if(mode.equals("OurToolGenomeWide"))
+					if (mode.equals("OurTool"))
+					{
+						judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
+					}
+					else if(mode.equals("OurToolGenomeWide"))
 					{
 						judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
 					}
@@ -248,26 +253,22 @@ public class Step9_Validation
 					}
 					else
 					{
-						//"ccgg" mode, the default
-						judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
+						throw new Exception("Mode unknown: " + mode);
 					}
+					
 					multipleJudgments.add(judgment);
-					//addToMVLResults(judgment, mvlClassfc, mvlName, record);
 				}
 			}
 			if(hasGeneId && !geneToIdMatchFound)
 			{
 				System.out.println("WARNING: bad data for variant " + chr + ":" + pos + " " + ref + "/" + alt + ", no match from ID field gene to snpeff annotations!");
 				multipleJudgments.add(new Judgment(Classification.VOUS, Method.calibrated, "Bad data!"));
-				//throw new Exception("no gene to id match for " + record.toString());
 			}
 			
 			//if no judgment, add null for this variant
 			if(multipleJudgments.size() == 0)
 			{
 				throw new Exception("No judgments! should not occur.");
-			//	addToMVLResults(null, mvlClassfc, mvlName, record);
-		//		continue;
 			}
 			
 			//go through the possible classifications and check if any of them are conflicting
@@ -291,11 +292,16 @@ public class Step9_Validation
 				}
 			}
 			
+			/**
+			 * Now we can assign the final verdict for this variant
+			 */
+			
 			//check if we have any conflicts
+			//TODO could be improved by prioritizing calibrated over genomewide results for our method
 			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
 			{
 				System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
-				addToMVLResults(new Judgment(Classification.VOUS, Method.calibrated, "Conflict!"), mvlClassfc, mvlName, record);
+				addToMVLResults(new Judgment(Classification.VOUS, (hasCalibratedJudgment ? Method.calibrated : Method.genomewide), "Conflicting classification!!"), mvlClassfc, mvlName, record);
 			}
 			else
 			{
@@ -305,6 +311,7 @@ public class Step9_Validation
 					if(hasCalibratedJudgment && judgment.getConfidence().equals(Method.calibrated))
 					{
 						addToMVLResults(judgment, mvlClassfc, mvlName, record);
+						if(mode.equals("OurTool")) { judgmentsInCalibratedGenes++; }
 						break;
 					}
 					//if not, might as well add this one and be done
