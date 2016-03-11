@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.EnumUtils;
 import org.molgenis.calibratecadd.support.CondelResults;
 import org.molgenis.calibratecadd.support.MSCResults;
 import org.molgenis.calibratecadd.support.MutationTaster2Results;
@@ -83,6 +84,10 @@ import org.molgenis.data.vcf.VcfRepository;
 */
 public class Step9_Validation
 {
+	public enum ToolNames{
+		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC, Condel, MutationTaster2
+	}
+	
 	public static void main(String[] args) throws Exception
 	{
 		new Step9_Validation(args[0], args[1], args[2]);
@@ -100,10 +105,9 @@ public class Step9_Validation
 	 */
 	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
 	{
-		List<String> modes = Arrays.asList(new String[]{"OurTool", "OurToolGenomeWide", "PONP2", "CADD", "MutationTaster2", "PROVEAN", "SIFT", "PolyPhen2", "MSC", "Condel"});
-		if(!modes.contains(mode))
+		if(!EnumUtils.isValidEnum(ToolNames.class, mode))
 		{
-			throw new Exception("mode needs to be one of : " + modes.toString());
+			throw new Exception("mode needs to be one of : " + java.util.Arrays.asList(ToolNames.values()));
 		}
 		File mvlFile = new File(mvlLoc);
 		if(!mvlFile.exists())
@@ -111,11 +115,11 @@ public class Step9_Validation
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
 		loadCCGG(ccggLoc);
-		scanMVL(mvlFile, mode);
+		scanMVL(mvlFile, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes);
 	}
 	
-	public void scanMVL(File mvlFile, String mode) throws Exception
+	public void scanMVL(File mvlFile, ToolNames mode) throws Exception
 	{
 		
 		VcfRepository vcfRepo = new VcfRepository(mvlFile, "mvl");
@@ -133,27 +137,27 @@ public class Step9_Validation
 		PolyPhen2Results pf2r = null;
 		MSCResults mscr = null;
 		CondelResults condelr = null;
-		if (mode.equals("PONP2"))
+		if (mode.equals(ToolNames.PONP2))
 		{
 			p2r = new PONP2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/ponp2/5832819162656_prediction.txt"));
 		}
-		if (mode.equals("MutationTaster2"))
+		if (mode.equals(ToolNames.MutationTaster2))
 		{
 			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_MutationTaster2_output_minimized_conflictsRemoved.tsv"));
 		}
-		if (mode.equals("PROVEAN") || mode.equals("SIFT"))
+		if (mode.equals(ToolNames.PROVEAN) || mode.equals(ToolNames.SIFT))
 		{
 			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/provean/PREDICTIONS_minimized.txt"));
 		}
-		if (mode.equals("PolyPhen2"))
+		if (mode.equals(ToolNames.PolyPhen2))
 		{
 			pf2r = new PolyPhen2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/polyphen/POLYPHENRESULT-clean.txt"));
 		}
-		if (mode.equals("MSC"))
+		if (mode.equals(ToolNames.MSC))
 		{
 			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
 		}
-		if (mode.equals("Condel"))
+		if (mode.equals(ToolNames.Condel))
 		{
 			condelr = new CondelResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/condel/condel-results-cleaned.tsv"));
 		}
@@ -201,43 +205,43 @@ public class Step9_Validation
 					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
 
 					Judgment judgment;
-					if (mode.equals("OurTool"))
+					if (mode.equals(ToolNames.GAVIN))
 					{
 						judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
 					}
-					else if(mode.equals("OurToolGenomeWide"))
+					else if(mode.equals(ToolNames.GAVINnocal))
 					{
 						judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
 					}
-					else if (mode.equals("PONP2"))
+					else if (mode.equals(ToolNames.PONP2))
 					{
 						judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals("MutationTaster2"))
+					else if (mode.equals(ToolNames.MutationTaster2))
 					{
 						judgment = m2r.classifyVariantUsingMutationTaster2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals("PROVEAN"))
+					else if (mode.equals(ToolNames.PROVEAN))
 					{
 						judgment = ps2r.classifyVariantUsingProveanResults(chr, pos, ref, alt);
 					}
-					else if (mode.equals("SIFT"))
+					else if (mode.equals(ToolNames.SIFT))
 					{
 						judgment = ps2r.classifyVariantUsingSiftResults(chr, pos, ref, alt);
 					}
-					else if (mode.equals("PolyPhen2"))
+					else if (mode.equals(ToolNames.PolyPhen2))
 					{
 						judgment = pf2r.classifyVariantUsingPolyPhen2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals("MSC"))
+					else if (mode.equals(ToolNames.MSC))
 					{
 						judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
 					}
-					else if (mode.equals("Condel"))
+					else if (mode.equals(ToolNames.Condel))
 					{
 						judgment = condelr.classifyVariantUsingCondelResults(chr, pos, ref, alt);
 					}
-					else if (mode.equals("CADD"))
+					else if (mode.equals(ToolNames.CADD))
 					{
 						if(CADDscore != null && CADDscore > 15)
 						{
@@ -311,7 +315,7 @@ public class Step9_Validation
 					if(hasCalibratedJudgment && judgment.getConfidence().equals(Method.calibrated))
 					{
 						addToMVLResults(judgment, mvlClassfc, mvlName, record);
-						if(mode.equals("OurTool")) { judgmentsInCalibratedGenes++; }
+						if(mode.equals(ToolNames.GAVIN)) { judgmentsInCalibratedGenes++; }
 						break;
 					}
 					//if not, might as well add this one and be done

@@ -17,7 +17,7 @@ Enter as name: 'view-entityreport-specific-ccgg.ftl'
 Enter as value: the content of view-entityreport-specific-ccgg.ftl (found in this directory)
 Press Save.
 
-2) Setup permissions
+4) Setup permissions
 Go to: Admin -> Permission Manager -> Plugin Permissions -> Users
 Select 'anonymous'
 Tick 'view' for 'dataexplorer' and 'home'. Press save.

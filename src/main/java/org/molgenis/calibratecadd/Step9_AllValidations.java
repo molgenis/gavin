@@ -10,7 +10,7 @@ public class Step9_AllValidations
 	{
 		String geneSumm = "/Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv";
 		List<String> datasets = Arrays.asList(new String[]{"ClinVarNew", "MutationTaster2", "UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining"});
-		List<String> tools = Arrays.asList(new String[]{"OurTool", "PONP2", "CADD", "PROVEAN", "SIFT", "PolyPhen2", "MSC", "Condel"});
+		List<String> tools = Arrays.asList(new String[]{"GAVIN", "PONP2", "CADD", "PROVEAN", "SIFT", "PolyPhen2", "MSC", "Condel"});
 		
 		for(String dataset: datasets)
 		{
