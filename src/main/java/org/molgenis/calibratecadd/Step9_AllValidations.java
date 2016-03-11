@@ -8,7 +8,7 @@ public class Step9_AllValidations
 {
 	public static void main(String[] args) throws Exception
 	{
-		String geneSumm = "/Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv";
+		String geneSumm = "/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/GAVIN_calibrations_r0.1.tsv";
 		List<String> datasets = Arrays.asList(new String[]{"ClinVarNew", "MutationTaster2", "UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining"});
 		List<String> tools = Arrays.asList(new String[]{"GAVIN", "PONP2", "CADD", "PROVEAN", "SIFT", "PolyPhen2", "MSC", "Condel"});
 		
@@ -16,7 +16,7 @@ public class Step9_AllValidations
 		{
 			for(String tool: tools)
 			{
-				new Step9_Validation(geneSumm, "/Users/jvelde/Desktop/clinvarcadd/datasets_inoneplace/" + dataset, tool);
+				new Step9_Validation(geneSumm, "/Users/jvelde/github/maven/molgenis-data-cadd/data/goldstandards/" + dataset, tool);
 			}
 		}
 		

@@ -139,27 +139,27 @@ public class Step9_Validation
 		CondelResults condelr = null;
 		if (mode.equals(ToolNames.PONP2))
 		{
-			p2r = new PONP2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/ponp2/5832819162656_prediction.txt"));
+			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/PON-P2.tsv"));
 		}
 		if (mode.equals(ToolNames.MutationTaster2))
 		{
-			m2r = new MutationTaster2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/Prediction_UMCG_MVLs_noClinVar_MutationTaster2_output_minimized_conflictsRemoved.tsv"));
+			m2r = new MutationTaster2Results(new File("n/a"));
 		}
 		if (mode.equals(ToolNames.PROVEAN) || mode.equals(ToolNames.SIFT))
 		{
-			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/provean/PREDICTIONS_minimized.txt"));
+			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/PROVEAN_SIFT.tsv"));
 		}
 		if (mode.equals(ToolNames.PolyPhen2))
 		{
-			pf2r = new PolyPhen2Results(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/polyphen/POLYPHENRESULT-clean.txt"));
+			pf2r = new PolyPhen2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/PolyPhen2.tsv"));
 		}
 		if (mode.equals(ToolNames.MSC))
 		{
-			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
+			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
 		}
 		if (mode.equals(ToolNames.Condel))
 		{
-			condelr = new CondelResults(new File("/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/condel/condel-results-cleaned.tsv"));
+			condelr = new CondelResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/Condel.tsv"));
 		}
 		
 		System.out.println("Running in mode: " + mode);
