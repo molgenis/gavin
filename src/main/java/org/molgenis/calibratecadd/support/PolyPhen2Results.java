@@ -34,7 +34,7 @@ public class PolyPhen2Results
 	{
 		polyphenFile = new HashMap<String, String>();
 		Scanner s = new Scanner(polyphen2results);
-		s.nextLine();
+	//	s.nextLine(); no header!
 		while(s.hasNextLine())
 		{
 			String line = s.nextLine();
