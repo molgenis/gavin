@@ -13,6 +13,11 @@ import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 public class ProcessJudgedVariantMVLResults
 {
 	
+	public static void main(String[] args)
+	{
+		System.out.println(getMCC(12, 2112, 2, 3));
+	}
+	
 	private static Integer grandTotalExpertClassified;
 	private static Integer grandTotalOursClassified;
 	private static Double MCCofAllMVLs;
