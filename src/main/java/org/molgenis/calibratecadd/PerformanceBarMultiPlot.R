@@ -190,6 +190,34 @@ mean(df.polyphen2$Yield)
 mean(df.provean$Yield)
 mean(df.sift$Yield)
 
+mean(df.gavin$MCC)
+mean(df.cadd$MCC)
+mean(df.msc$MCC)
+mean(df.ponp2$MCC)
+mean(df.condel$MCC)
+mean(df.polyphen2$MCC)
+mean(df.provean$MCC)
+mean(df.sift$MCC)
+
+median(df.gavin$MCC)
+median(df.cadd$MCC)
+median(df.msc$MCC)
+median(df.ponp2$MCC)
+median(df.condel$MCC)
+median(df.polyphen2$MCC)
+median(df.provean$MCC)
+median(df.sift$MCC)
+
+median(df.gavin$Yield)
+median(df.cadd$Yield)
+median(df.msc$Yield)
+median(df.ponp2$Yield)
+median(df.condel$Yield)
+median(df.polyphen2$Yield)
+median(df.provean$Yield)
+median(df.sift$Yield)
+
+
 
 # naive yield vs calibration coverage
 nonVousClsfInCalibGenes <- df.gavin$VCG/df.gavin$TotalToolClsfNonVOUS
