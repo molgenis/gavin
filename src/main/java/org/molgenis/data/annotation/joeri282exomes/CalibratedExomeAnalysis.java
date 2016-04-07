@@ -332,6 +332,7 @@ public class CalibratedExomeAnalysis
 		System.out.println("\n## COUNTS ##\n");
 		System.out.println("total nr of samples in vcf = " + samplesForVcfStats.size());
 		System.out.println("total nr of genes in vcf = " + genesForVcfStats.size());
+		System.out.println("genes in vcf = " + genesForVcfStats.toString());
 		System.out.println("total positions seen = " + totalPositionsSeen);
 		System.out.println("total positions that did not pass QC and were skipped: " + variantSkippedBadFilter);
 		System.out.println("total variant combinations of alleles and genes seen = " + totalVariantRefAltGeneCombinationsSeen);
