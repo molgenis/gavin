@@ -120,21 +120,25 @@ for(i in 1:nrow(df)) {
   df[i,]$Yield <- df[i,]$MCC * df[i,]$Coverage
 }
 
-
-#### MULTIPLOT ####
 labels = c("TN", "VB", "FP", "FN", "VP", "TP");
 palette <- c(vermillion, orange, skyblue, blue, lightgray, gray)
+
+#### MULTIPLOT ####
 for(i in 1:nrow(df)) {
   dfrow <- df[i,]
   counts = c(dfrow$TN, dfrow$ExpBenignAsVOUS, dfrow$FP, dfrow$FN, dfrow$ExpPathoAsVOUS, dfrow$TP)
   start = c(0,cumsum(counts)); length(start) <- length(start)-1
   stop <- start+counts
   plotdata <- data.frame(start,stop,labels);
+  lbl <- paste("MCC[covadj] == ", round(dfrow$Yield, 2))
   plot <- ggplot() + geom_rect(data = plotdata, aes(xmin = start, xmax = stop, ymin = 0, ymax = 1, fill = labels)) + scale_fill_manual(values=palette) + theme(axis.text=element_blank(),rect=element_blank(),line = element_blank(), legend.position="none") +
+    annotate("rect", xmin = sum(counts)/2-sum(counts)/4, xmax = sum(counts)/2+sum(counts)/4, ymin = .25, ymax = .75, alpha = .5, fill="white") + theme(axis.title = element_blank()) +
+    annotate("text", x = sum(counts)/2, y = 0.5, label = lbl, parse=TRUE) +
     ggtitle(paste(dfrow$Data, "classified by",dfrow$Tool))
   assign(paste(dfrow$Data,dfrow$Tool,"Plot",sep=""), plot)
 }
 
+## MULTIPLOT LAYOUT 1
 multiplot(
   VariBenchTrainingGAVINPlot, VariBenchTrainingCADDPlot, VariBenchTrainingMSCPlot, VariBenchTrainingPONP2Plot, VariBenchTrainingSIFTPlot, VariBenchTrainingPolyPhen2Plot, VariBenchTrainingPROVEANPlot, VariBenchTrainingCondelPlot, 
   VariBenchTestGAVINPlot, VariBenchTestCADDPlot, VariBenchTestMSCPlot, VariBenchTestPONP2Plot, VariBenchTestSIFTPlot, VariBenchTestPolyPhen2Plot, VariBenchTestPROVEANPlot, VariBenchTestCondelPlot, 
@@ -145,6 +149,7 @@ multiplot(
   cols=6
 )
 
+## MULTIPLOT LAYOUT 2
 multiplot(
   UMCG_VariousGAVINPlot, UMCG_VariousCADDPlot, UMCG_VariousMSCPlot, UMCG_VariousPONP2Plot, UMCG_VariousSIFTPlot, UMCG_VariousPolyPhen2Plot, UMCG_VariousPROVEANPlot, UMCG_VariousCondelPlot, 
   UMCG_OncoGAVINPlot, UMCG_OncoCADDPlot, UMCG_OncoMSCPlot, UMCG_OncoPONP2Plot, UMCG_OncoSIFTPlot, UMCG_OncoPolyPhen2Plot, UMCG_OncoPROVEANPlot, UMCG_OncoCondelPlot, 
@@ -156,11 +161,33 @@ multiplot(
 )
 
 
+#condensed per tool, sum of all data performances
+for(i in unique(df$Tool)) {
+  dfrow <- subset(df, Tool == i)
+  counts = c(sum(dfrow$TN), sum(dfrow$ExpBenignAsVOUS), sum(dfrow$FP), sum(dfrow$FN), sum(dfrow$ExpPathoAsVOUS), sum(dfrow$TP))
+  start = c(0,cumsum(counts)); length(start) <- length(start)-1
+  stop <- start+counts
+  plotdata <- data.frame(start,stop,labels);
+  lbl <- paste("MCC[covadj] == ", round(median(dfrow$Yield), 2))
+  plot <- ggplot() + geom_rect(data = plotdata, aes(xmin = start, xmax = stop, ymin = 0, ymax = 1, fill = labels)) + scale_fill_manual(values=palette) + theme(axis.text=element_blank(),rect=element_blank(),line = element_blank(), legend.position="none") +
+    annotate("rect", xmin = sum(counts)/2-sum(counts)/4, xmax = sum(counts)/2+sum(counts)/4, ymin = .25, ymax = .75, alpha = .5, fill="white") + theme(axis.title = element_blank()) +
+    annotate("text", x = sum(counts)/2, y = 0.5, label = lbl, parse=TRUE) +
+    annotate("text", x = (sum(counts)/2.25), y = 0.7, label = "median for 6 sets", size=3.5) +
+    ggtitle(paste(dfrow$Tool, ", all variants", sep=""))
+  assign(paste("AllData",dfrow$Tool,"Plot",sep=""), plot)
+}
+multiplot(
+  AllDataGAVINPlot, AllDataCondelPlot, AllDataMSCPlot, AllDataCADDPlot, AllDataPolyPhen2Plot, AllDataPROVEANPlot, AllDataPONP2Plot, AllDataSIFTPlot, cols=2
+)
+
+
+# "Overall yield per tool across datasets (correlation x coverage)"
+
 #### MCC plot #### ,fill=factor(Type)
-yieldbox <- ggplot() + geom_boxplot(data = df, fill = blueishgreen, aes(x = Tool, y = MCC*Coverage)) + theme_classic() + ggtitle("Overall yield per tool across datasets (correlation x coverage)")
-mccbox <- ggplot() + geom_boxplot(data = df, fill = yellow, aes(x = Tool, y = MCC)) + theme_classic() + ggtitle("Correlation per tool across datasets (Matthews Correlation Coefficient)")
-coveragebox <- ggplot() + geom_boxplot(data = df, fill = reddishpurple, aes(x = Tool, y = Coverage)) + theme_classic() + ggtitle("Coverage per tool across datasets (classified/classified+unclassified)")
-databox <- ggplot() + geom_boxplot(data = df, fill = gray, aes(x = Data, y = MCC*Coverage)) + theme_classic() + ggtitle("Dataset yield differences across tools")
+yieldbox <- ggplot() + geom_boxplot(data = df, fill = blueishgreen, aes(x = Tool, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle(expression(paste("", MCC[cadj], "per tool across datasets")))
+mccbox <- ggplot() + geom_boxplot(data = df, fill = yellow, aes(x = Tool, y = MCC)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("MCC per tool across datasets")
+coveragebox <- ggplot() + geom_boxplot(data = df, fill = reddishpurple, aes(x = Tool, y = Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("Coverage per tool across datasets")
+databox <- ggplot() + geom_boxplot(data = df, fill = gray, aes(x = Data, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + scale_x_discrete(breaks=c("UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining", "MutationTaster2", "ClinVarNew"), labels=c("UMCG-Onco", "UMCG-Various", "VB-Test", "VB-Training", "MT2-Test", "ClinVarNew")) + ggtitle(expression(paste("Dataset", MCC[cadj], "distribution across tools")))
 multiplot(yieldbox, coveragebox, mccbox, databox, cols=2)
 
 
@@ -173,6 +200,7 @@ df.condel <- subset(df, Tool == "Condel")
 df.polyphen2 <- subset(df, Tool == "PolyPhen2")
 df.provean <- subset(df, Tool == "PROVEAN")
 df.sift <- subset(df, Tool == "SIFT")
+
 df.onco <- subset(df, Data == "UMCG_Onco")
 df.various <- subset(df, Data == "UMCG_Various")
 df.vbtest <- subset(df, Data == "VariBenchTest")
@@ -241,7 +269,7 @@ plot <- ggplot() + geom_point(data = yieldComp, aes(xmin=0,xmax=1,x = calibcov, 
   theme_bw() +
   theme(legend.position="none", panel.grid.major = element_line(colour = "darkgray"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
   xlab("Percentage of variants located in calibrated genes") +
-  ylab("Yield improvement of GAVIN, relative to dataset average for all tools") +
+  ylab(expression(~MCC[covadj]~"improvement of GAVIN, relative to dataset average for all tools")) +
   ggtitle(expression("Yield improves when genes are calibrated ("~R^{2}~" = 0.40)"))
 plot
 
