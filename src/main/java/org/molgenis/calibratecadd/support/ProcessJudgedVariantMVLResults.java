@@ -15,7 +15,7 @@ public class ProcessJudgedVariantMVLResults
 	
 	public static void main(String[] args)
 	{
-		System.out.println(getMCC(12, 2112, 2, 3));
+		System.out.println(getMCC(6028, 11730, 1670, 1094));
 	}
 	
 	private static Integer grandTotalExpertClassified;
@@ -296,7 +296,7 @@ public class ProcessJudgedVariantMVLResults
 	}
 	
 	// https://en.wikipedia.org/wiki/Matthews_correlation_coefficient
-	private static double getMCC(int TP, int TN, int FP, int FN)
+	public static double getMCC(int TP, int TN, int FP, int FN)
 	{
 		double aboveDiv = TP*TN-FP*FN;
 		double belowDiv = Math.sqrt((double)(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN));
