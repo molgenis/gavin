@@ -114,7 +114,7 @@ public class Step9_Validation
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
-		loadCCGG(ccggLoc);
+		this.ccgg = loadCCGG(ccggLoc);
 		scanMVL(mvlFile, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes);
 	}
@@ -341,7 +341,7 @@ public class Step9_Validation
 		variants.add(new JudgedVariant(judgment, variant, ExpertClassification.valueOf(mvlClasfc)));
 	}
 	
-	public void loadCCGG(String ccggLoc) throws Exception
+	public static CCGGUtils loadCCGG(String ccggLoc) throws Exception
 	{
 		File ccggFile = new File(ccggLoc);
 		if(!ccggFile.exists())
@@ -349,6 +349,6 @@ public class Step9_Validation
 			throw new Exception("CCGG file "+ccggFile+" does not exist or is directory");
 		}
 		CCGGUtils ccggUtils = new CCGGUtils(ccggFile);
-		this.ccgg = ccggUtils;
+		return ccggUtils;
 	}
 }
