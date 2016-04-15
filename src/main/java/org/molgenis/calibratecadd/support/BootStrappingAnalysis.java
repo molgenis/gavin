@@ -1,13 +1,17 @@
 package org.molgenis.calibratecadd.support;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.molgenis.calibratecadd.Step9_Validation;
-import org.molgenis.calibratecadd.Step9_Validation.ToolNames;
+import org.molgenis.calibratecadd.support.BootStrappingVariant.OutCome;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
@@ -22,16 +26,136 @@ public class BootStrappingAnalysis
 	public static void main(String[] args) throws Exception
 	{
 
-		new BootStrappingAnalysis(args[0], args[1], Integer.parseInt(args[2]));
+		new BootStrappingAnalysis(args[0], args[1], args[3]);
 
 	}
 	
-	int TP = 0;
-	int TN = 0;
-	int FP = 0;
-	int FN = 0;
-	int VOUS = 0;
-	int judgmentsInCalibratedGenes = 0;
+	private List<BootStrappingVariant> variantClsfResults = new ArrayList<BootStrappingVariant>();
+	String outputFile;
+	
+	public void getStatsOnFullSet() throws Exception
+	{
+		getStatsOnSet(variantClsfResults);
+	}
+			
+	
+	public void getStatsOnSet(List<BootStrappingVariant> set) throws Exception
+	{
+		int TP = 0;
+		int TN = 0;
+		int FP = 0;
+		int FN = 0;
+		int VOUS = 0;
+		int judgmentsInCalibratedGenes = 0;
+		
+		for(BootStrappingVariant bv : set)
+		{
+			switch (bv.getOutcome()) {
+				case TP:  TP++; break;
+				case TN:  TN++; break;
+				case FP:  FP++; break;
+				case FN:  FN++; break;
+				case VOUS:  VOUS++; break;
+				default : throw new Exception("no outcome");
+			}
+			if(bv.inCalibGene)
+			{
+				judgmentsInCalibratedGenes++;
+			}
+		}
+		
+		System.out.println("TN = " + TN);
+		System.out.println("TP = " + TP);
+		System.out.println("FP = " + FP);
+		System.out.println("FN = " + FN);
+		System.out.println("VOUS = " + VOUS);
+		double MCC = ProcessJudgedVariantMVLResults.getMCC(TP, TN, FP, FN);
+		System.out.println("MCC = " + MCC);
+		double cov = (TP+TN+FP+FN)/(double)(TP+TN+FP+FN+VOUS);
+		System.out.println("MCCcovadj = " + (cov*MCC));
+		double percCalib = judgmentsInCalibratedGenes/(double)set.size();
+		System.out.println("% calibrated: " + judgmentsInCalibratedGenes + "/" + set.size() + " = " + percCalib);
+		
+		String toR = "row <- data.frame(MCCcovadj = "+(cov*MCC)+", percCalib = "+percCalib+"); df <- rbind(df, row)\n";
+		Files.write(Paths.get(outputFile), toR.getBytes(), StandardOpenOption.APPEND);
+
+	}
+	
+	public List<BootStrappingVariant> randomSubset(int sampleSize)
+	{
+		ArrayList<BootStrappingVariant> result = new ArrayList<BootStrappingVariant>();
+		Collections.shuffle(variantClsfResults);
+		for (int i = 0; i < sampleSize; i++)
+		{
+			result.add(variantClsfResults.get(i));
+		}
+		return result;
+	}
+	
+	public  List<BootStrappingVariant> downSampleToUniformCalibPercDistr(List<BootStrappingVariant> set) throws Exception
+	{
+		ArrayList<BootStrappingVariant> result = new ArrayList<BootStrappingVariant>();
+		int judgmentsInCalibratedGenes = 0;
+		for(BootStrappingVariant bv : set)
+		{
+			if(bv.inCalibGene)
+			{
+				judgmentsInCalibratedGenes++;
+			}
+		}
+		
+		//uniform distribution of the percentage of variants in calibrated genes
+		double wantedPercCalib = new Random().nextDouble();
+
+		System.out.println("set.size() = " + set.size());
+		System.out.println("judgmentsInCalibratedGenes = " + judgmentsInCalibratedGenes);
+		int judgmentsInUncalibratedGenes = set.size()-judgmentsInCalibratedGenes;
+		System.out.println("judgmentsInUncalibratedGenes = " + judgmentsInUncalibratedGenes);
+		double currentPercCalib = judgmentsInCalibratedGenes/(double)set.size();
+		System.out.println("current percCalib = " + currentPercCalib);
+		System.out.println("wanted percCalib = " + wantedPercCalib);
+
+		
+		int nrOfUncalibVariantsToDelete = 0;
+		int nrOfCalibVariantsToDelete = 0;
+		if(wantedPercCalib > currentPercCalib)
+		{
+			int targetAmountOfUncalib = (int) Math.round((judgmentsInCalibratedGenes/wantedPercCalib)-judgmentsInCalibratedGenes);
+			System.out.println("target uncalib amount = " + targetAmountOfUncalib);
+			nrOfUncalibVariantsToDelete = judgmentsInUncalibratedGenes-targetAmountOfUncalib;
+			System.out.println("nrOfUncalibVariantsToDelete = " + nrOfUncalibVariantsToDelete);
+		}
+		else
+		{
+			int targetAmountOfCalib = (int) Math.round((judgmentsInUncalibratedGenes/(1-wantedPercCalib))-judgmentsInUncalibratedGenes);
+			System.out.println("target calib amount = " + targetAmountOfCalib);
+			nrOfCalibVariantsToDelete = judgmentsInCalibratedGenes-targetAmountOfCalib;
+			System.out.println("nrOfCalibVariantsToDelete = " + nrOfCalibVariantsToDelete);
+		}
+		
+		for(BootStrappingVariant bv : set)
+		{
+			if(bv.inCalibGene && nrOfCalibVariantsToDelete > 0)
+			{
+				//dont add to result but subtract one from the amount to leave out
+				nrOfCalibVariantsToDelete--;
+				continue;
+			}
+			
+			if(!bv.inCalibGene && nrOfUncalibVariantsToDelete > 0)
+			{
+				//dont add to result but subtract one from the amount to leave out
+				nrOfUncalibVariantsToDelete--;
+				continue;
+			}
+
+			result.add(bv);
+		}
+		
+			
+		return result;
+	}
+	
 
 	/**
 	 * checked to give the exact same behaviour as Step9_Validation
@@ -40,29 +164,23 @@ public class BootStrappingAnalysis
 	 * @param gavinFile
 	 * @throws Exception
 	 */
-	public BootStrappingAnalysis(String vcfFile, String gavinFile, int bootstrapsize) throws Exception
+	public BootStrappingAnalysis(String vcfFile, String gavinFile, String outputFile) throws Exception
 	{
-
-	
+		this.outputFile = outputFile;
+		File yourFile = new File(outputFile);
+		if(!yourFile.exists()) {
+		    yourFile.createNewFile();
+			Files.write(Paths.get(outputFile), "df <- data.frame()\n".getBytes(), StandardOpenOption.APPEND);
+		} 
+		
 		CCGGUtils gavin = Step9_Validation.loadCCGG(gavinFile);
 		
 		// file with combined variants has 25,995 variants
 		File variantList = new File(vcfFile);
 
-		// get 100 random numbers in the range 1-25995
-		ArrayList<Integer> list = new ArrayList<Integer>();
-		ArrayList<Integer> randomX = new ArrayList<Integer>();
-		for (int i = 1; i <= 25995; i++)
-		{
-			list.add(i);
-		}
-		Collections.shuffle(list);
-		for (int i = 0; i < bootstrapsize; i++)
-		{
-			randomX.add(list.get(i));
-		}
 		
-		System.out.println("selected line nrs: " + randomX.toString());
+		
+	//	System.out.println("selected line nrs: " + randomX.toString());
 
 		VcfRepository vcfRepo = new VcfRepository(variantList, "vcf");
 
@@ -74,13 +192,6 @@ public class BootStrappingAnalysis
 			lineNr++;
 			
 			Entity record = vcfRepoIter.next();
-		
-			if(!randomX.contains(lineNr))
-			{
-				continue;
-			}
-			System.out.println("get this line: " + lineNr);
-			
 			
 			String chr = record.getString("#CHROM");
 			String pos = record.getString("POS");
@@ -163,7 +274,7 @@ public class BootStrappingAnalysis
 			//TODO could be improved by prioritizing calibrated over genomewide results for our method
 			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
 			{
-				count(Classification.VOUS, mvlClassfc);
+				addToFullSetClsfOutcomes(Classification.VOUS, mvlClassfc, hasCalibratedJudgment);
 			//	System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
 			}
 			else
@@ -174,8 +285,8 @@ public class BootStrappingAnalysis
 					if(hasCalibratedJudgment && judgment.getConfidence().equals(Method.calibrated))
 					{
 					//	addToMVLResults(judgment, mvlClassfc, mvlName, record);
-						judgmentsInCalibratedGenes++;
-						count(judgment.getClassification(), mvlClassfc);
+					//	judgmentsInCalibratedGenes++;
+						addToFullSetClsfOutcomes(judgment.getClassification(), mvlClassfc, true);
 						break;
 					}
 					//if not, might as well add this one and be done
@@ -184,54 +295,41 @@ public class BootStrappingAnalysis
 					{
 					//	addToMVLResults(judgment, mvlClassfc, mvlName, record);
 						
-						count(judgment.getClassification(), mvlClassfc);
+						addToFullSetClsfOutcomes(judgment.getClassification(), mvlClassfc, false);
 						break;
 					}
 				}
 			}
 
 		}
-		
-		
-		System.out.println("TN = " + TN);
-		System.out.println("TP = " + TP);
-		System.out.println("FP = " + FP);
-		System.out.println("FN = " + FN);
-		System.out.println("VOUS = " + VOUS);
-		double MCC = ProcessJudgedVariantMVLResults.getMCC(TP, TN, FP, FN);
-		System.out.println("MCC = " + MCC);
-		double cov = (TP+TN+FP+FN)/(double)(TP+TN+FP+FN+VOUS);
-		System.out.println("MCCcovadj = " + (cov*MCC));
-		double percCalib = judgmentsInCalibratedGenes/(double)bootstrapsize;
-		System.out.println("% calibrated: " + judgmentsInCalibratedGenes + "/" + bootstrapsize + " = " + percCalib);
-		
+	
 	}
 	
-	public void count (Classification observed, String expected)
+	private void addToFullSetClsfOutcomes (Classification observed, String expected, boolean hasCalibratedJudgment)
 	{
 		if(observed.equals(Classification.Benign) && (expected.equals("B") ||  expected.equals("LB")))
 		{
-			TN++;
+			variantClsfResults.add(new BootStrappingVariant(OutCome.TN, hasCalibratedJudgment));
 		}
 		
 		if(observed.equals(Classification.Benign) && (expected.equals("P") ||  expected.equals("LP")))
 		{
-			FN++;
+			variantClsfResults.add(new BootStrappingVariant(OutCome.FN, hasCalibratedJudgment));
 		}
 		
 		if(observed.equals(Classification.Pathogn) && (expected.equals("B") ||  expected.equals("LB")))
 		{
-			FP++;
+			variantClsfResults.add(new BootStrappingVariant(OutCome.FP, hasCalibratedJudgment));
 		}
 		
 		if(observed.equals(Classification.Pathogn) && (expected.equals("P") ||  expected.equals("LP")))
 		{
-			TP++;
+			variantClsfResults.add(new BootStrappingVariant(OutCome.TP, hasCalibratedJudgment));
 		}
 		
 		if(observed.equals(Classification.VOUS) && (expected.equals("P") ||  expected.equals("LP") || expected.equals("B") ||  expected.equals("LB")))
 		{
-			VOUS++;
+			variantClsfResults.add(new BootStrappingVariant(OutCome.VOUS, hasCalibratedJudgment));
 		}
 				
 		
