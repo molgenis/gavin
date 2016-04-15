@@ -273,3 +273,31 @@ plot <- ggplot() + geom_point(data = yieldComp, aes(xmin=0,xmax=1,x = calibcov, 
   ggtitle(expression("Yield improves when genes are calibrated ("~R^{2}~" = 0.40)"))
 plot
 
+
+
+
+### 
+
+#df <- data.frame()
+#row <- data.frame(MCCcovadj = 0.6289471382416062, percCalib = 0.44); df <- rbind(df, row)
+#row <- data.frame(MCCcovadj = 0.6366938014288426, percCalib = 0.7215496368038741); df <- rbind(df, row) 
+
+source("/Users/jvelde/bootstrapresults.r")
+
+lmDat <- lm(df$MCCcovadj ~ df$percCalib)
+summary(lmDat)$r.squared
+lmCoeff <- coef(lmDat)
+#plot(df$MCCcovadj ~ df$percCalib, xlim=c(0, 1), ylim=c(.45, .85))
+#abline(a = lmCoeff[1], b = lmCoeff[2])
+
+plot <- ggplot() + geom_point(data = df, aes(xmin=0, xmax=1, x = percCalib, y = MCCcovadj)) +
+  geom_abline(intercept = lmCoeff[1], slope = lmCoeff[2], size=2) +
+  theme_bw() +
+  theme(legend.position="none", panel.grid.major = element_line(colour = "darkgray"), axis.text=element_text(size=12)) +
+  xlab("Percentage of variants located in calibrated genes") +
+  ylab(expression(~MCC[covadj]~"")) +
+  ggtitle(expression("GAVIN performance scales with calibratable genes ("~R^{2}~" = 0.67, p-value: < 2.2e-16)"))
+plot
+
+
+
