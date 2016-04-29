@@ -338,7 +338,7 @@ public class CalibratedExomeAnalysis
 	//	printResultsAsMatrix(pathoVariants, vousVariants, benignVariants);
 	//	printResultsAsTable(pathoVariants, vousVariants, benignVariants);
 		
-	//	printResultsAsMatrix(pathoVariants, vousVariants, new ArrayList<CandidateVariant>());
+		printResultsAsMatrix(pathoVariants, vousVariants, new ArrayList<CandidateVariant>());
 		printResultsAsTable(pathoVariants, vousVariants, new ArrayList<CandidateVariant>());
 		
 		long endTime = System.currentTimeMillis();
@@ -435,11 +435,9 @@ public class CalibratedExomeAnalysis
 			}
 
 			
-			if (!CGDgenes.cgdAR_april2016.contains(gene) && (genotype.equals("0/" + altIndex) || genotype.equals(altIndex + "/0")
-					|| genotype.equals("0|" + altIndex) || genotype.equals(altIndex + "|0")) )
-			{
-				//interesting! unless AR & hetzyg.
-				
+			if (genotype.equals("0/" + altIndex) || genotype.equals(altIndex + "/0")
+					|| genotype.equals("0|" + altIndex) || genotype.equals(altIndex + "|0") )
+			{		
 				hetSampleIds.put(sampleName, sample);
 				hetCount++;
 			}
