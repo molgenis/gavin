@@ -1,2 +1,3 @@
 # molgenis-data-cadd.git
 Tools for CADD scores and others
+FROZEN UNTIL MIGRATION OF GAVIN CALIBRATION TO PUBLIC REPO IS COMPLETE
