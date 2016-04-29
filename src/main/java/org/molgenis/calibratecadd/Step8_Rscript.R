@@ -17,6 +17,11 @@ points(calibcaddGenes$MeanPathogenicCADDScore, col="red")
 plot(density(calibcaddGenes$MeanDifference))
 abline(v = mean(calibcaddGenes$MeanDifference))
 
+mean(calibcaddGenes$MeanPopulationCADDScore)
+mean(calibcaddGenes$MeanPathogenicCADDScore)
+mean(calibcaddGenes$MeanDifference)
+sd(calibcaddGenes$MeanDifference)
+
 #ggplot of patho MAF
 calibcaddGenesOrdered <- calibcaddAllGenes[order(-calibcaddAllGenes$PathoMAFThreshold),] 
 p <- ggplot() +

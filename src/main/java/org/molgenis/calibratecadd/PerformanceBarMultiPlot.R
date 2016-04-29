@@ -184,10 +184,10 @@ multiplot(
 # "Overall yield per tool across datasets (correlation x coverage)"
 
 #### MCC plot #### ,fill=factor(Type)
-yieldbox <- ggplot() + geom_boxplot(data = df, fill = blueishgreen, aes(x = Tool, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle(expression(paste("", MCC[cadj], "per tool across datasets")))
+yieldbox <- ggplot() + geom_boxplot(data = df, fill = blueishgreen, aes(x = Tool, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle(expression(paste("", MCC[covadj], " per tool across datasets")))
 mccbox <- ggplot() + geom_boxplot(data = df, fill = yellow, aes(x = Tool, y = MCC)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("MCC per tool across datasets")
 coveragebox <- ggplot() + geom_boxplot(data = df, fill = reddishpurple, aes(x = Tool, y = Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("Coverage per tool across datasets")
-databox <- ggplot() + geom_boxplot(data = df, fill = gray, aes(x = Data, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + scale_x_discrete(breaks=c("UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining", "MutationTaster2", "ClinVarNew"), labels=c("UMCG-Onco", "UMCG-Various", "VB-Test", "VB-Training", "MT2-Test", "ClinVarNew")) + ggtitle(expression(paste("Dataset", MCC[cadj], "distribution across tools")))
+databox <- ggplot() + geom_boxplot(data = df, fill = gray, aes(x = Data, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + scale_x_discrete(breaks=c("UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining", "MutationTaster2", "ClinVarNew"), labels=c("UMCG-Onco", "UMCG-Various", "VB-Test", "VB-Training", "MT2-Test", "ClinVarNew")) + ggtitle(expression(paste("Dataset ", MCC[covadj], " distribution across tools")))
 multiplot(yieldbox, coveragebox, mccbox, databox, cols=2)
 
 
