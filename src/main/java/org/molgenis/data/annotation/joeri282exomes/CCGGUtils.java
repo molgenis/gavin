@@ -134,11 +134,11 @@ public class CCGGUtils
 		}
 		else
 		{
-			if(CADDscore != null && CADDscore > 25)
+			if(CADDscore != null && CADDscore > 15)
 			{
 				return new Judgment(Judgment.Classification.Pathogn, Method.genomewide, "Variant MAF of "+MAF+" is rare enough to be potentially pathogenic and the CADDscore of "+CADDscore+ " is greater than a global threshold of 25.");
 			}
-			else if(CADDscore != null && CADDscore < 5)
+			else if(CADDscore != null && CADDscore <= 15)
 			{
 				return new Judgment(Judgment.Classification.Benign, Method.genomewide, "CADDscore of "+CADDscore+ " is less than a global threshold of 5, although the variant MAF of "+MAF+" is rare enough to be potentially pathogenic.");
 			}
