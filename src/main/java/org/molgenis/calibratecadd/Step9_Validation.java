@@ -265,6 +265,7 @@ public class Step9_Validation
 			}
 			if(hasGeneId && !geneToIdMatchFound)
 			{
+				if(mode.equals(ToolNames.GAVIN) && ccgg.getGeneToEntry().containsKey(geneFromId)) { judgmentsInCalibratedGenes++; }
 				System.out.println("WARNING: bad data for variant " + chr + ":" + pos + " " + ref + "/" + alt + ", no match from ID field gene to snpeff annotations!");
 				multipleJudgments.add(new Judgment(Classification.VOUS, Method.calibrated, "Bad data!"));
 			}
@@ -304,6 +305,7 @@ public class Step9_Validation
 			//TODO could be improved by prioritizing calibrated over genomewide results for our method
 			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
 			{
+				if(mode.equals(ToolNames.GAVIN) && hasCalibratedJudgment) { judgmentsInCalibratedGenes++; }
 				System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
 				addToMVLResults(new Judgment(Classification.VOUS, (hasCalibratedJudgment ? Method.calibrated : Method.genomewide), "Conflicting classification!!"), mvlClassfc, mvlName, record);
 			}
