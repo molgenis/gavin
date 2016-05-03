@@ -51,7 +51,7 @@ public class ProcessJudgedVariantMVLResults
 		}
 		
 		String toR = "row <- data.frame(Tool = \""+toolName+"\", Data = \""+datasetName+"\", MCC = "+MCCofAllMVLs+", TN = "+_TN_all+", TP = "+_TP_all+", FP = "+_FP_all+", FN = "+_FN_all+", ExpBenignAsVOUS = "+_vousB+", ExpPathoAsVOUS = "+_vousP+", VCG = " + judgmentsInCalibratedGenes +", TotalExpertClsf = "+grandTotalExpertClassified+"); df <- rbind(df, row)\n";
-		Files.write(Paths.get("/Users/jvelde/dfrows.r"), toR.getBytes(), StandardOpenOption.APPEND);
+		Files.write(Paths.get("/Users/jvelde/dfOutput.R"), toR.getBytes(), StandardOpenOption.APPEND);
 	}
 	public static void printCodeForPieChart(String toolName, String datasetName) throws Exception
 	{
