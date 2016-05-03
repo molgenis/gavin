@@ -11,8 +11,8 @@ public class BootStrappingAnalysisRunner
 		String gavin = "/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/GAVIN_calibrations_r0.1.tsv";
 		String outFile = "/Users/jvelde/bootstrapresults.r";
 		
-		int iterations = 1000;
-		int sampleSize = 1000;
+		int iterations = 10000;
+		int sampleSize = 10000;
 		
 		BootStrappingAnalysis ba = new BootStrappingAnalysis(fullSet, gavin, outFile);
 //		ba.getStatsOnFullSet();
