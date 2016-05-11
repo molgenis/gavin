@@ -279,23 +279,54 @@ plot
 
 
 
-### 
+### bootstrap analysis result processing
 
-#df <- data.frame()
-#row <- data.frame(MCCcovadj = 0.6289471382416062, percCalib = 0.44); df <- rbind(df, row)
-#row <- data.frame(MCCcovadj = 0.6366938014288426, percCalib = 0.7215496368038741); df <- rbind(df, row) 
+df <- read.table("/Users/jvelde/bootstrapresults.r",header=TRUE)
+df$MCCcovadj <- as.double(as.character(df$MCCcovadj))
 
-source("/Users/jvelde/bootstrapresults.r")
+ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = MCCcovadj)) +
+  theme_classic() +
+  theme(text = element_text(size = 15), legend.position="none", axis.text.x = element_text(angle = 90, hjust = 1, vjust=.5)) +
+  xlab("Variants selected from 3 groups of genes classified by gene-aware and genome-wide methods") +
+  ylab(expression(~MCC[covadj]~"performance")) +
+  scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
+  coord_flip() +
+  scale_x_discrete(limits=c("C3_GAVINnocal","C3_GAVIN","C4_GAVINnocal","C4_GAVIN", "C1_C2_GAVINnocal", "C1_C2_GAVIN"),
+  labels = c("C1_C2_GAVIN" = "Gene-aware classification\nCADD predictive genes (520)\nThresholds differ per gene",
+             "C1_C2_GAVINnocal" = "Genome-wide classification\nCADD predictive genes (520)\nThreshold 15 / MAF 0.00474",
+             "C4_GAVIN" = "Gene-aware classification\nCADD less predictive genes (660)\nThresholds differ per gene", 
+             "C4_GAVINnocal" = "Genome-wide classification\nCADD less predictive genes (660)\nThreshold 15 / MAF 0.00474", 
+             "C3_GAVIN" = "Gene-aware classification\nScarce training data (737)\nThresholds differ per gene",
+             "C3_GAVINnocal"="Genome-wide classification\nScarce training data (737)\nThreshold 15 / MAF 0.00474"
+             ))
 
-cor.test(df$MCCcovadj, df$percCalib, method = "spearm")
 
-plot <- ggplot() + geom_point(data = df, aes(xmin=0, xmax=1, x = percCalib, y = MCCcovadj)) +
-  theme_bw() +
-  theme(legend.position="none", panel.grid.major = element_line(colour = "darkgray"), axis.text=element_text(size=12)) +
-  xlab("Percentage of variants located in calibrated genes") +
-  ylab(expression(~MCC[covadj]~"")) +
-  ggtitle(expression("GAVIN performance scales with calibratable genes (Spearman's rho = 0.75, p-val < 2.2e-16)"))
-plot
+# mann-whitney-wilcoxon test and median values
+calib <- subset(df, Tool == "GAVIN")
+uncalib <- subset(df, Tool == "GAVINnocal")
 
+C1_calib <- subset(calib, Calib == "C1_C2")
+C1_uncalib <- subset(uncalib, Calib == "C1_C2")
+median(C1_calib$MCCcovadj)
+median(C1_uncalib$MCCcovadj)
+wilcox.test(C1_calib$MCCcovadj, C1_uncalib$MCCcovadj)
+
+C4_calib <- subset(calib, Calib == "C4")
+C4_uncalib <- subset(uncalib, Calib == "C4")
+median(C4_calib$MCCcovadj)
+median(C4_uncalib$MCCcovadj)
+wilcox.test(C4_calib$MCCcovadj, C4_uncalib$MCCcovadj)
+
+C3_calib <- subset(calib, Calib == "C3")
+C3_uncalib <- subset(uncalib, Calib == "C3")
+median(C3_calib$MCCcovadj)
+median(C3_uncalib$MCCcovadj)
+wilcox.test(C3_calib$MCCcovadj, C3_uncalib$MCCcovadj)
+
+# bonus: density plot of the same
+ggplot() + geom_density(data = df, alpha = 0.5, aes(MCCcovadj, fill = Label, colour = Label)) +
+  theme_classic() +
+  theme(plot.title = element_text(size = 15)) +
+  ggtitle("title")
 
 
