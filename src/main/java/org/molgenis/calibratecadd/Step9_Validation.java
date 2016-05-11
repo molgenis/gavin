@@ -245,14 +245,14 @@ public class Step9_Validation
 					{
 						if(CADDscore != null && CADDscore > 15)
 						{
-							judgment = new Judgment(Classification.Pathogn, Method.calibrated, "CADD score > 15");
+							judgment = new Judgment(Classification.Pathogn, Method.calibrated, gene, "CADD score > 15");
 						}
 						else if(CADDscore != null && CADDscore <= 15)
 						{
-							judgment = new Judgment(Classification.Benign, Method.calibrated, "CADD score <= 15");
+							judgment = new Judgment(Classification.Benign, Method.calibrated, gene, "CADD score <= 15");
 						}
 						else{
-							judgment = new Judgment(Classification.VOUS, Method.calibrated, "CADD score not available");
+							judgment = new Judgment(Classification.VOUS, Method.calibrated, gene, "CADD score not available");
 						}
 					}
 					else
@@ -267,7 +267,7 @@ public class Step9_Validation
 			{
 				if(mode.equals(ToolNames.GAVIN) && ccgg.getGeneToEntry().containsKey(geneFromId)) { judgmentsInCalibratedGenes++; }
 				System.out.println("WARNING: bad data for variant " + chr + ":" + pos + " " + ref + "/" + alt + ", no match from ID field gene to snpeff annotations!");
-				multipleJudgments.add(new Judgment(Classification.VOUS, Method.calibrated, "Bad data!"));
+				multipleJudgments.add(new Judgment(Classification.VOUS, Method.calibrated, geneFromId, "Bad data!"));
 			}
 			
 			//if no judgment, add null for this variant
@@ -307,7 +307,7 @@ public class Step9_Validation
 			{
 				if(mode.equals(ToolNames.GAVIN) && hasCalibratedJudgment) { judgmentsInCalibratedGenes++; }
 				System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
-				addToMVLResults(new Judgment(Classification.VOUS, (hasCalibratedJudgment ? Method.calibrated : Method.genomewide), "Conflicting classification!!"), mvlClassfc, mvlName, record);
+				addToMVLResults(new Judgment(Classification.VOUS, (hasCalibratedJudgment ? Method.calibrated : Method.genomewide), geneFromId, "Conflicting classification!!"), mvlClassfc, mvlName, record);
 			}
 			else
 			{
