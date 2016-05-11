@@ -13,11 +13,13 @@ public class Judgment
 	String reason;
 	Classification classification;
 	Method method;
+	String gene;
 
-	public Judgment(Classification classification, Method method, String reason)
+	public Judgment(Classification classification, Method method, String gene, String reason)
 	{
 		super();
 		this.reason = reason;
+		this.gene = gene;
 		this.classification = classification;
 		this.method = method;
 	}
@@ -42,6 +44,8 @@ public class Judgment
 	{
 		return "Judgment [reason=" + reason + ", classification=" + classification + "]";
 	}
-	
-	
+
+	public String getGene() {
+		return gene;
+	}
 }
