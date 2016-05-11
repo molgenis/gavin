@@ -1,5 +1,7 @@
 package org.molgenis.calibratecadd.support;
 
+import org.molgenis.calibratecadd.Step9_Validation;
+
 import java.util.List;
 
 
@@ -12,17 +14,23 @@ public class BootStrappingAnalysisRunner
 		String outFile = "/Users/jvelde/bootstrapresults.r";
 		
 		int iterations = 10000;
-		int sampleSize = 10000;
 		
-		BootStrappingAnalysis ba = new BootStrappingAnalysis(fullSet, gavin, outFile);
-//		ba.getStatsOnFullSet();
+		BootStrappingAnalysis ba = new BootStrappingAnalysis(fullSet, gavin, outFile, Step9_Validation.ToolNames.GAVIN);
+
 		for(int i = 0 ; i < iterations; i ++)
 		{
-			List<BootStrappingVariant> set = ba.randomSubset(sampleSize);
-			List<BootStrappingVariant> dsSet = ba.downSampleToUniformCalibPercDistr(set);
-			ba.getStatsOnSet(dsSet);
+			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C1_C2));
+			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C3));
+			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C4));
 		}
-			
-		
+
+		ba = new BootStrappingAnalysis(fullSet, gavin, outFile, Step9_Validation.ToolNames.GAVINnocal);
+
+		for(int i = 0 ; i < iterations; i ++)
+		{
+			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C1_C2));
+			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C3));
+			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C4));
+		}
 	}
 }
