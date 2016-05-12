@@ -20,6 +20,7 @@ import org.molgenis.data.annotation.joeri282exomes.Judgment;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
+import org.springframework.security.access.method.P;
 
 public class BootStrappingAnalysis
 {
@@ -45,8 +46,12 @@ public class BootStrappingAnalysis
 	{
 		this.outputFile = outputFile;
 		this.toolName = toolName;
-		File yourFile = new File(outputFile);
-		yourFile.createNewFile();
+		File outFile = new File(outputFile);
+		if(outFile.exists())
+		{
+			throw new Exception("output file already exists: " + outFile.getAbsolutePath());
+		}
+		outFile.createNewFile();
 		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tMCCcovadj\n".getBytes(), StandardOpenOption.APPEND);
 
 

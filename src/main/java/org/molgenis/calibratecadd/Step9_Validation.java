@@ -90,7 +90,7 @@ public class Step9_Validation
 	
 	public static void main(String[] args) throws Exception
 	{
-		new Step9_Validation(args[0], args[1], args[2]);
+		new Step9_Validation(args[0], args[1], args[2], args[3]);
 	}
 	
 	CCGGUtils ccgg;
@@ -103,7 +103,7 @@ public class Step9_Validation
 	 * Check if classification matches
 	 * @throws Exception 
 	 */
-	public Step9_Validation(String ccggLoc, String mvlLoc, String mode) throws Exception
+	public Step9_Validation(String ccggLoc, String mvlLoc, String mode, String outFile) throws Exception
 	{
 		if(!EnumUtils.isValidEnum(ToolNames.class, mode))
 		{
@@ -116,7 +116,7 @@ public class Step9_Validation
 		}
 		this.ccgg = loadCCGG(ccggLoc);
 		scanMVL(mvlFile, ToolNames.valueOf(mode));
-		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes);
+		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes, outFile);
 	}
 	
 	public void scanMVL(File mvlFile, ToolNames mode) throws Exception

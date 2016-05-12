@@ -11,7 +11,7 @@ public class BootStrappingAnalysisRunner
 	{
 		String fullSet = "/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/cat_all_vcfs.txt";
 		String gavin = "/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/GAVIN_calibrations_r0.1.tsv";
-		String outFile = "/Users/jvelde/bootstrapresults.r";
+		String outFile = "/Users/jvelde/performancebootstrap_output.r";
 		
 		int iterations = 10000;
 		
