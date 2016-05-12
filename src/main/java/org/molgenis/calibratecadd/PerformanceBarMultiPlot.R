@@ -292,12 +292,12 @@ ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = MCCcovadj)) 
   scale_fill_manual(values=c("gray50", "gray90", "gray70")) +
   coord_flip() +
   scale_x_discrete(limits=c("C3_GAVINnocal","C3_GAVIN","C4_GAVINnocal","C4_GAVIN", "C1_C2_GAVINnocal", "C1_C2_GAVIN"),
-  labels = c("C1_C2_GAVIN" = "Gene-aware classification\nCADD predictive genes (520)\nThresholds calibrated per gene",
+  labels = c("C1_C2_GAVIN" = "Gene-specific classification\nCADD predictive genes (520)\nThresholds calibrated per gene",
              "C1_C2_GAVINnocal" = "Genome-wide classification\nCADD predictive genes (520)\nThreshold 15 / MAF 0.00474",
-             "C4_GAVIN" = "Gene-aware classification\nCADD less predictive genes (660)\nThresholds calibrated per gene", 
+             "C4_GAVIN" = "Gene-specific classification\nCADD less predictive genes (660)\nThresholds calibrated per gene", 
              "C4_GAVINnocal" = "Genome-wide classification\nCADD less predictive genes (660)\nThreshold 15 / MAF 0.00474", 
-             "C3_GAVIN" = "Gene-aware classification\nScarce training data (737)\nThresholds calibrated per gene",
-             "C3_GAVINnocal"="Genome-wide classification\nScarce training data (737)\nThreshold 15 / MAF 0.00474"
+             "C3_GAVIN" = "Gene-specific classification\nScarce training data genes (737)\nThresholds calibrated per gene",
+             "C3_GAVINnocal"="Genome-wide classification\nScarce training data genes (737)\nThreshold 15 / MAF 0.00474"
              ))
 
 
