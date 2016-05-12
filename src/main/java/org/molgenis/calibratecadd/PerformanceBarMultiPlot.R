@@ -57,7 +57,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 df <- data.frame() 
 
-# update this with contents of "dfrows.R" as produced by Step9_Validation
+# contents of "toolcomparison_output.r" as produced by Step9_Validation, stored here for convenience
 row <- data.frame(Tool = "GAVIN", Data = "ClinVarNew", MCC = 0.7791903302275341, TN = 1537, TP = 1409, FP = 127, FN = 242, ExpBenignAsVOUS = 4, ExpPathoAsVOUS = 37, VCG = 2077, TotalExpertClsf = 3356); df <- rbind(df, row)
 row <- data.frame(Tool = "PONP2", Data = "ClinVarNew", MCC = 0.5711285902478755, TN = 165, TP = 235, FP = 61, FN = 46, ExpBenignAsVOUS = 1442, ExpPathoAsVOUS = 1407, VCG = 0, TotalExpertClsf = 3356); df <- rbind(df, row)
 row <- data.frame(Tool = "CADD", Data = "ClinVarNew", MCC = 0.71464193233354, TN = 1240, TP = 1574, FP = 425, FN = 75, ExpBenignAsVOUS = 3, ExpPathoAsVOUS = 39, VCG = 0, TotalExpertClsf = 3356); df <- rbind(df, row)
@@ -164,7 +164,7 @@ multiplot(
 )
 
 
-#condensed per tool, sum of all data performances
+# optional: condensed per tool, sum of all data performances
 for(i in unique(df$Tool)) {
   dfrow <- subset(df, Tool == i)
   counts = c(sum(dfrow$TN), sum(dfrow$ExpBenignAsVOUS), sum(dfrow$FP), sum(dfrow$FN), sum(dfrow$ExpPathoAsVOUS), sum(dfrow$TP))
@@ -187,10 +187,10 @@ multiplot(
 # "Overall yield per tool across datasets (correlation x coverage)"
 
 #### MCC plot #### ,fill=factor(Type)
-yieldbox <- ggplot() + geom_boxplot(data = df, fill = blueishgreen, aes(x = Tool, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle(expression(paste("", MCC[covadj], " per tool across datasets")))
-mccbox <- ggplot() + geom_boxplot(data = df, fill = yellow, aes(x = Tool, y = MCC)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("MCC per tool across datasets")
-coveragebox <- ggplot() + geom_boxplot(data = df, fill = reddishpurple, aes(x = Tool, y = Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("Coverage per tool across datasets")
-databox <- ggplot() + geom_boxplot(data = df, fill = gray, aes(x = Data, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + scale_x_discrete(breaks=c("UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining", "MutationTaster2", "ClinVarNew"), labels=c("UMCG-Onco", "UMCG-Various", "VB-Test", "VB-Training", "MT2-Test", "ClinVarNew")) + ggtitle(expression(paste("Dataset ", MCC[covadj], " distribution across tools")))
+yieldbox <- ggplot() + geom_boxplot(data = df, fill = "gray50", aes(x = Tool, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle(expression(paste("", MCC[covadj], " per tool across datasets")))
+mccbox <- ggplot() + geom_boxplot(data = df, fill = "gray70", aes(x = Tool, y = MCC)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("MCC per tool across datasets")
+coveragebox <- ggplot() + geom_boxplot(data = df, fill = "gray70", aes(x = Tool, y = Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + ggtitle("Coverage per tool across datasets")
+databox <- ggplot() + geom_boxplot(data = df, fill = "gray90", aes(x = Data, y = MCC*Coverage)) + theme_classic() + theme(plot.title = element_text(size = 12)) + scale_x_discrete(breaks=c("UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining", "MutationTaster2", "ClinVarNew"), labels=c("UMCG-Onco", "UMCG-Various", "VB-Test", "VB-Training", "MT2-Test", "ClinVarNew")) + ggtitle(expression(paste("Dataset ", MCC[covadj], " distribution across tools")))
 multiplot(yieldbox, coveragebox, mccbox, databox, cols=2)
 
 
@@ -281,22 +281,22 @@ plot
 
 ### bootstrap analysis result processing
 
-df <- read.table("/Users/jvelde/bootstrapresults.r",header=TRUE)
+df <- read.table("/Users/jvelde/github/maven/molgenis-data-cadd/data/other/performancebootstrap_output_usedinpaper.r",header=TRUE)
 df$MCCcovadj <- as.double(as.character(df$MCCcovadj))
 
 ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = MCCcovadj)) +
   theme_classic() +
-  theme(text = element_text(size = 15), legend.position="none", axis.text.x = element_text(angle = 90, hjust = 1, vjust=.5)) +
-  xlab("Variants selected from 3 groups of genes classified by gene-aware and genome-wide methods") +
+  theme(text = element_text(size = 15),  axis.title.y=element_blank(), legend.position="none") +
   ylab(expression(~MCC[covadj]~"performance")) +
-  scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
+# scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
+  scale_fill_manual(values=c("gray50", "gray90", "gray70")) +
   coord_flip() +
   scale_x_discrete(limits=c("C3_GAVINnocal","C3_GAVIN","C4_GAVINnocal","C4_GAVIN", "C1_C2_GAVINnocal", "C1_C2_GAVIN"),
-  labels = c("C1_C2_GAVIN" = "Gene-aware classification\nCADD predictive genes (520)\nThresholds differ per gene",
+  labels = c("C1_C2_GAVIN" = "Gene-aware classification\nCADD predictive genes (520)\nThresholds calibrated per gene",
              "C1_C2_GAVINnocal" = "Genome-wide classification\nCADD predictive genes (520)\nThreshold 15 / MAF 0.00474",
-             "C4_GAVIN" = "Gene-aware classification\nCADD less predictive genes (660)\nThresholds differ per gene", 
+             "C4_GAVIN" = "Gene-aware classification\nCADD less predictive genes (660)\nThresholds calibrated per gene", 
              "C4_GAVINnocal" = "Genome-wide classification\nCADD less predictive genes (660)\nThreshold 15 / MAF 0.00474", 
-             "C3_GAVIN" = "Gene-aware classification\nScarce training data (737)\nThresholds differ per gene",
+             "C3_GAVIN" = "Gene-aware classification\nScarce training data (737)\nThresholds calibrated per gene",
              "C3_GAVINnocal"="Genome-wide classification\nScarce training data (737)\nThreshold 15 / MAF 0.00474"
              ))
 
