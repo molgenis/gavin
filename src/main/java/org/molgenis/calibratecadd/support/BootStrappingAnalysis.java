@@ -46,12 +46,6 @@ public class BootStrappingAnalysis
 	{
 		this.outputFile = outputFile;
 		this.toolName = toolName;
-		File outFile = new File(outputFile);
-		if(outFile.exists())
-		{
-			throw new Exception("output file already exists: " + outFile.getAbsolutePath());
-		}
-		outFile.createNewFile();
 		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tMCCcovadj\n".getBytes(), StandardOpenOption.APPEND);
 
 
