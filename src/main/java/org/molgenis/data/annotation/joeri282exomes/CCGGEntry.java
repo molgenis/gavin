@@ -41,9 +41,9 @@ public class CCGGEntry
 	public CCGGEntry(String lineFromFile) throws Exception
 	{
 		String[] split = lineFromFile.split("\t", -1);
-		if(split.length != 31)
+		if(split.length != 30)
 		{
-			throw new Exception("not 31 elements");
+			throw new Exception("not 30 elements");
 		}
 		
 		this.gene = split[0];
@@ -81,7 +81,6 @@ public class CCGGEntry
 		this.UTestPvalue = split[27].isEmpty() ? null : Double.parseDouble(split[27]);
 		this.Sens95thPerCADDThreshold = split[28].isEmpty() ? null : Double.parseDouble(split[28]);
 		this.Spec95thPerCADDThreshold = split[29].isEmpty() ? null : Double.parseDouble(split[29]);
-		//30 is 'reason' string
 	}
 		
 }
