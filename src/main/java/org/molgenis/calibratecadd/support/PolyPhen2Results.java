@@ -53,20 +53,20 @@ public class PolyPhen2Results
 			
 			if(pc.contains("benign"))
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "PolyPhen2 result 'benign'");
+				return new Judgment(Classification.Benign, Method.calibrated, key, "PolyPhen2 result 'benign'");
 			}
 			else if(pc.contains("damaging"))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "PolyPhen2 result 'damaging'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, key, "PolyPhen2 result 'damaging'");
 			}
 			else
 			{
-				return new Judgment(Classification.VOUS, Method.calibrated, "Unknown PolyPhen2 result: " + pc);
+				return new Judgment(Classification.VOUS, Method.calibrated, key, "Unknown PolyPhen2 result: " + pc);
 			}
 		}
 		else
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "No PolyPhen2 result");
+			return new Judgment(Classification.VOUS, Method.calibrated, key, "No PolyPhen2 result");
 		}
 	}
 	

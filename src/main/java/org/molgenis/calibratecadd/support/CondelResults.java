@@ -79,20 +79,20 @@ public class CondelResults
 			CondelClassification pc = condelFile.get(key);
 			if(pc.equals(CondelClassification.N))
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "Condel result 'N'");
+				return new Judgment(Classification.Benign, Method.calibrated, key, "Condel result 'N'");
 			}
 			else if(pc.equals(CondelClassification.D))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "Condel result 'D'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, key, "Condel result 'D'");
 			}
 			else
 			{
-				return new Judgment(Classification.VOUS, Method.calibrated, "Unknown Condel result: " + pc);
+				return new Judgment(Classification.VOUS, Method.calibrated, key, "Unknown Condel result: " + pc);
 			}
 		}
 		else
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "No Condel result");
+			return new Judgment(Classification.VOUS, Method.calibrated, key, "No Condel result");
 		}
 	}
 	

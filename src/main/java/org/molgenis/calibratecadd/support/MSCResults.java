@@ -46,27 +46,27 @@ public class MSCResults
 		geneName = geneName.toUpperCase();
 		if(caddScore == null)
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score NULL for" + geneName);
+			return new Judgment(Classification.VOUS, Method.calibrated, geneName, "CADD score NULL for" + geneName);
 		}
 		else if(mscFile.containsKey(geneName) && mscFile.get(geneName) > 0)
 		{
 			if(caddScore > mscFile.get(geneName))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "CADD score "+caddScore+" above MSC threshold " + mscFile.get(geneName));
+				return new Judgment(Classification.Pathogn, Method.calibrated, geneName, "CADD score "+caddScore+" above MSC threshold " + mscFile.get(geneName));
 			}
 			else
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "CADD score "+caddScore+" below MSC threshold " + mscFile.get(geneName));
+				return new Judgment(Classification.Benign, Method.calibrated, geneName, "CADD score "+caddScore+" below MSC threshold " + mscFile.get(geneName));
 			}
 		}
 		else if(mscFile.containsKey(geneName) && mscFile.get(geneName) < 0)
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score "+caddScore+", gene in MSC list but threshold unknown for " + geneName);
+			return new Judgment(Classification.VOUS, Method.calibrated, geneName, "CADD score "+caddScore+", gene in MSC list but threshold unknown for " + geneName);
 		}
 		else
 		{
 			System.out.println("WARNING: no MSC threshold for gene " + geneName + ", try to add it?");
-			return new Judgment(Classification.VOUS, Method.calibrated, "CADD score "+caddScore+" but no MSC threshold for gene " + geneName);
+			return new Judgment(Classification.VOUS, Method.calibrated, geneName, "CADD score "+caddScore+" but no MSC threshold for gene " + geneName);
 		}
 	}
 	

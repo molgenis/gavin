@@ -52,15 +52,15 @@ public class PONP2Results
 			PonpClassification pc = ponpFile.get(key);
 			if(pc.equals(PonpClassification.Unknown))
 			{
-				return new Judgment(Classification.VOUS, Method.calibrated, "PON-P2 'unknown'");
+				return new Judgment(Classification.VOUS, Method.calibrated, key, "PON-P2 'unknown'");
 			}
 			else if(pc.equals(PonpClassification.Neutral))
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "PONP2 result 'Neutral'");
+				return new Judgment(Classification.Benign, Method.calibrated, key, "PONP2 result 'Neutral'");
 			}
 			else if(pc.equals(PonpClassification.Pathogenic))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "PONP2 result 'Pathogenic'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, key, "PONP2 result 'Pathogenic'");
 			}
 			else
 			{
@@ -69,7 +69,7 @@ public class PONP2Results
 		}
 		else
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "No PON-P2 result");
+			return new Judgment(Classification.VOUS, Method.calibrated, key, "No PON-P2 result");
 		}
 	}
 	

@@ -69,20 +69,20 @@ public class ProveanAndSiftResults
 			ProveanClassification pc = proveanFile.get(key);
 			if(pc.equals(ProveanClassification.Neutral))
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "PROVEAN result 'Neutral'");
+				return new Judgment(Classification.Benign, Method.calibrated, key, "PROVEAN result 'Neutral'");
 			}
 			else if(pc.equals(ProveanClassification.Deleterious))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "PROVEAN result 'Deleterious'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, key, "PROVEAN result 'Deleterious'");
 			}
 			else
 			{
-				return new Judgment(Classification.VOUS, Method.calibrated, "Unknown PROVEAN result: " + pc);
+				return new Judgment(Classification.VOUS, Method.calibrated, key, "Unknown PROVEAN result: " + pc);
 			}
 		}
 		else
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "No PROVEAN result");
+			return new Judgment(Classification.VOUS, Method.calibrated, key, "No PROVEAN result");
 		}
 	}
 	
@@ -94,20 +94,20 @@ public class ProveanAndSiftResults
 			SiftClassification pc = siftFile.get(key);
 			if(pc.equals(SiftClassification.Tolerated))
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "SIFT result 'Tolerated'");
+				return new Judgment(Classification.Benign, Method.calibrated, key, "SIFT result 'Tolerated'");
 			}
 			else if(pc.equals(SiftClassification.Damaging))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "SIFT result 'Damaging'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, key, "SIFT result 'Damaging'");
 			}
 			else
 			{
-				return new Judgment(Classification.VOUS, Method.calibrated, "SIFT result '"+pc+"'");
+				return new Judgment(Classification.VOUS, Method.calibrated, key, "SIFT result '"+pc+"'");
 			}
 		}
 		else
 		{
-			return new Judgment(Classification.VOUS, Method.calibrated, "No SIFT result");
+			return new Judgment(Classification.VOUS, Method.calibrated, key, "No SIFT result");
 		}
 	}
 	
