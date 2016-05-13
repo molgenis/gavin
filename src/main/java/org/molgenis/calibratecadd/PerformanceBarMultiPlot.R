@@ -330,3 +330,23 @@ ggplot() + geom_density(data = df, alpha = 0.5, aes(MCCcovadj, fill = Label, col
   ggtitle("title")
 
 
+# bonus: pie-chart gene calibration overview
+library(ggplot2)
+geneList <- c("Highly predictive (n = 257, pval < 0.01)", "Predictive (n = 263, pval < 0.05)", "Less predictive (n = 660, pval > 0.05)", "Scarce data (n = 737, pval > 0.05 with <5 samples)","'Effect impact predictive' (n = 309)", "Other (n = 829)");
+df <- data.frame(
+  Genes = geneList,
+  value = c(257, 263, 660, 737, 309, 829)
+)
+df$Genes <- factor(df$Genes, levels = geneList)
+
+bp <- ggplot(df, aes(x="", y=value, fill=Genes)) +
+  geom_bar(width = 1, stat = "identity") +
+  theme_bw() +
+  theme(text = element_text(size = 15), axis.title.y=element_blank(), axis.title.x=element_blank()) +
+  theme(legend.text=element_text(size=20), legend.title=element_text(size=25)) + 
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid  = element_blank()) +
+  scale_fill_manual(values=c(blue,skyblue,yellow,orange,blueishgreen,vermillion,reddishpurple)) +
+  coord_polar("y", start=0)
+bp
+
+
