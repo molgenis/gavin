@@ -289,6 +289,7 @@ ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = MCCcovadj)) 
   theme(text = element_text(size = 15),  axis.title.y=element_blank(), legend.position="none") +
   ylab(expression(~MCC[covadj]~"performance")) +
 # scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
+# scale_fill_manual(values=c("blue", "red", "purple")) +
   scale_fill_manual(values=c("gray50", "gray90", "gray70")) +
   coord_flip() +
   scale_x_discrete(limits=c("C3_GAVINnocal","C3_GAVIN","C4_GAVINnocal","C4_GAVIN", "C1_C2_GAVINnocal", "C1_C2_GAVIN"),
