@@ -7,22 +7,33 @@ todo
 Go to: Data Explorer -> StaticContent (select data set)
 Click [+] to create a new record
 Enter as key: 'home'
-Enter as content: the content of frontpage.html (found in this directory)
+Enter as content: the content of GAVIN_landingpage.html (found in this directory)
 Press Save.
 
 3) Setup entity report
 Go to: Data Explorer -> FreemarkerTemplate (select data set)
 Click [+] to create a new record
-Enter as name: 'view-entityreport-specific-ccgg.ftl'
-Enter as value: the content of view-entityreport-specific-ccgg.ftl (found in this directory)
+Enter as name: 'view-entityreport-specific-gavin.ftl'
+Enter as value: the content of view-entityreport-specific-gavin.ftl (found in this directory)
 Press Save.
 
 4) Setup permissions
 Go to: Admin -> Permission Manager -> Plugin Permissions -> Users
 Select 'anonymous'
-Tick 'view' for 'dataexplorer' and 'home'. Press save.
+Tick 'view' for 'dataexplorer', 'freemarkertemplate' and 'home'. Press save.
 Go to: Entity Class Permissions -> Users
 Select 'anonymous'
-Tick 'view' for 'ccgg' and 'settings_dataexplorer'
+Tick 'view' for 'gavin' and 'settings_dataexplorer'
 Press Save.
+
+5) hiden kopieer button in data explorer
+Tracking Code Footer -> $('#copy-data-btn').hide();
+
+6) permissies jobs runnen
+Add the Gavin plugin to the menu, make it available to anonymous user.
+Give the anonymous user EDIT permissions on the Gavin plugin
+Give anonymous user EDIT permissions on GavinJobExecution plugin
+Configure annotation resources
+
+
 
