@@ -1,4 +1,4 @@
-<#-- modal header -->			
+<#-- modal header, view-entityreport-specific-gavin.ftl -->			
 <div class="modal-header">
 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 	<h4 class="modal-title">DataSet: ${entityMetadata.getLabel()?html}</h4>
@@ -10,20 +10,16 @@
 
 	<div class="row">
 		<div class="col-md-4">
-			<h1>${entity.get('Gene')}</h1><br>
+			<h1>${entity.get('Gene_Name')}</h1><br>
 			<#if entity.get('UTestPvalue')??>
-				<a href="https://molgenis26.target.rug.nl/ccgg_resources/plots/${entity.get('Gene')}.png" target="_blank"><img src="https://molgenis26.target.rug.nl/ccgg_resources/plots/${entity.get('Gene')}.png" height="238" width="324"/></a>
+				<a href="https://molgenis26.target.rug.nl/ccgg_resources/plots/${entity.get('Gene_Name')}.png" target="_blank"><img src="https://molgenis26.target.rug.nl/ccgg_resources/plots/${entity.get('Gene_Name')}.png" height="238" width="324"/></a>
 				<br>
-				<a href="https://molgenis26.target.rug.nl/ccgg_resources/data/${entity.get('Gene')}.tsv" target="_blank">download data</a>
+				<a href="https://molgenis26.target.rug.nl/ccgg_resources/data/${entity.get('Gene_Name')}.tsv" target="_blank">download data</a>
 			<#else>
 				<i>No plot available</i>
 			</#if>
 		</div>
-		<div class="col-md-4">
-			<h1>Recommendation</h1><br>
-			<h4>${entity.get('Recommendation')?html}</h4>
-		</div>
-		<div class="col-md-4">
+		<div class="col-md-8">
 			<div id="modalGenomeBrowser"></div>
 		</div>
 	</div>
@@ -35,7 +31,7 @@
 			<table class="table">
 				<tbody>
 					<tr>
-						<#list entity.getEntityMetaData().getAtomicAttributes().iterator() as atomicAttribute>
+						<#list entity.getEntityMetaData().getAtomicAttributes() as atomicAttribute>
 	
 	                        <#assign key = atomicAttribute.getName()>
 	
