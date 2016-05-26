@@ -19,7 +19,8 @@ import org.molgenis.calibratecadd.support.JudgedVariant;
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
 import org.molgenis.calibratecadd.support.ProcessJudgedVariantMVLResults;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+
+import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
 import org.molgenis.data.annotation.joeri282exomes.Judgment;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
@@ -90,6 +91,7 @@ public class Step9_Validation
 	
 	public static void main(String[] args) throws Exception
 	{
+		new File(args[3]).createNewFile();
 		new Step9_Validation(args[0], args[1], args[2], args[3]);
 	}
 	

@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator;
+import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.data.annotator.tabix.TabixReader;
 import org.molgenis.data.annotator.tabix.TabixVcfRepository;
 import org.molgenis.data.vcf.VcfRepository;
@@ -66,12 +66,7 @@ public class Helper
 	/**
 	 * Returns a map of 'sequence feature' to list of 'candidate variants' denoted by chr:pos-pos location in the Tabix
 	 * file.
-	 * 
-	 * @param vcfFile
-	 * @param exacFile
-	 * @param mafThreshold
-	 * @return
-	 * @throws Exception
+	 *
 	 */
 	public LinkedHashMap<String, List<String>> getCandidateVariantsPerGene(File vcfFile, double mafThreshold,
 			Map<String, String> sequenceFeatureLocations) throws Exception
@@ -149,8 +144,8 @@ public class Helper
 			{
 				String ann = multiAnn[i];
 				String[] annSplit = ann.split("\\|", -1);
-				SnpEffAnnotator.Impact impact = Enum.valueOf(SnpEffAnnotator.Impact.class, annSplit[2]);
-				if (!(impact.equals(SnpEffAnnotator.Impact.MODERATE) || impact.equals(SnpEffAnnotator.Impact.HIGH)))
+				Impact impact = Enum.valueOf(Impact.class, annSplit[2]);
+				if (!(impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
 				{
 					continue;
 				}
@@ -249,7 +244,7 @@ public class Helper
 	 * Get variant from ExAC, null if not found Check on exact match of chrom, pos, ref, and alt If multiple alts, then
 	 * the list must include the asked for alt May return a line with multiple alt alleles
 	 * 
-	 * @param chrom
+	 * @param chr
 	 * @param pos
 	 * @param ref
 	 * @param alt
@@ -325,13 +320,7 @@ public class Helper
 
 	/**
 	 * Get list of CADD scores for indices within patient VCF adjusted by inheritance mode
-	 * 
-	 * @param candList
-	 * @param vcfFile
-	 * @param caddFile
-	 * @param inheritance
-	 * @return
-	 * @throws Exception
+	 *
 	 */
 	public double[] getPatientCaddScores(List<String> candList, String inheritance,
 			ArrayList<String> patientSampleIdList) throws Exception
@@ -424,7 +413,7 @@ public class Helper
 	/**
 	 * Combine genotype with CADD score and inheritance model to output stuff
 	 * 
-	 * @param geno
+	 * @param genotype
 	 * @param cadd
 	 * @param inheritance
 	 * @return
@@ -529,14 +518,7 @@ public class Helper
 
 	/**
 	 * Get a comparable set of variants from the population to contract against
-	 * 
-	 * @param candList
-	 * @param vcfFile
-	 * @param caddFile
-	 * @param exacFile
-	 * @param inheritance
-	 * @return
-	 * @throws Exception
+	 *
 	 */
 	public double[] getPopulationCaddScores(List<String> candList, String inheritance) throws Exception
 	{

@@ -15,12 +15,13 @@ import java.util.Set;
 import org.molgenis.calibratecadd.support.LoadCADDWebserviceOutput;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.cmd.CommandLineAnnotatorConfig;
-import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.annotation.joeri282exomes.struct.CGDgenes;
 import org.molgenis.data.vcf.VcfRepository;
 import org.molgenis.data.vcf.utils.VcfUtils;
+import org.molgenis.data.vcf.utils.VcfWriterUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -293,14 +294,14 @@ public class CalibratedExomeAnalysis
 							{
 								pathoVariants.add(cv);
 								variantRefAltGenePatho++;
-								VcfUtils.writeToVcf(record, pathogenicVariantsVCF);
+								VcfWriterUtils.writeToVcf(record, pathogenicVariantsVCF);
 								pathogenicVariantsVCF.write('\n');
 							}
 							if(judgment.classification.equals(Judgment.Classification.VOUS))
 							{
 								vousVariants.add(cv);
 								variantRefAltGeneVOUS++;
-								VcfUtils.writeToVcf(record, vousVariantsVCF);
+								 VcfWriterUtils.writeToVcf(record, vousVariantsVCF);
 								vousVariantsVCF.write('\n');
 							}
 						}

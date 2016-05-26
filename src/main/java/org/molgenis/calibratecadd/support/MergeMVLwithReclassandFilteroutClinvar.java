@@ -13,6 +13,7 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.vcf.VcfRepository;
 import org.molgenis.data.vcf.utils.VcfUtils;
+import org.molgenis.data.vcf.utils.VcfWriterUtils;
 
 public class MergeMVLwithReclassandFilteroutClinvar
 {
@@ -48,7 +49,7 @@ public class MergeMVLwithReclassandFilteroutClinvar
 		BufferedWriter pw = new BufferedWriter(new PrintWriter(output));
 		for(String key : printMe.keySet())
 		{
-			VcfUtils.writeToVcf(printMe.get(key), pw);
+			VcfWriterUtils.writeToVcf(printMe.get(key), pw);
 			pw.write('\n');
 		}
 		pw.flush();

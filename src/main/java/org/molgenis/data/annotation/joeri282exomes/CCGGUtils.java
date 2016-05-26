@@ -8,7 +8,8 @@ import java.util.Set;
 
 import org.molgenis.calibratecadd.support.VariantClassificationException;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+
+import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGEntry.Category;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
 import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;

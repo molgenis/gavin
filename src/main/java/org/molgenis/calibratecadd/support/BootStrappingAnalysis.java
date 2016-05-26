@@ -13,7 +13,7 @@ import org.molgenis.calibratecadd.Step9_Validation;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.OutCome;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.ExpClsf;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotation.entity.impl.SnpEffAnnotator.Impact;
+import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.data.annotation.joeri282exomes.CCGGEntry;
 import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
 import org.molgenis.data.annotation.joeri282exomes.Judgment;

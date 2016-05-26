@@ -71,11 +71,11 @@ public class MutationTaster2Results
 			MutationTasterClassification pc = muttasterFile.get(key);
 			if(pc.equals(MutationTasterClassification.polymorphism))
 			{
-				return new Judgment(Classification.Benign, Method.calibrated, "MutationTaster2 result 'polymorphism'");
+				return new Judgment(Classification.Benign, Method.calibrated, key, "MutationTaster2 result 'polymorphism'");
 			}
 			else if(pc.equals(MutationTasterClassification.disease_causing))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, "MutationTaster2 result 'disease_causing'");
+				return new Judgment(Classification.Pathogn, Method.calibrated, key, "MutationTaster2 result 'disease_causing'");
 			}
 			else
 			{
