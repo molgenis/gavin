@@ -55,29 +55,29 @@ import org.molgenis.data.vcf.VcfRepository;
 * 
 * Example usages:
 * 
- /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
+ /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/gavin/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
  ccgg
 *
- /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_MutationTaster_TestSet.vcf
+ /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/gavin/data/GoldStandard_MutationTaster_TestSet.vcf
  ccgg
 *
- /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
+ /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/gavin/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
  provean
 *
- /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_VariBench_ToleranceDS7_all.vcf.gz
+ /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/gavin/data/GoldStandard_VariBench_ToleranceDS7_all.vcf.gz
  ccgg
 * 
- /Users/jvelde/github/maven/molgenis-data-cadd/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/molgenis-data-cadd/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
+ /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
+ /Users/jvelde/github/maven/gavin/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
  ponp2
 * 
 * MS Windows paths:
- C:\Users\Joeri\github\molgenis-data-cadd\data\CCGG_ClassificationSource_GeneSummary.tsv
- C:\Users\Joeri\github\molgenis-data-cadd\data\GoldStandard_UMCG_MVLs_noClinVar.vcf
+ C:\Users\Joeri\github\gavin\data\CCGG_ClassificationSource_GeneSummary.tsv
+ C:\Users\Joeri\github\gavin\data\GoldStandard_UMCG_MVLs_noClinVar.vcf
  ccgg
 * 
 * @author jvelde

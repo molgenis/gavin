@@ -281,7 +281,7 @@ plot
 
 ### bootstrap analysis result processing
 
-df <- read.table("/Users/jvelde/github/maven/molgenis-data-cadd/data/other/performancebootstrap_output_usedinpaper.r",header=TRUE)
+df <- read.table("/Users/jvelde/github/maven/gavin/data/other/performancebootstrap_output_usedinpaper.r",header=TRUE)
 df$MCCcovadj <- as.double(as.character(df$MCCcovadj))
 
 ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = MCCcovadj)) +

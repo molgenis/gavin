@@ -11,8 +11,8 @@ public class BootStrappingAnalysisRunner
 	public static void main(String[] args) throws Exception
 	{
 		String fullSet = "/Users/jvelde/Desktop/clinvarcadd/combined_datasets_for_external_scoring/cat_all_vcfs.txt";
-		String gavin = "/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/GAVIN_calibrations_r0.1.tsv";
-		String outFile = "/Users/jvelde/performancebootstrap_output.r";
+		String gavin = "/Users/joeri/github/maven/gavin/data/predictions/GAVIN_calibrations_r0.1.tsv";
+		String outFile = "/Users/joeri/performancebootstrap_output.r";
 
 		int iterations = 10000;
 

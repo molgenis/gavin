@@ -77,7 +77,7 @@
 		</li>
 		<li>Use the group means or sensitivity/specificity thresholds as a means to interpret your variants.</li>
 		<li>Inspect the plots to get a better feel for the genomic context. Perhaps the CADD scores are more informative for one part of a gene than for another.</li>
-		<li>Batch downloads are available for <a href="downloads/clinvar.patho.fix.snpeff.exac.genesumm.tsv">gene summary</a> and <a href="downloads/clinvar.patho.fix.snpeff.exac.withcadd.tsv">variant level</a> data. Analysis source code is available on <a href="https://github.com/molgenis/molgenis-data-cadd" target="_blank">GitHub</a>.</li>
+		<li>Batch downloads are available for <a href="downloads/clinvar.patho.fix.snpeff.exac.genesumm.tsv">gene summary</a> and <a href="downloads/clinvar.patho.fix.snpeff.exac.withcadd.tsv">variant level</a> data. Analysis source code is available on <a href="https://github.com/molgenis/gavin" target="_blank">GitHub</a>.</li>
 	</ol>
 </td></tr></table>
 

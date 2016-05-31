@@ -10,7 +10,7 @@ public class Step9_AllValidations
 	public static void main(String[] args) throws Exception
 	{
 		String outFile = "/Users/joeri/step9_all_out.R";
-		String path = "/Users/joeri/github/molgenis-data-cadd/data/predictions";
+		String path = "/Users/joeri/github/gavin/data/predictions";
 		List<String> datasets = Arrays.asList(new String[]{"ClinVarNew", "MutationTaster2", "UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining"});
 		List<String> tools = Arrays.asList(new String[]{"GAVIN", "PONP2", "CADD", "PROVEAN", "SIFT", "PolyPhen2", "MSC", "Condel"});
 
@@ -24,7 +24,7 @@ public class Step9_AllValidations
 		{
 			for(String tool: tools)
 			{
-				new Step9_Validation(path, "/Users/joeri/github/molgenis-data-cadd/data/goldstandards/" + dataset, tool, outFile);
+				new Step9_Validation(path, "/Users/joeri/github/gavin/data/goldstandards/" + dataset, tool, outFile);
 			}
 		}
 

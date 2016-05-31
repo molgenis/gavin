@@ -4,7 +4,7 @@
 			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
 		</encoder>
 	</appender>
-	<appender name="MOLGENIS-DATA-CADD" class="org.molgenis.data.elasticsearch.logback.MolgenisAppender">
+	<appender name="GAVIN" class="org.molgenis.data.elasticsearch.logback.MolgenisAppender">
 	</appender>
 	<logger name="org.molgenis" level="ERROR"/>
 	<root level="WARN">
