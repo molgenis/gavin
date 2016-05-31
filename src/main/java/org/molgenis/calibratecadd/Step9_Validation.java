@@ -91,6 +91,10 @@ public class Step9_Validation
 	
 	public static void main(String[] args) throws Exception
 	{
+		if(args.length != 4)
+		{
+			throw new Exception("please provide: gavin file, variant vcf, tool, output file");
+		}
 		new File(args[3]).createNewFile();
 		new Step9_Validation(args[0], args[1], args[2], args[3]);
 	}
@@ -105,7 +109,7 @@ public class Step9_Validation
 	 * Check if classification matches
 	 * @throws Exception 
 	 */
-	public Step9_Validation(String ccggLoc, String mvlLoc, String mode, String outFile) throws Exception
+	public Step9_Validation(String predictionToolPath, String mvlLoc, String mode, String outFile) throws Exception
 	{
 		if(!EnumUtils.isValidEnum(ToolNames.class, mode))
 		{
@@ -116,12 +120,12 @@ public class Step9_Validation
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
-		this.ccgg = loadCCGG(ccggLoc);
-		scanMVL(mvlFile, ToolNames.valueOf(mode));
+		this.ccgg = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_r0.1.tsv");
+		scanMVL(mvlFile, predictionToolPath, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes, outFile);
 	}
 	
-	public void scanMVL(File mvlFile, ToolNames mode) throws Exception
+	public void scanMVL(File mvlFile, String predictionToolPath, ToolNames mode) throws Exception
 	{
 		
 		VcfRepository vcfRepo = new VcfRepository(mvlFile, "mvl");
@@ -141,7 +145,7 @@ public class Step9_Validation
 		CondelResults condelr = null;
 		if (mode.equals(ToolNames.PONP2))
 		{
-			p2r = new PONP2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/PON-P2.tsv"));
+			p2r = new PONP2Results(new File(predictionToolPath, "PON-P2.tsv"));
 		}
 		if (mode.equals(ToolNames.MutationTaster2))
 		{
@@ -149,19 +153,19 @@ public class Step9_Validation
 		}
 		if (mode.equals(ToolNames.PROVEAN) || mode.equals(ToolNames.SIFT))
 		{
-			ps2r = new ProveanAndSiftResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/PROVEAN_SIFT.tsv"));
+			ps2r = new ProveanAndSiftResults(new File(predictionToolPath, "PROVEAN_SIFT.tsv"));
 		}
 		if (mode.equals(ToolNames.PolyPhen2))
 		{
-			pf2r = new PolyPhen2Results(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/PolyPhen2.tsv"));
+			pf2r = new PolyPhen2Results(new File(predictionToolPath, "PolyPhen2.tsv"));
 		}
 		if (mode.equals(ToolNames.MSC))
 		{
-			mscr = new MSCResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/MSC_CADD_cutoffs_ClinVar95CI.tsv"));
+			mscr = new MSCResults(new File(predictionToolPath, "MSC_CADD_cutoffs_ClinVar95CI.tsv"));
 		}
 		if (mode.equals(ToolNames.Condel))
 		{
-			condelr = new CondelResults(new File("/Users/jvelde/github/maven/molgenis-data-cadd/data/predictions/Condel.tsv"));
+			condelr = new CondelResults(new File(predictionToolPath, "Condel.tsv"));
 		}
 		
 		System.out.println("Running in mode: " + mode);
