@@ -1,3 +1,2 @@
-# molgenis-data-cadd.git
-Tools for CADD scores and others
-FROZEN UNTIL MIGRATION OF GAVIN CALIBRATION TO PUBLIC REPO IS COMPLETE
+# gavin.git
+Gene specific calibrations for CADD scores based on ClinVar, ExAC and SnpEff
