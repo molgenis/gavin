@@ -14,13 +14,12 @@ import org.molgenis.calibratecadd.support.BootStrappingVariant.OutCome;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.ExpClsf;
 import org.molgenis.data.Entity;
 import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
-import org.molgenis.data.annotation.joeri282exomes.CCGGEntry;
-import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
-import org.molgenis.data.annotation.joeri282exomes.Judgment;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
+
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
-import org.springframework.security.access.method.P;
+
 
 public class BootStrappingAnalysis
 {

@@ -8,24 +8,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.EnumUtils;
-import org.molgenis.calibratecadd.support.CondelResults;
-import org.molgenis.calibratecadd.support.MSCResults;
-import org.molgenis.calibratecadd.support.MutationTaster2Results;
-import org.molgenis.calibratecadd.support.PONP2Results;
-import org.molgenis.calibratecadd.support.PolyPhen2Results;
-import org.molgenis.calibratecadd.support.ProveanAndSiftResults;
-import org.molgenis.calibratecadd.support.VariantClassificationException;
-import org.molgenis.calibratecadd.support.JudgedVariant;
+import org.molgenis.calibratecadd.support.*;
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
-import org.molgenis.calibratecadd.support.ProcessJudgedVariantMVLResults;
 import org.molgenis.data.Entity;
 
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
 import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
-import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
-import org.molgenis.data.annotation.joeri282exomes.Judgment;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 import org.molgenis.data.vcf.VcfRepository;
+
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 
 /**
 * Assess the performance of an in silico variant pathogenicity prediction tool on gold standard datasets.

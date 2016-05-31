@@ -8,10 +8,11 @@ import java.util.Set;
 
 import org.molgenis.data.Entity;
 
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.calibratecadd.support.CCGGEntry.Category;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 
 public class CCGGUtils
 {

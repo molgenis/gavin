@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 
 public class ProcessJudgedVariantMVLResults
 {

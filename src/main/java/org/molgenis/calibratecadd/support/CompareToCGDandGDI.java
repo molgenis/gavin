@@ -9,9 +9,8 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.molgenis.data.annotation.joeri282exomes.CCGGEntry;
-import org.molgenis.data.annotation.joeri282exomes.CCGGEntry.Category;
-import org.molgenis.data.annotation.joeri282exomes.CCGGUtils;
+import org.molgenis.calibratecadd.support.CCGGEntry.Category;
+
 
 public class CompareToCGDandGDI
 {

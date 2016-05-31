@@ -1,13 +1,13 @@
 package org.molgenis.calibratecadd.support;
 
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
+import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Scanner;
-
-import org.molgenis.data.annotation.joeri282exomes.Judgment;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Classification;
-import org.molgenis.data.annotation.joeri282exomes.Judgment.Method;
 
 public class PONP2Results
 {
