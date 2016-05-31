@@ -1,4 +1,4 @@
-package org.molgenis.data.annotation.joeri282exomes;
+package org.molgenis.calibratecadd.support;
 
 public class CCGGEntry
 {
