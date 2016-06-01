@@ -2,7 +2,6 @@ package org.molgenis.calibratecadd;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -91,7 +90,7 @@ public class Step9_Validation
 		new Step9_Validation(args[0], args[1], args[2], args[3]);
 	}
 	
-	CCGGUtils ccgg;
+	GavinUtils ccgg;
 	HashMap<String, List<JudgedVariant>> judgedMVLVariants = new HashMap<String, List<JudgedVariant>>();
 	int judgmentsInCalibratedGenes = 0;
 	
@@ -175,11 +174,11 @@ public class Step9_Validation
 				throw new Exception("Did not expect multiple alt alleles! " + record.toString());
 			}
 			
-			Double getMAF = CCGGUtils.getInfoForAllele(record, "EXAC_AF", alt);
+			Double getMAF = GavinUtils.getInfoForAllele(record, "EXAC_AF", alt);
 			double MAF = getMAF == null ? 0 : getMAF;
-			Double CADDscore = CCGGUtils.getInfoForAllele(record, "CADD_SCALED", alt);
+			Double CADDscore = GavinUtils.getInfoForAllele(record, "CADD_SCALED", alt);
 			String ann = record.getString("ANN");
-			Set<String> genes = CCGGUtils.getGenesFromAnn(ann);
+			Set<String> genes = GavinUtils.getGenesFromAnn(ann);
 			String id = record.getString("ID");
 			
 			//for some variants, we have GENE:MUTATION in the ID
@@ -200,7 +199,7 @@ public class Step9_Validation
 				if(!hasGeneId || gene.equals(geneFromId))
 				{
 					geneToIdMatchFound = true;
-					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
+					Impact impact = GavinUtils.getImpact(ann, gene, alt);
 
 					Judgment judgment;
 					if (mode.equals(ToolNames.GAVIN))
@@ -341,14 +340,14 @@ public class Step9_Validation
 		variants.add(new JudgedVariant(judgment, variant, ExpertClassification.valueOf(mvlClasfc)));
 	}
 	
-	public static CCGGUtils loadCCGG(String ccggLoc) throws Exception
+	public static GavinUtils loadCCGG(String ccggLoc) throws Exception
 	{
 		File ccggFile = new File(ccggLoc);
 		if(!ccggFile.exists())
 		{
 			throw new Exception("CCGG file "+ccggFile+" does not exist or is directory");
 		}
-		CCGGUtils ccggUtils = new CCGGUtils(ccggFile);
+		GavinUtils ccggUtils = new GavinUtils(ccggFile);
 		return ccggUtils;
 	}
 }

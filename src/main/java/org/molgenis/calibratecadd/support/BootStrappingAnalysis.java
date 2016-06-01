@@ -48,7 +48,7 @@ public class BootStrappingAnalysis
 		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tMCCcovadj\n".getBytes(), StandardOpenOption.APPEND);
 
 
-		CCGGUtils gavin = Step9_Validation.loadCCGG(gavinFile);
+		GavinUtils gavin = Step9_Validation.loadCCGG(gavinFile);
 
 		// file with combined variants has 25,995 variants
 		File variantList = new File(vcfFile);
@@ -73,11 +73,11 @@ public class BootStrappingAnalysis
 				throw new Exception("Did not expect multiple alt alleles! " + record.toString());
 			}
 
-			Double getMAF = CCGGUtils.getInfoForAllele(record, "EXAC_AF", alt);
+			Double getMAF = GavinUtils.getInfoForAllele(record, "EXAC_AF", alt);
 			double MAF = getMAF == null ? 0 : getMAF;
-			Double CADDscore = CCGGUtils.getInfoForAllele(record, "CADD_SCALED", alt);
+			Double CADDscore = GavinUtils.getInfoForAllele(record, "CADD_SCALED", alt);
 			String ann = record.getString("ANN");
-			Set<String> genes = CCGGUtils.getGenesFromAnn(ann);
+			Set<String> genes = GavinUtils.getGenesFromAnn(ann);
 			String id = record.getString("ID");
 
 			//for some variants, we have GENE:MUTATION in the ID
@@ -96,7 +96,7 @@ public class BootStrappingAnalysis
 
 			for(String gene : genes) {
 				if (!hasGeneId || gene.equals(geneFromId)) {
-					Impact impact = CCGGUtils.getImpact(ann, gene, alt);
+					Impact impact = GavinUtils.getImpact(ann, gene, alt);
 					geneToIdMatchFound = true;
 					Judgment judgment;
 					if (toolName.equals(Step9_Validation.ToolNames.GAVIN))
@@ -209,7 +209,7 @@ public class BootStrappingAnalysis
 
 	}
 
-	private void addToFullSetClsfOutcomes (Classification observed, String expected, CCGGUtils gavin, String gene)
+	private void addToFullSetClsfOutcomes (Classification observed, String expected, GavinUtils gavin, String gene)
 	{
 
 		BootStrappingVariant.Label label = null;

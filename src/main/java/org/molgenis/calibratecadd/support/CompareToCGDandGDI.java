@@ -35,7 +35,7 @@ public class CompareToCGDandGDI
 	HashMap<String, String> geneToInheritance;
 	HashMap<String, String> geneToOnset;
 	HashMap<String, String> geneToDamage;
-	CCGGUtils cu;
+	GavinUtils cu;
 	
 	public CompareToCGDandGDI(File cgdFile, File gdiFile, File ccggFile) throws FileNotFoundException
 	{
@@ -396,7 +396,7 @@ public class CompareToCGDandGDI
 	
 	public void loadData() throws Exception
 	{
-		CCGGUtils cu = new CCGGUtils(ccggFile);
+		GavinUtils cu = new GavinUtils(ccggFile);
 		
 		HashMap<String, String> geneToDamage = new HashMap<String, String>();
 		

@@ -14,11 +14,11 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
 import org.molgenis.calibratecadd.support.CCGGEntry.Category;
 
-public class CCGGUtils
+public class GavinUtils
 {
 	HashMap<String, CCGGEntry> geneToEntry = new HashMap<String, CCGGEntry>();
 	
-	public CCGGUtils(File ccgg) throws Exception
+	public GavinUtils(File ccgg) throws Exception
 	{	
 		Scanner s = new Scanner(ccgg);
 		
@@ -233,7 +233,7 @@ public class CCGGUtils
 	public static void main(String[] args) throws Exception
 	{
 		File ccgg = new File(args[0]);
-		new CCGGUtils(ccgg);
+		new GavinUtils(ccgg);
 
 	}
 
