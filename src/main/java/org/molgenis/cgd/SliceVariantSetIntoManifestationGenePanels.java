@@ -58,6 +58,7 @@ public class SliceVariantSetIntoManifestationGenePanels {
                 }
                 else
                 {
+                    //FIXME: only add here when NONE of the genes is found in CGD ! e.g. TTN variants that also lie in MIR548N and TTN-AS1 pseudogene go into "Cardiovascular" as well as "NotInCGD" ... thats a little bit weird
                     List<Entity> variantList = manifestionToRecord.get("NotInCGD");
                     if(variantList == null) {
                         variantList = new ArrayList<>();
