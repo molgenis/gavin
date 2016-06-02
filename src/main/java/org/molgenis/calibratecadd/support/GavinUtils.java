@@ -62,8 +62,8 @@ public class GavinUtils
 		CCGGEntry entry = geneToEntry.get(gene);
 		CCGGEntry.Category category = entry.category;
 		
-		// MAF based classification, calibrated
-		if(entry.PathoMAFThreshold != null && MAF > entry.PathoMAFThreshold)
+		// MAF based classification, calibrated but slightly relaxed with a factor 10
+		if(entry.PathoMAFThreshold != null && MAF > entry.PathoMAFThreshold * 10)
 		{
 			return new Judgment(Classification.Benign, Method.calibrated, gene, "Variant MAF of " + MAF + " is greater than the "+gene+" pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".");
 		}
@@ -100,10 +100,10 @@ public class GavinUtils
 				{
 					return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is greater than the mean pathogenic score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative. Also, " + mafReason);
 				}
-				else if(CADDscore < entry.MeanPopulationCADDScore)
-				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is less than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
-				}
+//				else if(CADDscore < entry.MeanPopulationCADDScore)
+//				{
+//					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is less than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
+//				}
 			}
 			else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
 			{
@@ -111,10 +111,10 @@ public class GavinUtils
 				{
 					return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is greater than the 95% specificity threhold of " + entry.Spec95thPerCADDThreshold + " for this gene. Also, " + mafReason);
 				}
-				else if(CADDscore < entry.Sens95thPerCADDThreshold)
-				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is less than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
-				}
+//				else if(CADDscore < entry.Sens95thPerCADDThreshold)
+//				{
+//					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is less than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
+//				}
 			}
 		}
 		
