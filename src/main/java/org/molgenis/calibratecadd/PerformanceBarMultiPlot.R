@@ -67,8 +67,8 @@ df$TotalToolClsfNonVOUS <- 0
 df$TotalExpertClsfNonVOUS <- 0
 df$Coverage <- 0
 df$MCCadj <- 0
-df$Sens <- 0
-df$Spec <- 0
+df$Sensitivity <- 0
+df$Specificity <- 0
 df$PPV <- 0
 df$NPV <- 0
 df$ACC <- 0
@@ -77,8 +77,8 @@ for(i in 1:nrow(df)) {
   df[i,]$TotalExpertClsfNonVOUS <- df[i,]$TotalToolClsfNonVOUS + df[i,]$ExpBenignAsVOUS + df[i,]$ExpPathoAsVOUS
   df[i,]$Coverage <- df[i,]$TotalToolClsfNonVOUS / df[i,]$TotalExpertClsfNonVOUS
   df[i,]$MCCadj <- df[i,]$MCC * df[i,]$Coverage
-  df[i,]$Sens <- df[i,]$TP/(df[i,]$TP+df[i,]$FN+df[i,]$ExpPathoAsVOUS)
-  df[i,]$Spec <- df[i,]$TN/(df[i,]$TN+df[i,]$FP+df[i,]$ExpBenignAsVOUS)
+  df[i,]$Sensitivity <- df[i,]$TP/(df[i,]$TP+df[i,]$FN+df[i,]$ExpPathoAsVOUS)
+  df[i,]$Specificity <- df[i,]$TN/(df[i,]$TN+df[i,]$FP+df[i,]$ExpBenignAsVOUS)
   df[i,]$PPV <- df[i,]$TP/(df[i,]$TP+df[i,]$FP)
   df[i,]$NPV <- df[i,]$TN/(df[i,]$TN+df[i,]$FN)
   df[i,]$ACC <- (df[i,]$TP+df[i,]$TN)/(df[i,]$TP+df[i,]$TN+df[i,]$FP+df[i,]$FN+df[i,]$ExpPathoAsVOUS+df[i,]$ExpBenignAsVOUS)
@@ -106,14 +106,14 @@ mean(df.gavin$Spec)
 
 ## tiles TPR/TNR
 ggplot() +
-  geom_tile(data = df, aes(x = Tool, y = Data), fill = "gray", colour="black") + 
+  geom_tile(data = df, aes(x = Tool, y = Data), fill = "white", colour="black") + 
   theme_bw() +
-  geom_tile(data = df, aes(x = Tool, y = Data, fill = Spec, width = Sens)) +
-  geom_text(data = df, aes(x = Tool, y = Data, label = paste("Sens:",percent(Sens),"\nSpec:",percent(Spec))), colour = "black", size=2.5) +
-  scale_fill_gradient(low = "white", high = "steelblue") +
+  geom_tile(data = df, aes(x = Tool, y = Data, fill = Specificity, width = Sensitivity), height= 0.9) +
+  geom_text(data = df, aes(x = Tool, y = Data, label = paste("Sens:",percent(Sensitivity),"\nSpec:",percent(Specificity))), colour = "black", size=2.5) +
+  scale_fill_gradient(low = "aliceblue", high = "dodgerblue") +
   ylab("CGD manifestation gene panel") +
   xlab("Prediction tool")
- # scale_fill_gradient(low="red", high="green") +
+
 
 ## ppv/npv
 ggplot() +
