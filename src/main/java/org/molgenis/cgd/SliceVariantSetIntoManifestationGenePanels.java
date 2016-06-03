@@ -1,5 +1,6 @@
 package org.molgenis.cgd;
 
+import net.didion.jwnl.data.Exc;
 import org.molgenis.calibratecadd.support.GavinUtils;
 import org.molgenis.data.Entity;
 import org.molgenis.data.vcf.VcfRepository;
@@ -35,11 +36,28 @@ public class SliceVariantSetIntoManifestationGenePanels {
             String ann = record.getString("ANN");
             Set<String> genes = GavinUtils.getGenesFromAnn(ann);
 
+            Set<String> manifestationCategoriesAlreadyWritten = new HashSet<>();
+
+            boolean inCGD = false;
             for(String gene : genes)
             {
-                if(cgd.keySet().contains(gene)){
+                if(cgd.keySet().contains(gene))
+                {
+                    inCGD = true;
+                    if(cgd.get(gene).getManifestationCategoriesList().size() == 0)
+                    {
+                        throw new Exception("gene in CGD but no ManifestationCategories: " + gene );
+                    }
                     for(String manifestCat : cgd.get(gene).getManifestationCategoriesList())
                     {
+                        if(manifestationCategoriesAlreadyWritten.contains(manifestCat))
+                        {
+                            //prevent writing out to the same manifestation category more than once when there are multiple CGD genes that map to the same
+                            System.out.println("already written variant to manifestation category " + manifestCat + ", skipping!");
+                            continue;
+                        }
+                        manifestationCategoriesAlreadyWritten.add(manifestCat);
+
                         List<Entity> variantList = manifestionToRecord.get(manifestCat);
                         if(variantList == null) {
                             variantList = new ArrayList<>();
@@ -56,24 +74,27 @@ public class SliceVariantSetIntoManifestationGenePanels {
 
                     }
                 }
-                else
-                {
-                    //FIXME: only add here when NONE of the genes is found in CGD ! e.g. TTN variants that also lie in MIR548N and TTN-AS1 pseudogene go into "Cardiovascular" as well as "NotInCGD" ... thats a little bit weird
-                    List<Entity> variantList = manifestionToRecord.get("NotInCGD");
-                    if(variantList == null) {
-                        variantList = new ArrayList<>();
-                        manifestionToRecord.put("NotInCGD", variantList);
-                    }
-                    variantList.add(record);
-
-                    Set<String> geneList = manifestionToGenes.get("NotInCGD");
-                    if(geneList == null) {
-                        geneList = new HashSet<>();
-                        manifestionToGenes.put("NotInCGD", geneList);
-                    }
-                    geneList.add(gene);
-                }
             }
+
+            if(!inCGD)
+            {
+                //only when 0 of the genes is found in CGD we consider a variant to be 'not in CGD'
+                // this prevents the sitation  where e.g. TTN variants that also lie in MIR548N and TTN-AS1 pseudogene go into "Cardiovascular" as well as "NotInCGD" ... which is a bit weird
+                List<Entity> variantList = manifestionToRecord.get("NotInCGD");
+                if(variantList == null) {
+                    variantList = new ArrayList<>();
+                    manifestionToRecord.put("NotInCGD", variantList);
+                }
+                variantList.add(record);
+
+                Set<String> geneList = manifestionToGenes.get("NotInCGD");
+                if(geneList == null) {
+                    geneList = new HashSet<>();
+                    manifestionToGenes.put("NotInCGD", geneList);
+                }
+                geneList.addAll(genes);
+            }
+
         }
 
         for(String key : manifestionToRecord.keySet())
