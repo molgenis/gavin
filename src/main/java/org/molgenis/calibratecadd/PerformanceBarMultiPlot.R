@@ -109,8 +109,8 @@ df.notincgd <- subset(df, Data == "NotInCGD")
 ggplot() +
   theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
   geom_point(data = df, aes(x = Sensitivity, y = Specificity, shape = Tool, colour = Tool), size=3, stroke = 3) +
-  geom_text(data = df, aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.005, size = 3, check_overlap = TRUE) +
-  geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.005, size = 3, colour="red",check_overlap = TRUE) +
+  geom_text(data = df, aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, check_overlap = TRUE) +
+  geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, colour="red",check_overlap = TRUE) +
   scale_colour_manual(values=c(orange, gray, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)) +
   scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8)) +
   xlim(0.395, 1)
@@ -307,16 +307,16 @@ plot
 
 ### bootstrap analysis result processing
 
-df <- read.table("/Users/jvelde/github/maven/gavin/data/other/performancebootstrap_output_usedinpaper.r",header=TRUE)
-df$MCCcovadj <- as.double(as.character(df$MCCcovadj))
+df <- read.table("/Users/joeri/github/gavin/data/other/performancebootstrap_output_usedinpaper.r",header=TRUE)
+df$Acc <- as.double(as.character(df$Acc))
 
-ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = MCCcovadj)) +
+ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = Acc)) +
   theme_classic() +
   theme(text = element_text(size = 15),  axis.title.y=element_blank(), legend.position="none") +
-  ylab(expression(~MCC[covadj]~"performance")) +
-# scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
+  ylab("Accuracy") +
+ scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
 # scale_fill_manual(values=c("blue", "red", "purple")) +
-  scale_fill_manual(values=c("gray50", "gray90", "gray70")) +
+#  scale_fill_manual(values=c("gray50", "gray90", "gray70")) +
   coord_flip() +
   scale_x_discrete(limits=c("C3_GAVINnocal","C3_GAVIN","C4_GAVINnocal","C4_GAVIN", "C1_C2_GAVINnocal", "C1_C2_GAVIN"),
   labels = c("C1_C2_GAVIN" = "Gene-specific classification\nCADD predictive genes (520)\nThresholds calibrated per gene",
