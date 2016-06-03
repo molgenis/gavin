@@ -45,7 +45,7 @@ public class BootStrappingAnalysis
 	{
 		this.outputFile = outputFile;
 		this.toolName = toolName;
-		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tMCCcovadj\n".getBytes(), StandardOpenOption.APPEND);
+		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tAcc\n".getBytes(), StandardOpenOption.APPEND);
 
 
 		GavinUtils gavin = Step9_Validation.loadCCGG(gavinFile);
@@ -300,12 +300,13 @@ public class BootStrappingAnalysis
 		System.out.println("FN = " + FN);
 		System.out.println("VOUS = " + VOUS);
 		double MCC = ProcessJudgedVariantMVLResults.getMCC(TP, TN, FP, FN);
+		double acc = (double)(TN+TP)/(double)(TN+TP+FP+FN+VOUS);
 		System.out.println("MCC = " + MCC);
 		double cov = (TP+TN+FP+FN)/(double)(TP+TN+FP+FN+VOUS);
-		System.out.println("MCCcovadj = " + (cov*MCC));
+		System.out.println("acc = " + (acc));
 		System.out.println("% true-pathogenic: " + (nrExpPatho/(double)(nrExpPatho+nrExpBenign)));
 
-		String toR = label+"_"+toolName + "\t" + label + "\t" + toolName + "\t" + (cov*MCC) + "\n";
+		String toR = label+"_"+toolName + "\t" + label + "\t" + toolName + "\t" + (acc) + "\n";
 		Files.write(Paths.get(outputFile), toR.getBytes(), StandardOpenOption.APPEND);
 
 	}
