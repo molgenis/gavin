@@ -104,6 +104,17 @@ mean(df.gavin$Spec)
 #no C1-5thrbenign + impactmodbenign 0.8218104
 #no C1-5thrbenign + genesens.mafthr*10 0.7806921
 
+df.notincgd <- subset(df, Data == "NotInCGD")
+##
+ggplot() +
+  theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
+  geom_point(data = df, aes(x = Sensitivity, y = Specificity, shape = Tool, colour = Tool), size=3, stroke = 3) +
+  geom_text(data = df, aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.005, size = 3, check_overlap = TRUE) +
+  geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.005, size = 3, colour="red",check_overlap = TRUE) +
+  scale_colour_manual(values=c(orange, gray, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)) +
+  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8)) +
+  xlim(0.395, 1)
+
 ## tiles TPR/TNR
 ggplot() +
   geom_tile(data = df, aes(x = Tool, y = Data), fill = "white", colour="black") + 
