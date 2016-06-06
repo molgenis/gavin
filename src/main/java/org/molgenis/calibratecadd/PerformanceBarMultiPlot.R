@@ -57,7 +57,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 # original data sets
-source("/Users/joeri/github/gavin/data/other/step9_out.R")
+#source("/Users/joeri/github/gavin/data/other/step9_out.R")
 
 # CGD panel sets
 source("/Users/joeri/github/gavin/data/other/step9_panels_out.R")
@@ -93,33 +93,18 @@ df.cadd <- subset(df, Tool == "CADD")
 median(df.cadd$Sensitivity)
 median(df.cadd$Specificity)
 
-#cadd 0.9359071
-#default 0.8558632
-#thr.adj -5 0.8894971
-#thr.adj -50 0.9369723
-#no C1-5thrbenign 0.8967742
-#no C1-5thrbenign + impactmodbenign 0.8968544
-#no C1-5thrbenign + genesens.mafthr*10 0.9194751
 
-
-# cadd 0.5742272
-#default 0.8485147
-#thr.adj -5 0.8299777
-#thr.adj -50 0.742219
-#no C1-5 thr. benign 0.8218974
-#no C1-5thrbenign + impactmodbenign 0.8218104
-#no C1-5thrbenign + genesens.mafthr*10 0.7806921
-
+## nice plot
 df.notincgd <- subset(df, Data == "NotInCGD")
-##
 ggplot() +
   theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
   geom_point(data = df, aes(x = Sensitivity, y = Specificity, shape = Tool, colour = Tool), size=3, stroke = 3) +
   geom_text(data = df, aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, check_overlap = TRUE) +
   geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, colour="red",check_overlap = TRUE) +
-  scale_colour_manual(values=c(orange, gray, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)) +
-  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8)) +
+  scale_colour_manual(values=c(orange, gray, skyblue, "slateblue", yellow, blue, vermillion, reddishpurple, blueishgreen)) +
+  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8, 9)) +
   scale_x_continuous(lim=c(0.395,1), breaks = seq(0, 1, by = 0.1))
+
 
 ## tiles TPR/TNR
 ggplot() +
