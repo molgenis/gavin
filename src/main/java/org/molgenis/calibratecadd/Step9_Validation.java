@@ -77,7 +77,7 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 public class Step9_Validation
 {
 	public enum ToolNames{
-		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC, Condel, MutationTaster2
+		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC_ClinVar95CI, MSC_HGMD99CI, Condel, MutationTaster2
 	}
 	
 	public static void main(String[] args) throws Exception
@@ -150,9 +150,13 @@ public class Step9_Validation
 		{
 			pf2r = new PolyPhen2Results(new File(predictionToolPath, "PolyPhen2.tsv"));
 		}
-		if (mode.equals(ToolNames.MSC))
+		if (mode.equals(ToolNames.MSC_ClinVar95CI))
 		{
 			mscr = new MSCResults(new File(predictionToolPath, "MSC_CADD_cutoffs_ClinVar95CI.tsv"));
+		}
+		if (mode.equals(ToolNames.MSC_HGMD99CI))
+		{
+			mscr = new MSCResults(new File(predictionToolPath, "MSC_CADD_cutoffs_HGMD99CI.tsv"));
 		}
 		if (mode.equals(ToolNames.Condel))
 		{
@@ -230,7 +234,7 @@ public class Step9_Validation
 					{
 						judgment = pf2r.classifyVariantUsingPolyPhen2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals(ToolNames.MSC))
+					else if (mode.equals(ToolNames.MSC_ClinVar95CI) || mode.equals(ToolNames.MSC_HGMD99CI))
 					{
 						judgment = mscr.classifyVariantUsingMSCResults(gene, CADDscore);
 					}
