@@ -302,21 +302,21 @@ df <- read.table("/Users/joeri/github/gavin/data/other/performancebootstrap_outp
 df$Acc <- as.double(as.character(df$Acc))
 
 ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, y = Acc)) +
-  theme_classic() +
-  theme(text = element_text(size = 15),  axis.title.y=element_blank(), legend.position="none") +
-  ylab("Accuracy") +
- scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple)) +
-# scale_fill_manual(values=c("blue", "red", "purple")) +
-#  scale_fill_manual(values=c("gray50", "gray90", "gray70")) +
-  coord_flip() +
+  theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
+  ylab("Accuracy") + xlab("GAVIN classification") +
   scale_x_discrete(limits=c("C3_GAVINnocal","C3_GAVIN","C4_GAVINnocal","C4_GAVIN", "C1_C2_GAVINnocal", "C1_C2_GAVIN"),
-  labels = c("C1_C2_GAVIN" = "Gene-specific classification\nCADD predictive genes (520)\nThresholds calibrated per gene",
-             "C1_C2_GAVINnocal" = "Genome-wide classification\nCADD predictive genes (520)\nThreshold 15 / MAF 0.00474",
-             "C4_GAVIN" = "Gene-specific classification\nCADD less predictive genes (660)\nThresholds calibrated per gene", 
-             "C4_GAVINnocal" = "Genome-wide classification\nCADD less predictive genes (660)\nThreshold 15 / MAF 0.00474", 
-             "C3_GAVIN" = "Gene-specific classification\nScarce training data genes (737)\nThresholds calibrated per gene",
-             "C3_GAVINnocal"="Genome-wide classification\nScarce training data genes (737)\nThreshold 15 / MAF 0.00474"
-             ))
+                   labels = c("C1_C2_GAVIN" = "Gene-specific",
+                              "C1_C2_GAVINnocal" = "Genome-wide",
+                              "C4_GAVIN" = "Gene-specific", 
+                              "C4_GAVINnocal" = "Genome-wide", 
+                              "C3_GAVIN" = "Gene-specific",
+                              "C3_GAVINnocal"="Genome-wide" )) +
+  scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple), 
+                    name="Selected gene group",
+                    breaks=c("C1_C2", "C4", "C3"),
+                    labels=c("CADD predictive genes (520)", "CADD less predictive genes (660)", "Scarce training data genes (737)")) +
+  coord_flip()
+
 
 
 # mann-whitney-wilcoxon test and median values
