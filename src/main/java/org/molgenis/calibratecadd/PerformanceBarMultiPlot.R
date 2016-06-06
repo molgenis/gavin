@@ -86,7 +86,13 @@ for(i in 1:nrow(df)) {
 
 df.gavin <- subset(df, Tool == "GAVIN")
 
-mean(df.gavin$Sens)
+median(df.gavin$Sensitivity)
+median(df.gavin$Specificity)
+
+df.cadd <- subset(df, Tool == "CADD")
+median(df.cadd$Sensitivity)
+median(df.cadd$Specificity)
+
 #cadd 0.9359071
 #default 0.8558632
 #thr.adj -5 0.8894971
@@ -95,7 +101,7 @@ mean(df.gavin$Sens)
 #no C1-5thrbenign + impactmodbenign 0.8968544
 #no C1-5thrbenign + genesens.mafthr*10 0.9194751
 
-mean(df.gavin$Spec)
+
 # cadd 0.5742272
 #default 0.8485147
 #thr.adj -5 0.8299777
@@ -113,7 +119,7 @@ ggplot() +
   geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, colour="red",check_overlap = TRUE) +
   scale_colour_manual(values=c(orange, gray, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)) +
   scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8)) +
-  xlim(0.395, 1)
+  scale_x_continuous(lim=c(0.395,1), breaks = seq(0, 1, by = 0.1))
 
 ## tiles TPR/TNR
 ggplot() +
