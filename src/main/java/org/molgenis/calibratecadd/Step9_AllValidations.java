@@ -16,7 +16,7 @@ public class Step9_AllValidations
 		String path = "/Users/joeri/github/gavin/data/predictions";
 	//	List<String> datasets = Arrays.asList(new String[]{"ClinVarNew", "MutationTaster2", "UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining"});
 		List<String> datasets = Arrays.asList(new String[]{"Renal", "Pulmonary", "Ophthalmologic", "Oncologic", "Obstetric", "NotInCGD", "Neurologic", "Musculoskeletal", "Hematologic", "Genitourinary", "Gastrointestinal", "Endocrine", "Dermatologic", "Dental", "Craniofacial", "Cardiovascular", "Biochemical", "Audiologic_Otolaryngologic", "Allergy_Immunology_Infectious"});
-		List<String> tools = Arrays.asList(new String[]{"GAVIN", "CADD", "MSC_ClinVar95CI", "MSC_HGMD99CI", "PROVEAN", "SIFT", "PolyPhen2", "Condel", "PONP2"});
+		List<String> tools = Arrays.asList(new String[]{"GAVIN", "CADD", "MSC_ClinVar95CI", "MSC_HGMD99CI", "PROVEAN", "SIFT", "PolyPhen2", "Condel", "PONP2", "PredictSNP2", "FATHMM", "GWAVA", "FunSeq", "DANN"});
 
 		if(new File(outFile).exists())
 		{

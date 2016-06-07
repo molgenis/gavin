@@ -77,7 +77,7 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 public class Step9_Validation
 {
 	public enum ToolNames{
-		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC_ClinVar95CI, MSC_HGMD99CI, Condel, MutationTaster2
+		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC_ClinVar95CI, MSC_HGMD99CI, Condel, PredictSNP2, FATHMM, GWAVA, FunSeq, DANN
 	}
 	
 	public static void main(String[] args) throws Exception
@@ -124,8 +124,8 @@ public class Step9_Validation
 		java.util.Iterator<Entity> vcfRepoIter = vcfRepo.iterator();
 		
 		/**
-		 * Here, we let PON-P2 or MutationTaster2 handle the classification and see what happens
-		 * Obviously, before this works, you must score your variant list with PON-P2 or MutationTaster2
+		 * Here, we let PON-P2 or other tools handle the classification and see what happens
+		 * Obviously, before this works, you must score your variant list with PON-P2 or other tools
 		 * And then link this file below
 		 */
 		PONP2Results p2r = null;
@@ -134,13 +134,10 @@ public class Step9_Validation
 		PolyPhen2Results pf2r = null;
 		MSCResults mscr = null;
 		CondelResults condelr = null;
+		PredictSNP2Results predictSNP2r = null;
 		if (mode.equals(ToolNames.PONP2))
 		{
 			p2r = new PONP2Results(new File(predictionToolPath, "PON-P2.tsv"));
-		}
-		if (mode.equals(ToolNames.MutationTaster2))
-		{
-			m2r = new MutationTaster2Results(new File("n/a"));
 		}
 		if (mode.equals(ToolNames.PROVEAN) || mode.equals(ToolNames.SIFT))
 		{
@@ -161,6 +158,10 @@ public class Step9_Validation
 		if (mode.equals(ToolNames.Condel))
 		{
 			condelr = new CondelResults(new File(predictionToolPath, "Condel.tsv"));
+		}
+		if (mode.equals(ToolNames.PredictSNP2) || mode.equals(ToolNames.FATHMM) || mode.equals(ToolNames.FunSeq) || mode.equals(ToolNames.GWAVA) || mode.equals(ToolNames.DANN) )
+		{
+			predictSNP2r = new PredictSNP2Results(new File(predictionToolPath, "PredictSNP2.vcf.gz"));
 		}
 		
 		System.out.println("Running in mode: " + mode);
@@ -218,10 +219,6 @@ public class Step9_Validation
 					{
 						judgment = p2r.classifyVariantUsingPONP2Results(chr, pos, ref, alt);
 					}
-					else if (mode.equals(ToolNames.MutationTaster2))
-					{
-						judgment = m2r.classifyVariantUsingMutationTaster2Results(chr, pos, ref, alt);
-					}
 					else if (mode.equals(ToolNames.PROVEAN))
 					{
 						judgment = ps2r.classifyVariantUsingProveanResults(chr, pos, ref, alt);
@@ -241,6 +238,10 @@ public class Step9_Validation
 					else if (mode.equals(ToolNames.Condel))
 					{
 						judgment = condelr.classifyVariantUsingCondelResults(chr, pos, ref, alt);
+					}
+					else if (mode.equals(ToolNames.PredictSNP2) || mode.equals(ToolNames.FATHMM) || mode.equals(ToolNames.FunSeq) || mode.equals(ToolNames.GWAVA) || mode.equals(ToolNames.DANN) )
+					{
+						judgment = predictSNP2r.classifyVariantUsingPredictSNP2Results(chr, pos, ref, alt, mode.toString());
 					}
 					else if (mode.equals(ToolNames.CADD))
 					{
