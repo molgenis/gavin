@@ -2,7 +2,9 @@ package org.molgenis.cgd;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
 import org.molgenis.cgd.CGDEntry.generalizedInheritance;
@@ -11,7 +13,7 @@ public class LoadCGD {
 
 	
 	
-	public static HashMap<String, CGDEntry> loadCGD(File cgdFile) throws IOException
+	public static Map<String, CGDEntry> loadCGD(File cgdFile) throws IOException
 	{
 
 		InputStream fileStream = new FileInputStream(cgdFile);
@@ -19,7 +21,8 @@ public class LoadCGD {
 		Reader decoder = new InputStreamReader(gzipStream, "UTF-8");
 		BufferedReader buffered = new BufferedReader(decoder);
 
-		HashMap<String, CGDEntry> cgd = new HashMap<String, CGDEntry>();
+		//HashMap<String, CGDEntry> cgd = new HashMap<String, CGDEntry>();
+		Map<String, CGDEntry> cgd =  new TreeMap<String, CGDEntry>(String.CASE_INSENSITIVE_ORDER);
 
 		buffered.lines().forEach(line -> {
 
@@ -65,7 +68,7 @@ public class LoadCGD {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 
-		HashMap<String, CGDEntry> cgd = LoadCGD.loadCGD(new File("/Users/joeri/github/gavin/data/other/CGD_1jun2016.txt.gz"));
+		Map<String, CGDEntry> cgd = LoadCGD.loadCGD(new File("/Users/joeri/github/gavin/data/other/CGD_1jun2016.txt.gz"));
 
 		for( String key : cgd.keySet())
 		{

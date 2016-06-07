@@ -20,7 +20,7 @@ public class SliceVariantSetIntoManifestationGenePanels {
     public SliceVariantSetIntoManifestationGenePanels(File vcfFile, File cgdFile, File outputDir) throws Exception {
 
         VcfRepository vcf = new VcfRepository(vcfFile, "vcf");
-        HashMap<String, CGDEntry> cgd = LoadCGD.loadCGD(cgdFile);
+        Map<String, CGDEntry> cgd = LoadCGD.loadCGD(cgdFile);
         HashMap<String, List<Entity>> manifestionToRecord = new HashMap<>();
         HashMap<String, Set<String>> manifestionToGenes = new HashMap<>();
 
