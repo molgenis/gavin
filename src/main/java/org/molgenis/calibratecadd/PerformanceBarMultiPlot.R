@@ -98,13 +98,14 @@ median(df.cadd$Specificity)
 df.notincgd <- subset(df, Data == "NotInCGD")
 ggplot() +
   theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
-  geom_point(data = df, aes(x = Sensitivity, y = Specificity, shape = Tool, colour = Tool), size=3, stroke = 3) +
+  geom_point(data = df, aes(x = Sensitivity, y = Specificity, shape = Tool, colour = Tool), size=3, stroke = 3, alpha=0.75) +
   geom_text(data = df, aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, check_overlap = TRUE) +
   geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, colour="red",check_overlap = TRUE) +
-  scale_colour_manual(values=c(orange, gray, skyblue, "slateblue", yellow, blue, vermillion, reddishpurple, blueishgreen)) +
-  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8, 9)) +
-  scale_x_continuous(lim=c(0.395,1), breaks = seq(0, 1, by = 0.1))
-
+  scale_colour_manual(values=rainbow(14)) +
+  # scale_colour_manual(values=c(orange, "green", skyblue, "slateblue", yellow, blue, vermillion, reddishpurple, blueishgreen,"red", "blue","brown","orange", gray)) +
+  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) +
+  scale_x_continuous(lim=c(0.393,1), breaks = seq(0, 1, by = 0.1)) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1))
 
 ## tiles TPR/TNR
 ggplot() +
