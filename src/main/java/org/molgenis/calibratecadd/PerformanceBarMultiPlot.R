@@ -84,14 +84,26 @@ for(i in 1:nrow(df)) {
   df[i,]$ACC <- (df[i,]$TP+df[i,]$TN)/(df[i,]$TP+df[i,]$TN+df[i,]$FP+df[i,]$FN+df[i,]$ExpPathoAsVOUS+df[i,]$ExpBenignAsVOUS)
 }
 
-df.gavin <- subset(df, Tool == "GAVIN")
 
-median(df.gavin$Sensitivity)
-median(df.gavin$Specificity)
+#stats per tool
+stats <- data.frame()
+for(i in unique(df$Tool)) {
+  df.sub <- subset(df, Tool == i)
+  medianSens <- median(df.sub$Sensitivity)
+  medianSpec <- median(df.sub$Specificity)
+  row <- data.frame(Tool = i, medianSens = medianSens, medianSpec = medianSpec)
+  stats <- rbind(stats, row)
+}
 
-df.cadd <- subset(df, Tool == "CADD")
-median(df.cadd$Sensitivity)
-median(df.cadd$Specificity)
+#bit pointless but nevertheless: stats per data set (panel)
+panelstats <- data.frame()
+for(i in unique(df$Data)) {
+  df.sub <- subset(df, Data == i)
+  medianSens <- median(df.sub$Sensitivity)
+  medianSpec <- median(df.sub$Specificity)
+  row <- data.frame(Data = i, medianSens = medianSens, medianSpec = medianSpec)
+  panelstats <- rbind(panelstats, row)
+}
 
 
 ## nice plot
@@ -326,21 +338,21 @@ uncalib <- subset(df, Tool == "GAVINnocal")
 
 C1_calib <- subset(calib, Calib == "C1_C2")
 C1_uncalib <- subset(uncalib, Calib == "C1_C2")
-median(C1_calib$MCCcovadj)
-median(C1_uncalib$MCCcovadj)
-wilcox.test(C1_calib$MCCcovadj, C1_uncalib$MCCcovadj)
+median(C1_calib$Acc)
+median(C1_uncalib$Acc)
+wilcox.test(C1_calib$Acc, C1_uncalib$Acc)
 
 C4_calib <- subset(calib, Calib == "C4")
 C4_uncalib <- subset(uncalib, Calib == "C4")
-median(C4_calib$MCCcovadj)
-median(C4_uncalib$MCCcovadj)
-wilcox.test(C4_calib$MCCcovadj, C4_uncalib$MCCcovadj)
+median(C4_calib$Acc)
+median(C4_uncalib$Acc)
+wilcox.test(C4_calib$Acc, C4_uncalib$Acc)
 
 C3_calib <- subset(calib, Calib == "C3")
 C3_uncalib <- subset(uncalib, Calib == "C3")
-median(C3_calib$MCCcovadj)
-median(C3_uncalib$MCCcovadj)
-wilcox.test(C3_calib$MCCcovadj, C3_uncalib$MCCcovadj)
+median(C3_calib$Acc)
+median(C3_uncalib$Acc)
+wilcox.test(C3_calib$Acc, C3_uncalib$Acc)
 
 # bonus: density plot of the same
 ggplot() + geom_density(data = df, alpha = 0.5, aes(MCCcovadj, fill = Label, colour = Label)) +
