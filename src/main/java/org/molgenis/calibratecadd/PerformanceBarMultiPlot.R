@@ -91,7 +91,9 @@ for(i in unique(df$Tool)) {
   df.sub <- subset(df, Tool == i)
   medianSens <- median(df.sub$Sensitivity)
   medianSpec <- median(df.sub$Specificity)
-  row <- data.frame(Tool = i, medianSens = medianSens, medianSpec = medianSpec)
+  medianPPV <- median(df.sub$PPV)
+  medianNPV <- median(df.sub$NPV)
+  row <- data.frame(Tool = i, medianSens = medianSens, medianSpec = medianSpec, medianPPV = medianPPV, medianNPV = medianNPV)
   stats <- rbind(stats, row)
 }
 
