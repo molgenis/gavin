@@ -59,6 +59,7 @@ public class GavinUtils
 			return naiveClassifyVariant(gene, MAF, impact, CADDscore);
 		}
 
+		//at 5, GAVIN is 92% sensitive and 78% specific, whereas at 1, GAVIN is 89% sensitive and 83% specific. However sensitivity is more important. (don't want to miss anything)
 		int extraSensitivityFactor = 5;
 
 		CCGGEntry entry = geneToEntry.get(gene);
