@@ -197,6 +197,7 @@ public class GavinUtils
 	
 	public static Impact getImpact(String ann, String gene, String allele) throws Exception
 	{
+		//get the right annotation entry that matches both gene and allele
 		String findAnn = getAnn(ann, gene, allele);
 		if(findAnn == null)
 		{
@@ -205,6 +206,7 @@ public class GavinUtils
 		}
 		else
 		{
+			//from the right one, get the impact
 			String[] fields = findAnn.split("\\|", -1);
 			String impact = fields[2];
 			return Impact.valueOf(impact);
