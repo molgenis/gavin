@@ -22,7 +22,7 @@ public class CGDEntry
 
 
 	public enum generalizedInheritance {
-		DOM_OR_REC, DOMINANT, RECESSIVE, XLINKED, OTHER
+		DOMINANT, RECESSIVE, XL_DOMINANT, XL_RECESSIVE, DOMINANT_OR_RECESSIVE, OTHER
 	}
 	
 	public CGDEntry(String gene, String hgnc_id, String entrez_gene_id,
