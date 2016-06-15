@@ -29,7 +29,7 @@ public class ProcessJudgedVariantMVLResults
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, null);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, null);
-		printYield();
+		//printYield();
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.calibrated);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.calibrated);
 		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.genomewide);
@@ -201,7 +201,7 @@ public class ProcessJudgedVariantMVLResults
 		System.out.println("\nFalse posities & false negatives, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;
 		
-		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t" + "TPR" + "\t" + "TNR" + "\t" + "PPV" + "\t" + "NPV" + "\t" + "ACC" + "\t" + "MCC" + "\t" + "OPM");
+		System.out.println("\t" + "#TN" + "\t" + "#TP" + "\t" + "#FP" + "\t" + "#FN" + "\t"+ "#MP" + "\t"+ "#MN" + "\t" + "Sens" + "\t" + "Spec" + "\t" + "Acc");
 		
 		int TN_all = 0;
 		int TP_all = 0;
@@ -216,6 +216,8 @@ public class ProcessJudgedVariantMVLResults
 			int TP = 0;
 			int FP = 0;
 			int FN = 0;
+			int vousB = 0;
+			int vousP = 0;
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
 				if(jv.getJudgment() != null && (method == null || jv.getJudgment().getConfidence().equals(method)))
@@ -242,21 +244,23 @@ public class ProcessJudgedVariantMVLResults
 					}
 					else if((jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getClassification().equals(Classification.VOUS))
 					{
+						vousP++;
 						vousP_all ++;
 					}
 					else if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.VOUS))
 					{
+						vousB++;
 						vousB_all ++;
 					}
 				}
 			}
 			
-			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + getTPR(TP, FN) + "\t" + getTNR(TN, FP)+ "\t" + getPPV(TP, FP) + "\t" + getNPV(TN, FN) + "\t" + getAcc(TP, TN, FP, FN) + "\t" + getMCC(TP, TN, FP, FN) + "\t" + getOPM(TP, TN, FP, FN));
+			System.out.println(mvl + "\t" + TN + "\t" + TP + "\t" + FP + "\t" + FN + "\t" + vousP + "\t" + vousB + "\t" + getTPR(TP, FN, vousP) + "\t" + getTNR(TN, FP, vousB)+ "\t" + getAcc(TP, TN, FP, FN, vousP, vousB) );
 			
 			
 		}
 		
-		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + getTPR(TP_all, FN_all) + "\t" + getTNR(TN_all, FP_all)+ "\t" + getPPV(TP_all, FP_all)+ "\t" + getNPV(TN_all, FN_all) + "\t" + getAcc(TP_all, TN_all, FP_all, FN_all) + "\t" + getMCC(TP_all, TN_all, FP_all, FN_all) + "\t" + getOPM(TP_all, TN_all, FP_all, FN_all));
+		System.out.println("TOTAL" + "\t" + TN_all + "\t" + TP_all + "\t" + FP_all + "\t" + FN_all + "\t" + vousP_all + "\t" + vousB_all + "\t" + getTPR(TP_all, FN_all, vousP_all) + "\t" + getTNR(TN_all, FP_all, vousB_all)+ "\t" + getAcc(TP_all, TN_all, FP_all, FN_all, vousP_all, vousB_all));
 		
 		if(method == null) //mode = 'all'
 		{
@@ -271,14 +275,14 @@ public class ProcessJudgedVariantMVLResults
 		
 	}
 	
-	private static String getTPR(int TP, int FN)
+	private static String getTPR(int TP, int FN, int vousP)
 	{
-		return TP+FN == 0 ? "-" : (int)Math.round((double)TP/(TP+FN)*100) + "%";
+		return TP+FN == 0 ? "-" : (int)Math.round((double)TP/(TP+FN+vousP)*100) + "%";
 	}
 	
-	private static String getTNR(int TN, int FP)
+	private static String getTNR(int TN, int FP, int vousB)
 	{
-		return TN+FP == 0 ? "-" : (int)Math.round((double)TN/(FP+TN)*100) + "%";
+		return TN+FP == 0 ? "-" : (int)Math.round((double)TN/(TN+FP+vousB)*100) + "%";
 	}
 	
 	private static String getPPV(int TP, int FP)
@@ -291,9 +295,9 @@ public class ProcessJudgedVariantMVLResults
 		return TN+FN == 0 ? "-" : (int)Math.round((double)TN/(TN+FN)*100) + "%";
 	}
 	
-	private static String getAcc(int TP, int TN, int FP, int FN)
+	private static String getAcc(int TP, int TN, int FP, int FN, int vousP, int vousB)
 	{
-		return TP+TN+FP+FN == 0 ? "-" : (int)Math.round((double)(TP+TN)/(TP+TN+FP+FN)*100) + "%";
+		return TP+TN+FP+FN == 0 ? "-" : (int)Math.round((double)(TP+TN)/(TP+TN+FP+FN+vousP+vousB)*100) + "%";
 	}
 	
 	// https://en.wikipedia.org/wiki/Matthews_correlation_coefficient
