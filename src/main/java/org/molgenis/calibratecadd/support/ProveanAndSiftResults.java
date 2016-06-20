@@ -73,7 +73,7 @@ public class ProveanAndSiftResults
 			}
 			else if(pc.equals(ProveanClassification.Deleterious))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, "PROVEAN result 'Deleterious'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, "PROVEAN result 'Deleterious'");
 			}
 			else
 			{
@@ -98,7 +98,7 @@ public class ProveanAndSiftResults
 			}
 			else if(pc.equals(SiftClassification.Damaging))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, "SIFT result 'Damaging'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, "SIFT result 'Damaging'");
 			}
 			else
 			{

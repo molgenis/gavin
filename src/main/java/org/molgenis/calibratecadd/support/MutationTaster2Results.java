@@ -75,7 +75,7 @@ public class MutationTaster2Results
 			}
 			else if(pc.equals(MutationTasterClassification.disease_causing))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, "MutationTaster2 result 'disease_causing'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, "MutationTaster2 result 'disease_causing'");
 			}
 			else
 			{

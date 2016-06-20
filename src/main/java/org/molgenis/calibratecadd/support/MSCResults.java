@@ -52,7 +52,7 @@ public class MSCResults
 		{
 			if(caddScore > mscFile.get(geneName))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, geneName, "CADD score "+caddScore+" above MSC threshold " + mscFile.get(geneName));
+				return new Judgment(Classification.Pathogenic, Method.calibrated, geneName, "CADD score "+caddScore+" above MSC threshold " + mscFile.get(geneName));
 			}
 			else
 			{

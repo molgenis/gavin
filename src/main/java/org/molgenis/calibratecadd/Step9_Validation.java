@@ -11,8 +11,11 @@ import org.molgenis.calibratecadd.support.*;
 import org.molgenis.calibratecadd.support.JudgedVariant.ExpertClassification;
 import org.molgenis.data.Entity;
 
+import org.molgenis.data.annotation.entity.impl.gavin.GavinAlgorithm;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinAnnotator;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinEntry;
 import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
-import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
+import org.molgenis.data.annotation.entity.impl.snpEff.Impact;
 import org.molgenis.data.vcf.VcfRepository;
 
 import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
@@ -88,9 +91,12 @@ public class Step9_Validation
 		}
 		new File(args[3]).createNewFile();
 		new Step9_Validation(args[0], args[1], args[2], args[3]);
+		GavinAnnotator ga = new GavinAnnotator();
+	//	ga.gavin().annotateEntity();
 	}
-	
-	GavinUtils ccgg;
+
+	HashMap<String, GavinEntry> gavinData;
+	GavinAlgorithm gavin;
 	HashMap<String, List<JudgedVariant>> judgedMVLVariants = new HashMap<String, List<JudgedVariant>>();
 	int judgmentsInCalibratedGenes = 0;
 	
@@ -111,7 +117,8 @@ public class Step9_Validation
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
-		this.ccgg = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_r0.1.tsv");
+		this.gavinData = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_r0.1.tsv").getGeneToEntry();
+		this.gavin = new GavinAlgorithm();
 		scanMVL(mvlFile, predictionToolPath, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes, outFile);
 	}
@@ -209,11 +216,11 @@ public class Step9_Validation
 					Judgment judgment;
 					if (mode.equals(ToolNames.GAVIN))
 					{
-						judgment = ccgg.classifyVariant(gene, MAF, impact, CADDscore);
+						judgment = gavin.classifyVariant(impact, CADDscore, MAF, gene, null, this.gavinData);
 					}
 					else if(mode.equals(ToolNames.GAVINnocal))
 					{
-						judgment = ccgg.naiveClassifyVariant(gene, MAF, impact, CADDscore);
+						judgment = gavin.genomewideClassifyVariant(impact, CADDscore, MAF, gene);
 					}
 					else if (mode.equals(ToolNames.PONP2))
 					{
@@ -247,7 +254,7 @@ public class Step9_Validation
 					{
 						if(CADDscore != null && CADDscore > 15)
 						{
-							judgment = new Judgment(Classification.Pathogn, Method.calibrated, gene, "CADD score > 15");
+							judgment = new Judgment(Classification.Pathogenic, Method.calibrated, gene, "CADD score > 15");
 						}
 						else if(CADDscore != null && CADDscore <= 15)
 						{
@@ -267,7 +274,7 @@ public class Step9_Validation
 			}
 			if(hasGeneId && !geneToIdMatchFound)
 			{
-				if(mode.equals(ToolNames.GAVIN) && ccgg.getGeneToEntry().containsKey(geneFromId)) { judgmentsInCalibratedGenes++; }
+				if(mode.equals(ToolNames.GAVIN) && gavinData.containsKey(geneFromId)) { judgmentsInCalibratedGenes++; }
 				System.out.println("WARNING: bad data for variant " + chr + ":" + pos + " " + ref + "/" + alt + ", no match from ID field gene to snpeff annotations!");
 				multipleJudgments.add(new Judgment(Classification.VOUS, Method.calibrated, geneFromId, "Bad data!"));
 			}
@@ -289,7 +296,7 @@ public class Step9_Validation
 				{
 					nrOfBenignClsf++;
 				}
-				if(judgment.getClassification().equals(Classification.Pathogn))
+				if(judgment.getClassification().equals(Classification.Pathogenic))
 				{
 					nrOfPathognClsf++;
 				}

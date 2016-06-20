@@ -8,15 +8,13 @@ import java.util.Set;
 
 import org.molgenis.data.Entity;
 
-import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
-import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
-import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
-import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
-import org.molgenis.calibratecadd.support.CCGGEntry.Category;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinEntry;
+import org.molgenis.data.annotation.entity.impl.snpEff.Impact;
+
 
 public class GavinUtils
 {
-	HashMap<String, CCGGEntry> geneToEntry = new HashMap<String, CCGGEntry>();
+	HashMap<String, GavinEntry> geneToEntry = new HashMap<String, GavinEntry>();
 	
 	public GavinUtils(File ccgg) throws Exception
 	{	
@@ -29,19 +27,19 @@ public class GavinUtils
 		while(s.hasNextLine())
 		{
 			line = s.nextLine();
-			
-			CCGGEntry e = new CCGGEntry(line);
+
+			GavinEntry e = new GavinEntry(line);
 			geneToEntry.put(e.gene, e);
 		}
 		
 	}
 
-	public HashMap<String, CCGGEntry> getGeneToEntry()
+	public HashMap<String, GavinEntry> getGeneToEntry()
 	{
 		return geneToEntry;
 	}
 
-	public Category getCategory(String gene)
+	public GavinEntry.Category getCategory(String gene)
 	{
 		return geneToEntry.get(gene).category;
 	}
@@ -49,108 +47,6 @@ public class GavinUtils
 	public boolean contains(String gene)
 	{
 		return geneToEntry.containsKey(gene) ? true : false;
-	}
-	
-	public Judgment classifyVariant(String gene, Double MAF, Impact impact, Double CADDscore)
-	{
-		//if we have no data for this gene, immediately fall back to the naive method
-		if(!geneToEntry.containsKey(gene))
-		{
-			return naiveClassifyVariant(gene, MAF, impact, CADDscore);
-		}
-
-		//at 5, GAVIN is 92% sensitive and 78% specific, whereas at 1, GAVIN is 89% sensitive and 83% specific. However sensitivity is more important. (don't want to miss anything)
-		int extraSensitivityFactor = 5;
-
-		CCGGEntry entry = geneToEntry.get(gene);
-		CCGGEntry.Category category = entry.category;
-
-		String mafReason = "the variant MAF of " + MAF + " is less than the "+gene+" pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".";
-
-		// CADD score based classification, calibrated
-		if(CADDscore != null)
-		{
-			if((category.equals(Category.C1) || category.equals(Category.C2)))
-			{
-				if(CADDscore > entry.MeanPathogenicCADDScore - extraSensitivityFactor)
-				{
-					return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is greater than the mean pathogenic score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative. Also, " + mafReason);
-				}
-				else if(CADDscore < entry.MeanPopulationCADDScore - extraSensitivityFactor)
-				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is less than the mean population score of " + entry.MeanPathogenicCADDScore + " in a gene for which CADD scores are informative, although " + mafReason);
-				}
-			}
-			else if((category.equals(Category.C3) || category.equals(Category.C4) || category.equals(Category.C5)))
-			{
-				if(CADDscore > entry.Spec95thPerCADDThreshold - extraSensitivityFactor)
-				{
-					return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is greater than the 95% specificity threhold of " + entry.Spec95thPerCADDThreshold + " for this gene. Also, " + mafReason);
-				}
-				else if(CADDscore < entry.Sens95thPerCADDThreshold - extraSensitivityFactor)
-				{
-					return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant CADD score of " + CADDscore + " is less than the 95% sensitivity threhold of " + entry.MeanPathogenicCADDScore + " for this gene, although " + mafReason);
-				}
-			}
-		}
-		
-		// MAF based classification, calibrated but slightly relaxed with a factor x
-		if(entry.PathoMAFThreshold != null && MAF > entry.PathoMAFThreshold * extraSensitivityFactor * 2)
-		{
-			return new Judgment(Classification.Benign, Method.calibrated, gene, "Variant MAF of " + MAF + " is greater than the "+gene+" pathogenic 95th percentile MAF of "+ entry.PathoMAFThreshold + ".");
-		}
-
-		// Impact based classification, calibrated
-		if(impact != null)
-		{
-			if(category.equals(Category.I1) && impact.equals(Impact.HIGH))
-			{
-				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant is of high impact, while there are no known high impact variants in the population. Also, " + mafReason);
-			}
-			else if(category.equals(Category.I2) && (impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
-			{
-				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant is of high/moderate impact, while there are no known high/moderate impact variants in the population. Also, " + mafReason);
-			}
-			else if(category.equals(Category.I3) && (impact.equals(Impact.LOW) || impact.equals(Impact.MODERATE) || impact.equals(Impact.HIGH)))
-			{
-				return new Judgment(Judgment.Classification.Pathogn,  Method.calibrated, gene, "Variant is of high/moderate/low impact, while there are no known high/moderate/low impact variants in the population. Also, " + mafReason);
-			}
-			else if(impact.equals(Impact.MODIFIER))
-			{
-				return new Judgment(Judgment.Classification.Benign,  Method.calibrated, gene, "Variant is of 'modifier' impact, and therefore unlikely to be pathogenic. However, " + mafReason);
-			}
-		}
-
-		//if everything so far has failed, we can still fall back to the genome-wide method
-		return naiveClassifyVariant(gene, MAF, impact, CADDscore);
-	}
-	
-	
-	public Judgment naiveClassifyVariant(String gene, Double MAF, Impact impact, Double CADDscore)
-	{
-		if(MAF > 0.00474)
-		{
-			return new Judgment(Judgment.Classification.Benign, Method.genomewide, gene, "Variant MAF of "+MAF+" is not rare enough to generally be considered pathogenic.");
-		}
-		if(impact.equals(Impact.MODIFIER))
-		{
-			return new Judgment(Judgment.Classification.Benign, Method.genomewide, gene, "Variant is of 'modifier' impact, and therefore unlikely to be pathogenic.");
-		}
-		else
-		{
-			if(CADDscore != null && CADDscore > 15)
-			{
-				return new Judgment(Judgment.Classification.Pathogn, Method.genomewide, gene, "Variant MAF of "+MAF+" is rare enough to be potentially pathogenic and the CADDscore of "+CADDscore+ " is greater than a global threshold of 15.");
-			}
-			else if(CADDscore != null && CADDscore <= 15)
-			{
-				return new Judgment(Judgment.Classification.Benign, Method.genomewide, gene, "CADDscore of "+CADDscore+ " is less than a global threshold of 15, although the variant MAF of "+MAF+" is rare enough to be potentially pathogenic.");
-			}
-			else
-			{
-				return new Judgment(Judgment.Classification.VOUS, Method.genomewide, gene, "Unable to classify variant as benign or pathogenic. The combination of "+impact+" impact, a CADD score "+CADDscore +" and MAF of " + MAF + " in " + gene + " is inconclusive.");
-			}
-		}
 	}
 	
 	public static Set<String> getGenesFromAnn(String ann) throws Exception

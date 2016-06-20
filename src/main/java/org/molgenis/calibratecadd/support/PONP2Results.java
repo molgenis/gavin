@@ -60,7 +60,7 @@ public class PONP2Results
 			}
 			else if(pc.equals(PonpClassification.Pathogenic))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, "PONP2 result 'Pathogenic'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, "PONP2 result 'Pathogenic'");
 			}
 			else
 			{

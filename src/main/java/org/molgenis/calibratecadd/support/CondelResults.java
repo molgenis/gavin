@@ -83,7 +83,7 @@ public class CondelResults
 			}
 			else if(pc.equals(CondelClassification.D))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, "Condel result 'D'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, "Condel result 'D'");
 			}
 			else
 			{

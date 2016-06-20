@@ -75,7 +75,7 @@ public class PredictSNP2Results
 			}
 			else if(consensus.contains("deleterious"))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, tool + " result 'deleterious'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, tool + " result 'deleterious'");
 			}
 			else
 			{

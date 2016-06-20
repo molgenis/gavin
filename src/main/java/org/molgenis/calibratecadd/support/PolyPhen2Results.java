@@ -57,7 +57,7 @@ public class PolyPhen2Results
 			}
 			else if(pc.contains("damaging"))
 			{
-				return new Judgment(Classification.Pathogn, Method.calibrated, key, "PolyPhen2 result 'damaging'");
+				return new Judgment(Classification.Pathogenic, Method.calibrated, key, "PolyPhen2 result 'damaging'");
 			}
 			else
 			{

@@ -112,7 +112,7 @@ public class ProcessJudgedVariantMVLResults
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && (jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getConfidence().equals(method))
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogenic) && (jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getConfidence().equals(method))
 				{
 					FP.append(jv.printVariant() + "\n");
 				}
@@ -149,7 +149,7 @@ public class ProcessJudgedVariantMVLResults
 			
 			for(JudgedVariant jv : judgedMVLVariants.get(mvl))
 			{
-				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogn) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(method))
+				if(jv.getJudgment() != null && jv.getJudgment().getClassification().equals(Classification.Pathogenic) && jv.getExpertClassification().equals(ExpertClassification.V) && jv.getJudgment().getConfidence().equals(method))
 				{
 					pathoVous.append(jv.printVariant() + "\n");
 				}
@@ -182,7 +182,7 @@ public class ProcessJudgedVariantMVLResults
 						benignVOUSforMVL++;
 						totalBenign++;
 					}
-					else if(jv.getJudgment().getClassification().equals(Classification.Pathogn))
+					else if(jv.getJudgment().getClassification().equals(Classification.Pathogenic))
 					{
 						pathogenicVOUSforMVL++;
 						totalPathogn++;
@@ -227,12 +227,12 @@ public class ProcessJudgedVariantMVLResults
 						TN ++;
 						TN_all ++;
 					}
-					else if((jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getClassification().equals(Classification.Pathogn))
+					else if((jv.getExpertClassification().equals(ExpertClassification.P) || jv.getExpertClassification().equals(ExpertClassification.LP)) && jv.getJudgment().getClassification().equals(Classification.Pathogenic))
 					{
 						TP ++;
 						TP_all ++;
 					}
-					else if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.Pathogn))
+					else if((jv.getExpertClassification().equals(ExpertClassification.B) || jv.getExpertClassification().equals(ExpertClassification.LB)) && jv.getJudgment().getClassification().equals(Classification.Pathogenic))
 					{
 						FP ++;
 						FP_all ++;
@@ -373,7 +373,7 @@ public class ProcessJudgedVariantMVLResults
 						{
 							totalBenign++;
 						}
-						if(jv.getJudgment().getClassification().equals(Classification.Pathogn))
+						if(jv.getJudgment().getClassification().equals(Classification.Pathogenic))
 						{
 							totalPathogenic++;
 						}

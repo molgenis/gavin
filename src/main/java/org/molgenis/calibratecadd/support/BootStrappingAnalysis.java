@@ -4,16 +4,16 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.molgenis.calibratecadd.Step9_Validation;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.OutCome;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.ExpClsf;
 import org.molgenis.data.Entity;
-import org.molgenis.data.annotation.entity.impl.snpEff.SnpEffRunner.Impact;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinAlgorithm;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinEntry;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinEntry.Category;
+import org.molgenis.data.annotation.entity.impl.snpEff.Impact;
 
 import org.molgenis.data.annotation.entity.impl.gavin.Judgment;
 import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Classification;
@@ -47,8 +47,8 @@ public class BootStrappingAnalysis
 		this.toolName = toolName;
 		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tAcc\n".getBytes(), StandardOpenOption.APPEND);
 
-
-		GavinUtils gavin = Step9_Validation.loadCCGG(gavinFile);
+		HashMap<String, GavinEntry> gavinData = Step9_Validation.loadCCGG(gavinFile).getGeneToEntry();
+		GavinAlgorithm gavin = new GavinAlgorithm();
 
 		// file with combined variants has 25,995 variants
 		File variantList = new File(vcfFile);
@@ -101,12 +101,12 @@ public class BootStrappingAnalysis
 					Judgment judgment;
 					if (toolName.equals(Step9_Validation.ToolNames.GAVIN))
 					{
-						judgment = gavin.classifyVariant(gene, MAF, impact, CADDscore);
+						judgment = gavin.classifyVariant(impact, CADDscore, MAF, gene, null, gavinData);
 
 					}
 					else if (toolName.equals(Step9_Validation.ToolNames.GAVINnocal))
 					{
-						judgment = gavin.naiveClassifyVariant(gene, MAF, impact, CADDscore);
+						judgment = gavin.genomewideClassifyVariant(impact, CADDscore, MAF, gene);
 					}
 					else
 					{
@@ -140,7 +140,7 @@ public class BootStrappingAnalysis
 				{
 					nrOfBenignClsf++;
 				}
-				if(judgment.getClassification().equals(Classification.Pathogn))
+				if(judgment.getClassification().equals(Classification.Pathogenic))
 				{
 					nrOfPathognClsf++;
 				}
@@ -167,7 +167,7 @@ public class BootStrappingAnalysis
 			//TODO could be improved by prioritizing calibrated over genomewide results for our method
 			if(nrOfBenignClsf > 0 && nrOfPathognClsf > 0)
 			{
-				addToFullSetClsfOutcomes(Classification.VOUS, mvlClassfc, gavin, gene);
+				addToFullSetClsfOutcomes(Classification.VOUS, mvlClassfc, gavinData, gene);
 				//	System.out.println("WARNING: conflicting classification! adding no judgment for this variant: " + chr + ":" + pos + " " + ref + "/" + alt + ", judged: " + multipleJudgments.toString() );
 			}
 			else
@@ -177,14 +177,14 @@ public class BootStrappingAnalysis
 					//if we know we have calibrated results, wait for it, then add it, and then break
 					if(hasCalibratedJudgment && judgment.getConfidence().equals(Method.calibrated))
 					{
-						addToFullSetClsfOutcomes(judgment.getClassification(), mvlClassfc, gavin, gene);
+						addToFullSetClsfOutcomes(judgment.getClassification(), mvlClassfc, gavinData, gene);
 						break;
 					}
 					//if not, might as well add this one and be done
 					//TODO: this means there may be multiple verdicts, e.g. 2x BENIGN for context in two genes, but we only add 1 of them, to keep things a bit more simple
 					else if(!hasCalibratedJudgment)
 					{
-						addToFullSetClsfOutcomes(judgment.getClassification(), mvlClassfc, gavin, gene);
+						addToFullSetClsfOutcomes(judgment.getClassification(), mvlClassfc, gavinData, gene);
 						break;
 					}
 				}
@@ -209,22 +209,22 @@ public class BootStrappingAnalysis
 
 	}
 
-	private void addToFullSetClsfOutcomes (Classification observed, String expected, GavinUtils gavin, String gene)
+	private void addToFullSetClsfOutcomes (Classification observed, String expected, HashMap<String, GavinEntry> gavinData, String gene)
 	{
 
 		BootStrappingVariant.Label label = null;
 
-		if(gavin.getGeneToEntry().get(gene) != null)
+		if(gavinData.get(gene) != null)
 		{
-			if(gavin.getGeneToEntry().get(gene).category.equals(CCGGEntry.Category.C1) || gavin.getGeneToEntry().get(gene).category.equals(CCGGEntry.Category.C2))
+			if(gavinData.get(gene).category.equals(GavinEntry.Category.C1) || gavinData.get(gene).category.equals(Category.C2))
 			{
 				label = BootStrappingVariant.Label.C1_C2;
 			}
-			if(gavin.getGeneToEntry().get(gene).category.equals(CCGGEntry.Category.C3))
+			if(gavinData.get(gene).category.equals(Category.C3))
 			{
 				label = BootStrappingVariant.Label.C3;
 			}
-			if(gavin.getGeneToEntry().get(gene).category.equals(CCGGEntry.Category.C4))
+			if(gavinData.get(gene).category.equals(Category.C4))
 			{
 				label = BootStrappingVariant.Label.C4;
 			}
@@ -240,12 +240,12 @@ public class BootStrappingAnalysis
 			variantClsfResults.add(new BootStrappingVariant(OutCome.FN, label, ExpClsf.P));
 		}
 
-		if(observed.equals(Classification.Pathogn) && (expected.equals("B") ||  expected.equals("LB")))
+		if(observed.equals(Classification.Pathogenic) && (expected.equals("B") ||  expected.equals("LB")))
 		{
 			variantClsfResults.add(new BootStrappingVariant(OutCome.FP, label, ExpClsf.B));
 		}
 
-		if(observed.equals(Classification.Pathogn) && (expected.equals("P") ||  expected.equals("LP")))
+		if(observed.equals(Classification.Pathogenic) && (expected.equals("P") ||  expected.equals("LP")))
 		{
 			variantClsfResults.add(new BootStrappingVariant(OutCome.TP, label, ExpClsf.P));
 		}
