@@ -72,6 +72,10 @@ public class LoadCGD {
 			{
 				inherMode = generalizedInheritance.DOMINANT;
 			}
+			else if(split[4].contains("BG"))
+			{
+				inherMode = generalizedInheritance.BLOODGROUP;
+			}
 			else if(split[4].contains("XL"))
 			{
 				if(xlinkedDominantGenes.contains(split[0]))
