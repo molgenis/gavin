@@ -111,6 +111,24 @@ public class GavinUtils
 			return Impact.valueOf(impact);
 		}
 	}
+
+	public static String getTranscript(String ann, String gene, String allele) throws Exception
+	{
+		//get the right annotation entry that matches both gene and allele
+		String findAnn = getAnn(ann, gene, allele);
+		if(findAnn == null)
+		{
+			System.out.println("WARNING: failed to get impact for gene '"+gene+"', allele '"+allele+"' in " + ann);
+			return null;
+		}
+		else
+		{
+			//from the right one, get the impact
+			String[] fields = findAnn.split("\\|", -1);
+			String transcript = fields[6];
+			return transcript;
+		}
+	}
 	
 	public static String getAnn(String ann, String gene, String allele) throws Exception
 	{
