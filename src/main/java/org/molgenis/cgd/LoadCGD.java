@@ -34,7 +34,7 @@ public class LoadCGD {
 
 	 */
 
-	public static List<String> xlinkedDominantGenes = Arrays.asList("PHEX", "FMR1", "MECP2", "COL4A3","COL4A4", "IKBKG", "PORCN", "ALAS2", "NSDHL", "EFNB1", "MED12", "BCOR");
+	//public static List<String> xlinkedDominantGenes = Arrays.asList("PHEX", "FMR1", "MECP2", "COL4A3","COL4A4", "IKBKG", "PORCN", "ALAS2", "NSDHL", "EFNB1", "MED12", "BCOR");
 	
 	public static Map<String, CGDEntry> loadCGD(File cgdFile) throws IOException
 	{
@@ -78,14 +78,15 @@ public class LoadCGD {
 			}
 			else if(split[4].contains("XL"))
 			{
-				if(xlinkedDominantGenes.contains(split[0]))
-				{
-					inherMode = generalizedInheritance.XL_DOMINANT;
-				}
-				else
-				{
-					inherMode = generalizedInheritance.XL_RECESSIVE;
-				}
+				inherMode = generalizedInheritance.XL_LINKED;
+//				if(xlinkedDominantGenes.contains(split[0]))
+//				{
+//					inherMode = generalizedInheritance.XL_DOMINANT;
+//				}
+//				else
+//				{
+//					inherMode = generalizedInheritance.XL_RECESSIVE;
+//				}
 			}
 
 			entry.setGeneralizedInheritance(inherMode);
