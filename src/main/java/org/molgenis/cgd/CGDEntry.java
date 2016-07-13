@@ -22,7 +22,16 @@ public class CGDEntry
 
 
 	public enum generalizedInheritance {
-		DOMINANT, RECESSIVE, DOMINANT_OR_RECESSIVE, XL_LINKED, BLOODGROUP, OTHER, NOTINCGD
+		DOMINANT, RECESSIVE, DOMINANT_OR_RECESSIVE, XL_LINKED, BLOODGROUP, OTHER, NOTINCGD;
+
+		public static boolean isDominant(generalizedInheritance gi)
+		{
+			return (gi == DOMINANT || gi == DOMINANT_OR_RECESSIVE) ? true : false;
+		}
+		public static boolean isRecessive(generalizedInheritance gi)
+		{
+			return (gi == RECESSIVE || gi == DOMINANT_OR_RECESSIVE) ? true : false;
+		}
 	}
 	
 	public CGDEntry(String gene, String hgnc_id, String entrez_gene_id,
