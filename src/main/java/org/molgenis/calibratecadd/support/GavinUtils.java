@@ -52,7 +52,8 @@ public class GavinUtils
 	public static Set<String> getGenesFromAnn(String ann) throws Exception
 	{
 		if(ann == null){
-			return null;
+			return new HashSet<>();
+			//return null;
 		}
 		Set<String> genes = new HashSet<String>();
 		String[] annSplit = ann.split(",", -1);
@@ -62,10 +63,10 @@ public class GavinUtils
 			String gene = fields[3];
 			genes.add(gene);
 		}
-		if(genes.size() == 0)
-		{
-			throw new Exception("No genes for " + ann);
-		}
+//		if(genes.size() == 0)
+//		{
+//			throw new Exception("No genes for " + ann);
+//		}
 		return genes;
 	}
 	
