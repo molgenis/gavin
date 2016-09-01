@@ -9,7 +9,7 @@ public class FunSeqValidationTest {
 
     @Test
     public void testPredictionTool() throws Exception {
-        new AbstractValidationTest("PROVEAN").testPredictionTool();
+        new AbstractValidationTest("FunSeq").testPredictionTool();
     }
 
 }

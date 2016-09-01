@@ -9,7 +9,7 @@ public class PONP2ValidationTest {
 
     @Test
     public void testPredictionTool() throws Exception {
-        new AbstractValidationTest("SIFT").testPredictionTool();
+        new AbstractValidationTest("PONP2").testPredictionTool();
     }
 
 }

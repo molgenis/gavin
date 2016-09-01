@@ -9,7 +9,7 @@ public class PredictSNP2ValidationTest {
 
     @Test
     public void testPredictionTool() throws Exception {
-        new AbstractValidationTest("SIFT").testPredictionTool();
+        new AbstractValidationTest("PredictSNP2").testPredictionTool();
     }
 
 }
