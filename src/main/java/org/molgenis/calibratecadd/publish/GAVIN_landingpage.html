@@ -13,34 +13,36 @@
 					</div>
 					<div class="row">
 						<div class="col-md-12 col-md-offset-0 text-center">
-							<h2>GAVIN (release 0.1)</h2>
+							<h2>GAVIN (release 0.1 testing)</h2>
 							<h3>Gene-Aware Variant INterpretation</h3>
 							<br>
 							<font color="red" size="2"><b>Please note:</b> indels are not yet automatically annotated with CADD scores.<br>For best results, pre-annotate these using VCF INFO field "CADD_SCALED=12.34"</font><br>
-							<font color="red" size="2"><b>Coming soon:</b> gene view legends, ESHG poster, link to GitHub calibration source code,<br>link to command-line annotator version, gold standard data sets</font><br>
 							<br>
 							<a href="/menu/main/gavin-app"><b>Upload a VCF to classify variants</b></a><br>
 							<br>
 							<i>or</i><br>
 							<br>
-							<a href="/menu/main/dataexplorer?entity=gavin"><b>Browse gene calibrations</b></a><br>
+							<a href="/menu/main/dataexplorer?entity=gavin"><b>Browse raw gene calibrations</b></a><br>
+							<i>These calibrations are used internally and are not optimized for sensitivity in their native form.</i>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col-md-4 col-md-offset-4 text-center">
 							<div class="input-group"><input id="direct-repository-query" class="form-control" type="text" placeholder="Search for a gene, position, category, etc" /> <span class="input-group-btn"> <button id="direct-repository-query-button" class="btn btn-default" type="button"><span class="glyphicon glyphicon-search">&nbsp;</span></button></span></div>
-							<br><br>
+							Examples: <a href="/menu/main/dataexplorer?entity=gavin&query[q][0][operator]=SEARCH&query[q][0][value]=TTN">TTN</a>, 
+							<a href="/menu/main/dataexplorer?entity=gavin&query[q][0][operator]=SEARCH&query[q][0][value]=MYH7">MYH7</a>, 
+							<a href="/menu/main/dataexplorer?entity=gavin&query[q][0][operator]=SEARCH&query[q][0][value]=RYR2">RYR2</a>.
+							Click the <img src="https://molgenis26.target.rug.nl/ccgg_resources/res/react_search_icon.png"/> icon to bring up the detailed view per gene.
 						</div>
 					</div>
 				</div>
 					
 				<div class="row">
 					<div class="col-md-6 col-md-offset-3 text-center">
-						Examples: <a href="/menu/main/dataexplorer?entity=gavin&query[q][0][operator]=SEARCH&query[q][0][value]=TTN">TTN</a>, 
-						<a href="/menu/main/dataexplorer?entity=gavin&query[q][0][operator]=SEARCH&query[q][0][value]=MYH7">MYH7</a>, 
-						<a href="/menu/main/dataexplorer?entity=gavin&query[q][0][operator]=SEARCH&query[q][0][value]=RYR2">RYR2</a>.
-						Click the <img src="https://molgenis26.target.rug.nl/ccgg_resources/res/react_search_icon.png"/> icon to bring up the detailed view per gene.
+
 						<br><br>
+						Useful links: <a href="http://biorxiv.org/content/early/2016/08/30/072330">preprint paper</b>, <a href="https://molgenis26.gcc.rug.nl/downloads/gavin/misc/vdVelde_ESHG_2016_GAVIN_poster.pdf">ESHG poster</a>, <a href="https://github.com/molgenis/molgenis/releases/download/v1.21.1/CmdLineAnnotator-1.21.1.jar">executable</a>, <a href="https://github.com/molgenis/molgenis/tree/master/molgenis-gavin">app source code</a> and <a href="https://github.com/molgenis/gavin">calibration source code</a>.<br>
+						GAVIN is part of an automated <a href="http://molgenis.org/downloads/gavin/">variant interpretation tool</a> currently under <a href="https://github.com/molgenis/rvcf">open-source development</a>.
 					</div>
 				</div>
 
