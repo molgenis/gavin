@@ -42,7 +42,7 @@ public class Step4_MatchingVariantsFromExAC {
 		System.out.println("loaded LP/P variants for " + clinvarPatho.size() + " genes");
 		createMatchingExACsets(exacFile, clinvarPatho, outFile);
 
-	//	printVariantsToFile(outFile, clinvarPatho, calibResults);
+		//	printVariantsToFile(outFile, clinvarPatho, calibResults);
 
 
 	}
@@ -214,22 +214,22 @@ public class Step4_MatchingVariantsFromExAC {
 	private void printVariantsToFile(File outFile, String gene, List<Entity> clinvarPatho, GeneCalibResult calibResult, PrintWriter pw_variantInfo, PrintWriter pw_forCADD, PrintWriter pw_geneInfo) throws FileNotFoundException
 	{
 
-				for(Entity variant : clinvarPatho)
-				{
-					pw_forCADD.println(variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + "." + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT"));
-					pw_variantInfo.println(gene + "\t" + variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT") + "\t" + "PATHOGENIC");
-				}
-				for(EntityPlus variant : calibResult.matchedVariants)
-				{
-					pw_forCADD.println(variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + "." + "\t"+ variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString());
-					pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION");
-				}
+		for(Entity variant : clinvarPatho)
+		{
+			pw_forCADD.println(variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + "." + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT"));
+			pw_variantInfo.println(gene + "\t" + variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT") + "\t" + "PATHOGENIC");
+		}
+		for(EntityPlus variant : calibResult.matchedVariants)
+		{
+			pw_forCADD.println(variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + "." + "\t"+ variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString());
+			pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION");
+		}
 
-			//replace "/" by "_" because R should not write output files with "/" in them, for obvious reasons.
-			//pw_geneInfo.println(gene.replace("/", "_") + "\t" + geneInfo.get(gene));
+		//replace "/" by "_" because R should not write output files with "/" in them, for obvious reasons.
+		//pw_geneInfo.println(gene.replace("/", "_") + "\t" + geneInfo.get(gene));
 
 
-}
+	}
 
 
 	private HashMap<String, List<Entity>> loadClinvarPatho(File clinvarPathoLoc) throws Exception {
