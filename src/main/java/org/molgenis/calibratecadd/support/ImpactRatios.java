@@ -36,10 +36,11 @@ public class ImpactRatios
 	public String toString()
 	{
 	//	return "high: " + f.format(high) + "%, moderate: " + f.format(moderate) + "%, low: " + f.format(low) + "%, modifier: " + f.format(modifier)+ "%";
-		return f.format(high) + "\t" + f.format(moderate) + "\t" + f.format(low) + "\t" + f.format(modifier);
+		//System.out.println("counts: high=" + nrOfHigh + ", modr=" + nrOfModerate + ", low=" + nrOfLow + ", modf=" + nrOfModifier);
+		return "HIGH:"+f.format(high) + ", MODR:" + f.format(moderate) + ", LOW:" + f.format(low) + ", MODF:" + f.format(modifier);
 	}
-	
-	
+
+
 	
 	
 }

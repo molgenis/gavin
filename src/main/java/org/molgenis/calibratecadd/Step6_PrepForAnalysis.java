@@ -79,7 +79,10 @@ public class Step6_PrepForAnalysis
 		{
 			line = info.nextLine();
 			String[] split = line.split("\t", -1);
-			String key = split[1] + "_" + split[2] + "_" + split[3] + "_" + split[4];
+			String chrPos = split[1] + "_" + split[2];
+			String ref = split[3];
+			String alt = split[4];
+			String key = chrPos + "_" + ref + "_" + alt;
 			if(caddScores.containsKey(key))
 			{
 				//FIXME: need to replace '/' to prevent problems in R later on when writing plots based on gene names..
@@ -87,7 +90,19 @@ public class Step6_PrepForAnalysis
 			}
 			else
 			{
-				System.out.println("WARNING: could not get CADD score for " + key);
+				String trimmedRefAlt = LoadCADDWebserviceOutput.trimRefAlt(ref, alt, "_");
+				key = chrPos + "_" + trimmedRefAlt;
+				if(caddScores.containsKey(key))
+				{
+					System.out.println("RESOLVED by trimming ref alt " + ref + "_" + alt + " to " + trimmedRefAlt);
+					pw.println(line.replace("/", "_") + "\t" + caddScores.get(key));
+				}
+				else
+				{
+					System.out.println("WARNING: could not get CADD score for " + key);
+				}
+
+
 			}
 		}
 		

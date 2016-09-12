@@ -9,47 +9,17 @@ import java.util.Set;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.molgenis.data.Entity;
+import org.molgenis.data.annotation.entity.impl.gavin.GavinEntry;
+import org.molgenis.data.annotation.entity.impl.snpEff.Impact;
 
 public class Step4_Helper
 {
-	private HashMap<String, Integer> variantToNonZeroSnpEffGeneIndex;
-	
 	/**
 	 * Constructor
-	 * @param variantToNonZeroSnpEffGeneIndex
 	 */
-	public Step4_Helper(HashMap<String, Integer> variantToNonZeroSnpEffGeneIndex)
+	public Step4_Helper()
 	{
-		this.variantToNonZeroSnpEffGeneIndex = variantToNonZeroSnpEffGeneIndex;
-	}
 
-	/**
-	 * If these ExAC and ClinVar variants have a matching ALT allele, report the ExAC AF, else return 0
-	 * @param clinvarVariant
-	 * @return
-	 * @throws Exception
-	 */
-	public String getExACMAFforUnprocessedClinvarVariant(Entity clinvarVariant, List<Entity> exacVariants) throws Exception
-	{
-		for(Entity exacVar : exacVariants)
-		{
-			if (exacVar.getString("#CHROM").equals(clinvarVariant.getString("#CHROM"))
-					&& exacVar.getString("POS").equals(clinvarVariant.getString("POS"))
-					&& exacVar.getString("REF").equals(clinvarVariant.getString("REF"))
-					)
-			{
-				String clinvarAlt = clinvarVariant.getString("ALT");
-				String[] altSplit = exacVar.getString("ALT").split(",", -1);
-				for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
-				{
-					if(clinvarAlt.equals(altSplit[altIndex]))
-					{
-						return exacVar.getString("AF").split(",", -1)[altIndex];
-					}
-				}
-			}
-		}
-		return "0";
 	}
 	
 	/**
@@ -59,7 +29,7 @@ public class Step4_Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public VariantIntersectResult intersectVariants(List<Entity> exacMultiAllelic, List<Entity> clinvar) throws Exception
+	public VariantIntersectResult intersectVariants(List<Entity> exacMultiAllelic, List<Entity> clinvar, String gene) throws Exception
 	{
 		List<EntityPlus> inExAConly = new ArrayList<EntityPlus>();
 		List<EntityPlus> inClinVarOnly = new ArrayList<EntityPlus>();
@@ -87,11 +57,21 @@ public class Step4_Helper
 				altsSeenForVariant.add(alt);
 				exacVariantCopy.getKeyVal().put("ALT", alt);
 				exacVariantCopy.getKeyVal().put("AF", Double.parseDouble(exacVariant.getString("AF").split(",", -1)[altIndex]));
+				exacVariantCopy.getKeyVal().put("AC_Adj", Integer.parseInt(exacVariant.getString("AC_Adj").split(",", -1)[altIndex]));
+				Impact impact = GavinUtils.getImpact(exacVariant.getString("ANN"), gene, alt);
+				//if there is no impact we skip it, e.g. for gene 'BBS1', allele 'T' in T|intergenic_region|MODIFIER|DPP3-BBS1|DPP3-BBS1|intergenic_region|DPP3-BBS1|||n.66278118G>T||||||
+				if(impact == null){
+					continue;
+				}
+				exacVariantCopy.getKeyVal().put("IMPACT", impact);
+
 				exac.add(exacVariantCopy);
 			}
 			//set original to null so we don't accidentally use it somewhere
 			exacVariant.set("ALT", null);
 			exacVariant.set("AF", null);
+			exacVariant.set("AC_Adj", null);
+			exacVariant.set("IMPACT", null);
 		}
 		
 		for (EntityPlus exacVariant : exac)
@@ -170,7 +150,6 @@ public class Step4_Helper
 		return perc.evaluate(mafs, 95);
 	}
 
-
 	/**
 	 * Given a MAF threshold, filter a set of ExAC variants
 	 * If MAF = 0, we only select singleton variants (AC_Adj = 1)
@@ -179,101 +158,26 @@ public class Step4_Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold, String gene) throws Exception
+	public List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold) throws Exception
 	{
 		List<EntityPlus> res = new ArrayList<EntityPlus>();
-		
-		filterVariants:
 		for(EntityPlus exacVariantPlus : inExACOnly)
 		{
-	
-			String[] altSplit = exacVariantPlus.getKeyVal().get("ALT").toString().split(",", -1);
-			for(int altIndex = 0; altIndex < altSplit.length; altIndex++)
-			{
-				String alt = altSplit[altIndex];
-				//System.out.println("AF field: " + exacVariantPlus.getE().getString("AF"));
-			
-				double maf = Double.parseDouble(exacVariantPlus.getKeyVal().get("AF").toString().split(",",-1)[altIndex]);				
-				int AC_Adj = Integer.parseInt(exacVariantPlus.getE().getString("AC_Adj").split(",",-1)[altIndex]);
-		
-				//we consider each alt allele as a possible 'keep' or 'ditch'
-				//though we only keep 1 alt allele if that one is a match
-				boolean keep = false;
-				
-				//the clinvar variants were all 'singletons', so we only select singletons from exac
-				if(MAFthreshold == 0.0 && AC_Adj == 1)
-				{
-					keep = true;
-				}
-				//else it must be under/equal to MAF threshold
-				else if(maf <= MAFthreshold)
-				{
-					keep = true;
-				}
-				
-				//if keep: we have to update this variant to remove any 'ditched' alternative alleles!
-				if(keep)
-				{
-					
-					//update the 'variant annotation' line 'ANN' to match this alt
-					//includes adding 'impact' for later use
-					boolean success = updateANN(exacVariantPlus, alt, maf, AC_Adj, gene);
-					
-					if(success)
-					{
-						res.add(exacVariantPlus);
+			double maf = Double.parseDouble(exacVariantPlus.getKeyVal().get("AF").toString());
+			int AC_Adj = Integer.parseInt(exacVariantPlus.getKeyVal().get("AC_Adj").toString());
 
-						//don't consider other alt alleles, just stick with the one we found first and continue
-						continue filterVariants;
-					}
-				}
+			//we consider each alt allele as a possible 'keep' or 'ditch'
+			//though we only keep 1 alt allele if that one is a match
+			boolean keep = false;
+
+			//the clinvar variants were all 'singletons', so we only select singletons from exac
+			//or it must be under/equal to MAF threshold
+			if((MAFthreshold == 0.0 && AC_Adj == 1) || (maf <= MAFthreshold))
+			{
+				res.add(exacVariantPlus);
 			}
 		}
-//		System.out.println("RETURNING " + res.get(0).getKeyVal().get(VEPimpactCategories.IMPACT).toString());
 		return res;
-	}
-
-	/**
-	 * Helper function to update ANN (annotation) field to only contain the ANN for the matching
-	 * alt allele, containing the highest impact effect, and for canonical transcripts only
-	 * @param exacVariant
-	 * @param altAllele
-	 * @param maf
-	 * @param AC_Adj
-	 * @return
-	 * @throws Exception
-	 */
-	private boolean updateANN(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj, String gene) throws Exception
-	{
-		String alt = exacVariant.getKeyVal().get("ALT").toString();
-		String fullAnn = exacVariant.getE().getString("ANN");
-//		System.out.println("FULLANN " + fullAnn);
-		String ann = GavinUtils.getAnn(fullAnn, gene, alt);
-		if(ann == null)
-		{
-			return false;
-		}
-		exacVariant.getE().set("ANN", fullAnn); //dont put alt-specific ANN in, because we iterate over multiple alts..
-		exacVariant.getE().set("ALT", altAllele);
-		exacVariant.getE().set("AF", maf);
-		exacVariant.getE().set("AC_Adj", AC_Adj);
-	//	System.out.println("ANN = " + ann);
-		String impact = GavinUtils.getImpact(fullAnn, gene, alt).toString();
-		exacVariant.getKeyVal().put("IMPACT", impact);
-
-		return true;
-
-	}
-
-	public ImpactRatios calculateImpactRatiosFromUnprocessedVariants(List<Entity> entities) throws Exception
-	{
-		//liftover entity to entityplus and count
-		List<EntityPlus> clinvarVariants = new ArrayList<EntityPlus>();
-		for(Entity e : entities)
-		{
-			clinvarVariants.add(new EntityPlus(e));
-		}
-		return calculateImpactRatios(clinvarVariants);
 	}
 	
 	/**
@@ -287,21 +191,21 @@ public class Step4_Helper
 	 * @throws Exception
 	 *
 	 */
-	public void countImpacts(Integer[] counts, String impact) throws Exception
+	public void countImpacts(Integer[] counts, Impact impact) throws Exception
 	{
-		if(impact.equals("HIGH"))
+		if(impact == Impact.HIGH)
 		{
 			counts[0]++;
 		}
-		else if(impact.equals("MODERATE"))
+		else if(impact == Impact.MODERATE)
 		{
 			counts[1]++;
 		}
-		else if(impact.equals("LOW"))
+		else if(impact == Impact.LOW)
 		{
 			counts[2]++;
 		}
-		else if(impact.equals("MODIFIER"))
+		else if(impact == Impact.MODIFIER)
 		{
 			counts[3]++;
 		}
@@ -310,74 +214,45 @@ public class Step4_Helper
 			throw new Exception("unrecognized impact: " + impact);
 		}
 	}
-	
+
+
+
 	/**
 	 * Determine ratio of impacts for a list of variants
 	 * @param entities
 	 * @return
 	 * @throws Exception
 	 */
-	public ImpactRatios calculateImpactRatios(List<EntityPlus> entities) throws Exception
+	public ImpactRatios calculateImpactRatios(List<EntityPlus> entities, String gene) throws Exception
 	{
 		Integer[] impactCounts = new Integer[]{ 0, 0, 0, 0};
-		
+
 		for(EntityPlus e : entities)
 		{
-			
-			if(e.getE().getString("ANN") != null)
-			{
-				String impact = null;
-				//clinvar
-				if(e.getE().getString("ANN") != null)
-				{
-					String[] multiAnn = e.getE().getString("ANN").split(",", -1);
-					
-					if(multiAnn.length > 1)
-					{
-						//special: the ANN field for the gene symbol we mapped is not present on index 0
-						//get it from the list of 'exceptions' we stored earlier
-						String chrPosRefAlt = e.getE().getString("#CHROM") + "_" + e.getE().getString("POS") + "_" + e.getE().getString("REF") + "_" + e.getE().getString("ALT");
-						if(variantToNonZeroSnpEffGeneIndex.containsKey(chrPosRefAlt))
-						{
-							impact = multiAnn[variantToNonZeroSnpEffGeneIndex.get(chrPosRefAlt)].split("\\|", -1)[2];
-						}
-						else
-						{
-							impact = multiAnn[0].split("\\|", -1)[2];
-						}
-					}
-					else
-					{
-						impact =  multiAnn[0].split("\\|", -1)[2];
-					}
-					
-				}
-				else
-				{
-					throw new Exception("should not be reached");
-				}
-				
-				countImpacts(impactCounts, impact);
-				
-			}
-			else
-			{
-				throw new Exception("should no longer be reached when ExAC is annotated by SnpEff");
-			}
+			//System.out.println("e: " + e.toString());
+
+			//get alt: for exac this is in getKeyVal() after the intersect, for clinvar this is in getE()
+			String alt = e.getKeyVal().get("ALT") == null ? e.getE().getString("ALT").toString() : e.getKeyVal().get("ALT").toString();
+
+			//get the appropriate IMPACT
+			Impact impact = GavinUtils.getImpact(e.getE().getString("ANN"), gene, alt);
+			countImpacts(impactCounts, impact);
 		}
-		
+
 		double total = impactCounts[0] + impactCounts[1] + impactCounts[2] + impactCounts[3];
 		double highPerc = impactCounts[0] == 0 ? 0 :((double)impactCounts[0]/total)*100.0;
 		double modrPerc = impactCounts[1] == 0 ? 0 : ((double)impactCounts[1]/total)*100.0;
 		double lowPerc = impactCounts[2] == 0 ? 0 : ((double)impactCounts[2]/total)*100.0;
 		double modfPerc = impactCounts[3] == 0 ? 0 : ((double)impactCounts[3]/total)*100;
-		
+
 		ImpactRatios ir = new ImpactRatios(highPerc, modrPerc, lowPerc, modfPerc);
-		
-	//	System.out.println("counts: high=" + nrOfHigh + ", modr=" + nrOfModerate + ", low=" + nrOfLow + ", modf=" + nrOfModifier);
 
 		return ir;
 	}
+
+
+
+
 
 	/**
 	 * TODO: this function has an interesting side effect: when there are (only) HIGH effect variants in clinvar, but only MODERATE (or LOW/MODF) variants in ExAC, the matching fails..
@@ -398,24 +273,24 @@ public class Step4_Helper
 		int nrOfModifier = 0;
 		for(EntityPlus e : exacFilteredByMAF)
 		{
-	//		System.out.println(e.getKeyVal().toString());
-			String impact = e.getKeyVal().get("IMPACT").toString();
-			if(impact.equals("HIGH"))
+		//	System.out.println(e.getKeyVal().toString());
+			Impact impact = Impact.valueOf(e.getKeyVal().get("IMPACT").toString());
+			if(impact == Impact.HIGH)
 			{
 				highImpactVariants.add(e);
 				nrOfHigh++;
 			}
-			else if(impact.equals("MODERATE"))
+			else if(impact == Impact.MODERATE)
 			{
 				modrImpactVariants.add(e);
 				nrOfModerate++;
 			}
-			else if(impact.equals("LOW"))
+			else if(impact == Impact.LOW)
 			{
 				lowImpactVariants.add(e);
 				nrOfLow++;
 			}
-			else if(impact.equals("MODIFIER"))
+			else if(impact == Impact.MODIFIER)
 			{
 				modfImpactVariants.add(e);
 				nrOfModifier++;
@@ -603,24 +478,24 @@ public class Step4_Helper
 		return res;
 	}
 
-	public String determineImpactFilterCat(ImpactRatios exacImpactRatio, ImpactRatios pathoImpactRatio, double pathoMAF) throws Exception
+	public GavinEntry.Category determineImpactFilterCat(ImpactRatios exacImpactRatio, ImpactRatios pathoImpactRatio) throws Exception
 	{
 		
 		if(pathoImpactRatio.high > 0 && exacImpactRatio.high == 0)
 		{
-			return "I1";
+			return GavinEntry.Category.I1;
 		}
 		else if(pathoImpactRatio.moderate > 0 && exacImpactRatio.high == 0 && exacImpactRatio.moderate == 0)
 		{
-			return "I2";
+			return GavinEntry.Category.I2;
 		}
 		else if(pathoImpactRatio.low > 0 && exacImpactRatio.high == 0 && exacImpactRatio.moderate == 0 && exacImpactRatio.low == 0)
 		{
-			return "I3";
+			return GavinEntry.Category.I3;
 		}
 		else
 		{
-			return "T2";
+			return GavinEntry.Category.T2;
 		}
 
 	}

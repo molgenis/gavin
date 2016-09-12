@@ -20,8 +20,36 @@ public class VariantIntersectResult
 		this.inExACOnly = inExACOnly;
 	}
 
-	
-	
-	
-	
+
+	@Override
+	public String toString() {
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("Variant Intersection Result:\n");
+		sb.append("- In both sets, ExAC data:\n");
+		for(EntityPlus e : inBoth_exac)
+		{
+			sb.append("\t"+e.toString() + "\n");
+		}
+
+		sb.append("- In both sets, ClinVar data:\n");
+		for(EntityPlus e : inBoth_clinvar)
+		{
+			sb.append("\t"+e.toString() + "\n");
+		}
+
+		sb.append("- In ClinVar only:\n");
+		for(EntityPlus e : inClinVarOnly)
+		{
+			sb.append("\t"+e.toString() + "\n");
+		}
+
+		sb.append("- In ExAC only:\n");
+		for(EntityPlus e : inExACOnly)
+		{
+			sb.append("\t"+e.toString() + "\n");
+		}
+
+		return sb.toString();
+	}
 }
