@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +26,7 @@ public class Step4_MatchingVariantsFromExAC
 	 * Uses:
 	 * [0] file produced in step 3
 	 * [1] ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz (+ in the same folder ExAC.r0.3.sites.vep.vcf.gz.tbi )
-	 * [2] output file
+	 * [2] output file (produce 3 files: output.cadd, output.genes, output.variants)
 	 * 
 	 * Example:
 	 * E:\Data\clinvarcadd\clinvar.patho.fix.snpeff.vcf
@@ -46,7 +47,9 @@ public class Step4_MatchingVariantsFromExAC
 	HashMap<String, List<Entity>> clinvarPatho = new HashMap<String, List<Entity>>();
 	HashMap<String, List<EntityPlus>> matchedExACvariants = new HashMap<String, List<EntityPlus>>();
 	HashMap<String, String> geneInfo = new HashMap<String, String>();
-	
+	Map<String, String> clinvarToSnpEffGene = new HashMap<String, String>();
+
+
 	// keep track of which 'ANN' field index was used to match the gene to ClinVar symbol
 	//e.g. if the matched gene is the second ANN field, we need to use that impact in the analysis
 	HashMap<String, Integer> variantToNonZeroSnpEffGeneIndex = new HashMap<String, Integer>();
@@ -120,11 +123,12 @@ public class Step4_MatchingVariantsFromExAC
 					}
 
 					// sometimes, a SnpEff symbol 'contains' the ClinVar symbol
-					// happens quite often, e.g. TTN-AS1 contains TTN, INS-IGF2 contains INS etc.
+					// e.g. INS-IGF2 contains INS etc.
 					// if this happens, assign the ClinVar symbol (ie. the smaller one) and we're done
 					else if (snpEffGene.contains(geneAccordingToClinVar))
 					{
 						finalGeneSymbol = geneAccordingToClinVar;
+						clinvarToSnpEffGene.put(geneAccordingToClinVar, snpEffGene);
 					}
 					
 					// opposite scenario: clinvar gene contains the snpeff one, use the snpeff one
@@ -149,13 +153,14 @@ public class Step4_MatchingVariantsFromExAC
 
 			// still no joy?
 			// there is a difference we cannot resolve nicely
-			// so we concatenate the symbols from both
+			// use clinvar and store snpeff for later matching
 			if (finalGeneSymbol == null)
 			{
 				// simple case: we have 1 + 1
 				if(genesAccordingToSnpEff.size() == 1)
 				{
-					finalGeneSymbol = geneAccordingToClinVar + "_" + genesAccordingToSnpEff.iterator().next();
+					finalGeneSymbol = geneAccordingToClinVar;
+					clinvarToSnpEffGene.put(geneAccordingToClinVar, genesAccordingToSnpEff.iterator().next());
 				}
 				
 				
@@ -177,6 +182,7 @@ public class Step4_MatchingVariantsFromExAC
 						snpEffGenes +=  "_" + snpEffGene;
 					}
 					finalGeneSymbol = geneAccordingToClinVar + snpEffGenes;
+					throw new Exception("1 clinvar and 2+ snpeff symbols");
 				}
 			}		
 
@@ -212,6 +218,10 @@ public class Step4_MatchingVariantsFromExAC
 		for (String gene : clinvarPatho.keySet())
 		{
 			index++;
+
+			//clinvar is the leading gene name provider, but if there is a different SnpEff name, we should used
+			//that to map with the ANN field
+			String snpEffgene = clinvarToSnpEffGene.containsKey(gene) ? clinvarToSnpEffGene.get(gene) : gene;
 			
 			/** DEV **/
 //			if(!gene.equals("TYROBP"))
@@ -290,7 +300,7 @@ public class Step4_MatchingVariantsFromExAC
 				//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
 				//if we have nothing to go on, we will set this to 0 and only select singleton variants
 				double pathogenicMAF = st4h.calculatePathogenicMAF(vir.inBoth_exac, vir.inClinVarOnly.size());
-				List<EntityPlus> exacFilteredByMAF = st4h.filterExACvariantsByMAF(vir.inExACOnly, pathogenicMAF);
+				List<EntityPlus> exacFilteredByMAF = st4h.filterExACvariantsByMAF(vir.inExACOnly, pathogenicMAF, snpEffgene);
 
 				System.out.println("exaconly filtered down to " + exacFilteredByMAF.size() + " variants using pathogenic MAF " + pathogenicMAF);
 

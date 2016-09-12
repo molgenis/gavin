@@ -26,7 +26,6 @@ public class Step4_Helper
 	/**
 	 * If these ExAC and ClinVar variants have a matching ALT allele, report the ExAC AF, else return 0
 	 * @param clinvarVariant
-	 * @param exacVariant
 	 * @return
 	 * @throws Exception
 	 */
@@ -180,7 +179,7 @@ public class Step4_Helper
 	 * @return
 	 * @throws Exception
 	 */
-	public List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold) throws Exception
+	public List<EntityPlus> filterExACvariantsByMAF(List<EntityPlus> inExACOnly, double MAFthreshold, String gene) throws Exception
 	{
 		List<EntityPlus> res = new ArrayList<EntityPlus>();
 		
@@ -216,9 +215,9 @@ public class Step4_Helper
 				if(keep)
 				{
 					
-					//update the 'variant annotation' line 'CSQ' to match this alt
+					//update the 'variant annotation' line 'ANN' to match this alt
 					//includes adding 'impact' for later use
-					boolean success = updateCSQ(exacVariantPlus, alt, maf, AC_Adj);
+					boolean success = updateANN(exacVariantPlus, alt, maf, AC_Adj, gene);
 					
 					if(success)
 					{
@@ -235,7 +234,7 @@ public class Step4_Helper
 	}
 
 	/**
-	 * Helper function to update CSQ (consequence) field to only contain the CSQ for the matching
+	 * Helper function to update ANN (annotation) field to only contain the ANN for the matching
 	 * alt allele, containing the highest impact effect, and for canonical transcripts only
 	 * @param exacVariant
 	 * @param altAllele
@@ -244,78 +243,28 @@ public class Step4_Helper
 	 * @return
 	 * @throws Exception
 	 */
-	private boolean updateCSQ(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj) throws Exception
+	private boolean updateANN(EntityPlus exacVariant, String altAllele, double maf, int AC_Adj, String gene) throws Exception
 	{
-		String csq = exacVariant.getE().getString("CSQ");
-		
-		//can be null when using +/- 100 bp window! e.g. for 19:36399198
-		if(csq == null)
+		String alt = exacVariant.getKeyVal().get("ALT").toString();
+		String fullAnn = exacVariant.getE().getString("ANN");
+//		System.out.println("FULLANN " + fullAnn);
+		String ann = GavinUtils.getAnn(fullAnn, gene, alt);
+		if(ann == null)
 		{
 			return false;
 		}
+		exacVariant.getE().set("ANN", fullAnn); //dont put alt-specific ANN in, because we iterate over multiple alts..
+		exacVariant.getE().set("ALT", altAllele);
+		exacVariant.getE().set("AF", maf);
+		exacVariant.getE().set("AC_Adj", AC_Adj);
+	//	System.out.println("ANN = " + ann);
+		String impact = GavinUtils.getImpact(fullAnn, gene, alt).toString();
+		exacVariant.getKeyVal().put("IMPACT", impact);
 
-		boolean found = false;
-		
-		//multiple transcripts, with each multiple alleles
-		for(String csqs : csq.split(",", -1))
-		{
-			String[] csqSplit = csqs.split("\\|", -1);
-			
-//			System.out.println("csqSplit[0]="+csqSplit[0]);
-//			System.out.println("csqSplit[18]="+csqSplit[18]);
-	
-			if(csqSplit[0].equals(altAllele) && csqSplit[18].equals("YES"))
-			{
-				exacVariant.getE().set("CSQ", csqs);
-				exacVariant.getE().set("ALT", altAllele);
-				exacVariant.getE().set("AF", maf);
-				exacVariant.getE().set("AC_Adj", AC_Adj);
-				String impact = getHighestImpact(csqSplit[4]);
-				exacVariant.getKeyVal().put(VEPimpactCategories.IMPACT, impact);
-				found = true;
-				break;
-			}
-		}
-		
-		if(!found)
-		{
-	//		System.out.println("could not return CSQ, no alt allele match for '"+altAllele+"' && 'YES' consensus for " + csq);
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-		
+		return true;
+
 	}
 
-	/**
-	 * Helper function to get the highest impact type for a specific ref-alt combination in ExAC
-	 * e.g. "splice_acceptor_variant&non_coding_transcript_variant" is both HIGH and MODIFIER impact
-	 * we want to consider the HIGH impact in this case
-	 * @param csqConsequences
-	 * @return
-	 * @throws Exception
-	 */
-	private String getHighestImpact(String csqConsequences) throws Exception
-	{
-		int highestImpactRank = -1;
-		for(String consequence : csqConsequences.split("&", -1))
-		{
-			String impact = VEPimpactCategories.getImpact(consequence);
-			int impactRank = VEPimpactCategories.getImpactRank(impact);
-			if(impactRank > highestImpactRank)
-			{
-				highestImpactRank = impactRank;
-			}
-		}
-		if(highestImpactRank == -1)
-		{
-			throw new Exception("no impact match on " + csqConsequences);
-		}
-		return highestImpactRank == 3 ? "HIGH" : highestImpactRank == 2 ? "MODERATE" : highestImpactRank == 1 ? "LOW" : "MODIFIER";
-	}
-	
 	public ImpactRatios calculateImpactRatiosFromUnprocessedVariants(List<Entity> entities) throws Exception
 	{
 		//liftover entity to entityplus and count
@@ -375,7 +324,7 @@ public class Step4_Helper
 		for(EntityPlus e : entities)
 		{
 			
-			if(e.getE().getString("ANN") != null || e.getKeyVal().get(VEPimpactCategories.IMPACT) != null)
+			if(e.getE().getString("ANN") != null)
 			{
 				String impact = null;
 				//clinvar
@@ -403,11 +352,6 @@ public class Step4_Helper
 					}
 					
 				}
-				//exac
-				else if(e.getKeyVal().get(VEPimpactCategories.IMPACT) != null)
-				{
-					impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
-				}
 				else
 				{
 					throw new Exception("should not be reached");
@@ -418,26 +362,7 @@ public class Step4_Helper
 			}
 			else
 			{
-				//we are looking at the 'raw' exac data, that does not have an updated CSQ line per allele
-				//so lets get impacts right now
-			
-				//get consequence field
-				String csq = e.getE().getString("CSQ");
-				
-				if(csq == null)
-				{
-					continue;
-				}
-				
-				//multiple transcripts, with each multiple alleles
-				boolean canonicalTranscriptFound = countImpactsInCSQ(csq, impactCounts, true);
-				
-				//for some genes, there are no annotated canonical transcripts (e.g. 'KIZ')
-				//re-count except now for any transcript
-				if(!canonicalTranscriptFound)
-				{
-					countImpactsInCSQ(csq, impactCounts, false);
-				}
+				throw new Exception("should no longer be reached when ExAC is annotated by SnpEff");
 			}
 		}
 		
@@ -452,30 +377,6 @@ public class Step4_Helper
 	//	System.out.println("counts: high=" + nrOfHigh + ", modr=" + nrOfModerate + ", low=" + nrOfLow + ", modf=" + nrOfModifier);
 
 		return ir;
-	}
-	
-	/**
-	 * Count protein impacts from all consequences (comma-separated). If countCanonicalOnly, the 'canonical' field must be 'YES'.
-	 * @param csq
-	 * @param countCanonicalOnly
-	 * @return
-	 * @throws Exception 
-	 */
-	public boolean countImpactsInCSQ(String csq, Integer[] impactCounts, boolean countCanonicalOnly) throws Exception
-	{
-		boolean canonicalTranscriptFound = false;
-		for(String csqs : csq.split(",", -1))
-		{
-			String[] csqSplit = csqs.split("\\|", -1);
-	
-			if((countCanonicalOnly && csqSplit[18].equals("YES")) || !countCanonicalOnly)
-			{
-				canonicalTranscriptFound = true;
-				String csqImpact = getHighestImpact(csqSplit[4]);
-				countImpacts(impactCounts, csqImpact);
-			}
-		}
-		return canonicalTranscriptFound;
 	}
 
 	/**
@@ -498,7 +399,7 @@ public class Step4_Helper
 		for(EntityPlus e : exacFilteredByMAF)
 		{
 	//		System.out.println(e.getKeyVal().toString());
-			String impact = e.getKeyVal().get(VEPimpactCategories.IMPACT).toString();
+			String impact = e.getKeyVal().get("IMPACT").toString();
 			if(impact.equals("HIGH"))
 			{
 				highImpactVariants.add(e);
