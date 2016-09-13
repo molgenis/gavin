@@ -10,9 +10,14 @@ public class BootStrappingAnalysisRunner
 {
 	public static void main(String[] args) throws Exception
 	{
-		String fullSet = "/Users/joeri/Desktop/old/Desktop/clinvarcadd/combined_datasets_for_external_scoring/cat_all_vcfs.txt";
-		String gavin = "/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_r0.1.tsv";
-		String outFile = "/Users/joeri/github/gavin/data/other/performancebootstrap_output_usedinpaper.r";
+		//this is simply all files in the data/goldstandards/ folder, concatenated together
+		String fullSet = "/Users/joeri/Desktop/clinvarcadd/combined_datasets_for_external_scoring/gavin_benchmark_annotated.vcf";
+
+		//calibration file
+		String gavin = "/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_r0.2.tsv";
+
+		//output file, see BootstrapResultsPlot.R for further plotting/statistics on this file
+		String outFile = "/Users/joeri/github/gavin/data/other/performancebootstrap_output_usedinpaper_r0.2.r";
 
 		int iterations = 10000;
 
