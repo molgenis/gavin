@@ -17,7 +17,7 @@ ggplot() + geom_boxplot(data = df, aes(x = Label, fill = Calib, colour=Tool, y =
   scale_fill_manual(values=c(blueishgreen, yellow, reddishpurple), 
                     name="Selected gene group",
                     breaks=c("C1_C2", "C4", "C3"),
-                    labels=c("CADD predictive genes (737)", "CADD less predictive genes (x)", "Scarce training data genes (x)")) +
+                    labels=c("CADD predictive genes (737)", "CADD less predictive genes (684)", "Scarce training data genes (766)")) +
   scale_colour_manual(values=c("black", "blue"), name="GAVIN classification", breaks=c("GAVIN", "GAVINnocal"), labels=c("Gene-specific", "Genome-wide")) +
   coord_flip()
 
