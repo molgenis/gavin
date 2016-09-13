@@ -128,16 +128,16 @@ public class Step4_MatchingVariantsFromExAC {
 			//there are a lot of genes with only 1 pathogenic variant.. a bit silly to consider them seriously for calibration work, drop and report as N1 (N=1)
 			if (clinvarPatho.get(gene).size() < 2) {
 				System.out.println("DROPPED - Too few clinvar variants");
-				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.N1, chrom, leftMostPos, rightMostPos), null);
-				//TODO: print results to file
+				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.N1, chrom, leftMostPos, rightMostPos, null), null);
+				printGeneToFile(gcr, pw_geneInfo);
 				continue nextGene;
 			}
 
 			// too few exac variants
 			if (exacVariants.size() < 2) {
 				System.out.println("DROPPED - Too few exac variants");
-				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.N2, chrom, leftMostPos, rightMostPos), null);
-				//TODO: print results to file
+				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.N2, chrom, leftMostPos, rightMostPos, null), null);
+				printGeneToFile(gcr, pw_geneInfo);
 				continue nextGene;
 			}
 
@@ -154,8 +154,8 @@ public class Step4_MatchingVariantsFromExAC {
 
 			if (exacFilteredByMAF.size() == 0) {
 				System.out.println("DROPPED - Too few exac variants after filtering with pathogenic MAF" + pathogenicMAF);
-				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.T1, chrom, leftMostPos, rightMostPos), null);
-				//TODO: print results to file
+				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.T1, chrom, leftMostPos, rightMostPos, pathogenicMAF), null);
+				printGeneToFile(gcr, pw_geneInfo);
 				continue nextGene;
 			}
 
@@ -173,17 +173,18 @@ public class Step4_MatchingVariantsFromExAC {
 				System.out.println("DROPPED - No match for impact profile, but we did learn something");
 				ImpactRatios MAFfilteredExacImpactRatio = st4h.calculateImpactRatios(exacFilteredByMAF, gene);
 				GavinEntry.Category cat = st4h.determineImpactFilterCat(MAFfilteredExacImpactRatio, pathoImpactRatio);
-				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, cat, chrom, leftMostPos, rightMostPos), null);
-				//TODO: print results to file
+				GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, cat, chrom, leftMostPos, rightMostPos, pathogenicMAF), null);
+				printGeneToFile(gcr, pw_geneInfo);
 				continue nextGene;
 			}
 
 
-			GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.Cx, chrom, leftMostPos, rightMostPos), exacFilteredByMAFandImpact);
+			GeneCalibResult gcr = new GeneCalibResult(new GavinEntry(gene, GavinEntry.Category.Cx, chrom, leftMostPos, rightMostPos, pathogenicMAF), exacFilteredByMAFandImpact);
 			System.out.println("INFO - calibrated gene ! impact ratio of population reference: " + st4h.calculateImpactRatios(exacFilteredByMAFandImpact, gene));
 
-
-			printVariantsToFile(outFile, gene, clinvarPatho.get(gene), gcr, pw_variantInfo, pw_forCADD, pw_geneInfo);
+			//print gene and variant info
+			printGeneToFile(gcr, pw_geneInfo);
+			printVariantsToFile(gene, clinvarPatho.get(gene), gcr, pw_variantInfo, pw_forCADD);
 
 
 
@@ -210,25 +211,27 @@ public class Step4_MatchingVariantsFromExAC {
 
 	}
 
-
-	private void printVariantsToFile(File outFile, String gene, List<Entity> clinvarPatho, GeneCalibResult calibResult, PrintWriter pw_variantInfo, PrintWriter pw_forCADD, PrintWriter pw_geneInfo) throws FileNotFoundException
+	/**
+	 * @param calibResult
+	 * @param pw_geneInfo
+     */
+	private void printGeneToFile(GeneCalibResult calibResult, PrintWriter pw_geneInfo)
 	{
+		pw_geneInfo.println(calibResult.toString());
+	}
 
+	private void printVariantsToFile(String gene, List<Entity> clinvarPatho, GeneCalibResult calibResult, PrintWriter pw_variantInfo, PrintWriter pw_forCADD) throws Exception
+	{
 		for(Entity variant : clinvarPatho)
 		{
 			pw_forCADD.println(variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + "." + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT"));
-			pw_variantInfo.println(gene + "\t" + variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT") + "\t" + "PATHOGENIC");
+			pw_variantInfo.println(gene + "\t" + variant.getString("#CHROM") + "\t" + variant.getString("POS") + "\t" + variant.getString("REF") + "\t" + variant.getString("ALT") + "\t" + "PATHOGENIC" + "\t" + GavinUtils.getEffect(variant.getString("ANN"), gene, variant.getString("ALT")) + "\t" + GavinUtils.getImpact(variant.getString("ANN"), gene, variant.getString("ALT")));
 		}
 		for(EntityPlus variant : calibResult.matchedVariants)
 		{
 			pw_forCADD.println(variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + "." + "\t"+ variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString());
-			pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION");
+			pw_variantInfo.println(gene + "\t" + variant.getE().getString("#CHROM") + "\t" + variant.getE().getString("POS") + "\t" + variant.getE().getString("REF") + "\t" + variant.getKeyVal().get("ALT").toString() + "\t" + "POPULATION" + "\t" + variant.getKeyVal().get("EFFECT").toString() + "\t" + variant.getKeyVal().get("IMPACT").toString());
 		}
-
-		//replace "/" by "_" because R should not write output files with "/" in them, for obvious reasons.
-		//pw_geneInfo.println(gene.replace("/", "_") + "\t" + geneInfo.get(gene));
-
-
 	}
 
 
@@ -273,15 +276,14 @@ public class Step4_MatchingVariantsFromExAC {
 			Set<String> genesAccordingToSnpEff = GavinUtils.getGenesFromAnn(record.getString("ANN"));
 			for(String snpEffGene : genesAccordingToSnpEff)
 			{
-				if (clinvarPatho.containsKey(snpEffGene))
-				{
-					clinvarPatho.get(snpEffGene).add(record);
-				}
-				else
-				{
-					List<Entity> variants = new ArrayList<Entity>();
-					variants.add(record);
-					clinvarPatho.put(snpEffGene, variants);
+				if(!snpEffGene.isEmpty()) {
+					if (clinvarPatho.containsKey(snpEffGene)) {
+						clinvarPatho.get(snpEffGene).add(record);
+					} else {
+						List<Entity> variants = new ArrayList<Entity>();
+						variants.add(record);
+						clinvarPatho.put(snpEffGene, variants);
+					}
 				}
 			}
 		}

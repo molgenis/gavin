@@ -94,7 +94,25 @@ public class GavinUtils
 		}
 		return null;
 	}
-	
+
+	public static String getEffect(String ann, String gene, String allele) throws Exception
+	{
+		//get the right annotation entry that matches both gene and allele
+		String findAnn = getAnn(ann, gene, allele);
+		if(findAnn == null)
+		{
+			System.out.println("WARNING: failed to get effect for gene '"+gene+"', allele '"+allele+"' in " + ann);
+			return null;
+		}
+		else
+		{
+			//from the right one, get the impact
+			String[] fields = findAnn.split("\\|", -1);
+			String effect = fields[1];
+			return effect;
+		}
+	}
+
 	public static Impact getImpact(String ann, String gene, String allele) throws Exception
 	{
 		//get the right annotation entry that matches both gene and allele

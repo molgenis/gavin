@@ -12,7 +12,7 @@ public class Step9_AllValidations
 {
 	public static void main(String[] args) throws Exception
 	{
-		String outFile = "/Users/joeri/github/gavin/data/other/step9_panels_out.R";
+		String outFile = "/Users/joeri/github/gavin/data/other/step9_panels_out_r0.2.R";
 		String path = "/Users/joeri/github/gavin/data/predictions";
 	//	List<String> datasets = Arrays.asList(new String[]{"ClinVarNew", "MutationTaster2", "UMCG_Onco", "UMCG_Various", "VariBenchTest", "VariBenchTraining"});
 		List<String> datasets = Arrays.asList(new String[]{"Renal", "Pulmonary", "Ophthalmologic", "Oncologic", "Obstetric", "NotInCGD", "Neurologic", "Musculoskeletal", "Hematologic", "Genitourinary", "Gastrointestinal", "Endocrine", "Dermatologic", "Dental", "Craniofacial", "Cardiovascular", "Biochemical", "Audiologic_Otolaryngologic", "Allergy_Immunology_Infectious"});

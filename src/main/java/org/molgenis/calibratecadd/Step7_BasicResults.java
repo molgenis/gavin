@@ -20,11 +20,10 @@ import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
  * Read:
  * (e.g. clinvar.patho.fix.snpeff.exac.genes.tsv, output of step 4)
  * 
- * gene	category	info
- * NUP107	N1	less than 2 clinvar variants available
- * IFT172	Cx	ready for cadd calibration with 96 variants
- * MT-TV	N2	0 exac variants in range MT:1606-1644
- * NDST1	T1	no exac variants below MAF 7.000599999999998E-6 known impacts: ImpactRatios [high=0.0, moderate=100.0, low=0.0, modifier=0.0]
+ * Gene	Category	Chr	Start	End	NrOfPopulationVariants	NrOfPathogenicVariants	NrOfOverlappingVariants	NrOfFilteredPopVariants	PathoMAFThreshold	PopImpactHighPerc	PopImpactModeratePerc	PopImpactLowPerc	PopImpactModifierPerc	PathoImpactHighPerc	PathoImpactModeratePerc	PathoImpactLowPerc	PathoImpactModifierPerc	PopImpactHighEq	PopImpactModerateEq	PopImpactLowEq	PopImpactModifierEq
+ * SPINT2	Cx	19	38755433	38782579	269	6	2	6	2.326425E-4	1.92	22.36	16.29	59.42	50.00	33.33	16.67	0.00	50.00	33.33	16.67	0.00
+ * NDST1	T1	5	149921113	149925129	100	4	1	0	7.000599999999998E-6	0.00	25.83	20.83	53.33	0.00	100.00	0.00	0.00
+ * KIAA1109	N1	4	123128323	123128323	18	1	1	0	0	0.00	50.00	22.22	27.78	100.00	0.00	0.00	0.00
  * 
  * 
  * And:
@@ -38,9 +37,11 @@ import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
  * 
  * Write out:
  * (e.g. clinvar.patho.fix.snpeff.exac.genesumm.tsv)
- * 
- * gene	nPath	nPopul	medianPatho	medianPopul	medianDiff
- * IFT172	10	14	22.35	25.69	3.34
+ *
+ * Gene	Category	Chr	Start	End	NrOfPopulationVariants	NrOfPathogenicVariants	NrOfOverlappingVariants	NrOfFilteredPopVariants	PathoMAFThreshold	PopImpactHighPerc	PopImpactModeratePerc	PopImpactLowPerc	PopImpactModifierPerc	PathoImpactHighPerc	PathoImpactModeratePerc	PathoImpactLowPerc	PathoImpactModifierPerc	PopImpactHighEq	PopImpactModerateEq	PopImpactLowEq	PopImpactModifierEq	NrOfCADDScoredPopulationVars	NrOfCADDScoredPathogenicVars	MeanPopulationCADDScore	MeanPathogenicCADDScore	MeanDifference	UTestPvalue	Sens95thPerCADDThreshold	Spec95thPerCADDThreshold
+ * SPINT2	C4	19	38755433	38782579	269	6	2	6	2.326425E-4	1.92	22.36	16.29	59.42	50.00	33.33	16.67	0.00	50.00	33.33	16.67	0.00	6	6	22.05	24.85	2.80	0.33666836761003904	22.30	25.18
+ * NDST1	T1	5	149921113	149925129	100	4	1	0	7.000599999999998E-6	0.00	25.83	20.83	53.33	0.00	100.00	0.00	0.00
+ * KIAA1109	N1	4	123128323	123128323	18	1	1	0	0	0.00	50.00	22.22	27.78	100.00	0.00	0.00	0.00
  *
  *
  *
@@ -56,6 +57,21 @@ public class Step7_BasicResults
 	HashMap<String, ArrayList<String>> geneToVariantAndCADD = new HashMap<String, ArrayList<String>>();
 	NumberFormat f = new DecimalFormat("#0.00");
 	static String NA = "";
+
+
+	public Step7_BasicResults(String geneInfoFile, String variantInfoFile, String outputFile) throws Exception
+	{
+		System.out.println("starting..");
+		loadGeneInfo(geneInfoFile);
+		loadVariantInfo(variantInfoFile);
+		processAndWriteOutput(outputFile);
+		System.out.println("..done");
+	}
+
+	public static void main(String[] args) throws Exception
+	{
+		new Step7_BasicResults(args[0], args[1], args[2]);
+	}
 	
 	public void loadGeneInfo(String geneInfoFile) throws FileNotFoundException
 	{
@@ -107,7 +123,7 @@ public class Step7_BasicResults
 		 * process everything and write out
 		 */
 		PrintWriter pw = new PrintWriter(new File(outputFile));
-		pw.println("Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "NrOfOverlappingVariants" + "\t" + "NrOfFilteredPopVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopImpactHighPerc" + "\t" + "PopImpactModeratePerc" + "\t" + "PopImpactLowPerc" + "\t" + "PopImpactModifierPerc" + "\t" + "PathoImpactHighPerc" + "\t" + "PathoImpactModeratePerc" + "\t" + "PathoImpactLowPerc" + "\t" + "PathoImpactModifierPerc" + "\t" + "PopImpactHighEq" + "\t" + "PopImpactModerateEq" + "\t" + "PopImpactLowEq" + "\t" + "PopImpactModifierEq" + "\t" + "NrOfCADDScoredPopulationVars" + "\t" + "NrOfCADDScoredPathogenicVars" + "\t" + "MeanPopulationCADDScore" + "\t" + "MeanPathogenicCADDScore" + "\t" + "MeanDifference" + "\t" + "UTestPvalue" + "\t" + "Sens95thPerCADDThreshold" +"\t" + "Spec95thPerCADDThreshold" + "\t" + "Recommendation");
+		pw.println("Gene" + "\t" + "Category" + "\t" + "Chr" + "\t" + "Start" + "\t" + "End" + "\t" + "NrOfPopulationVariants" + "\t" + "NrOfPathogenicVariants" + "\t" + "NrOfOverlappingVariants" + "\t" + "NrOfFilteredPopVariants" + "\t" + "PathoMAFThreshold" + "\t" + "PopImpactHighPerc" + "\t" + "PopImpactModeratePerc" + "\t" + "PopImpactLowPerc" + "\t" + "PopImpactModifierPerc" + "\t" + "PathoImpactHighPerc" + "\t" + "PathoImpactModeratePerc" + "\t" + "PathoImpactLowPerc" + "\t" + "PathoImpactModifierPerc" + "\t" + "PopImpactHighEq" + "\t" + "PopImpactModerateEq" + "\t" + "PopImpactLowEq" + "\t" + "PopImpactModifierEq" + "\t" + "NrOfCADDScoredPopulationVars" + "\t" + "NrOfCADDScoredPathogenicVars" + "\t" + "MeanPopulationCADDScore" + "\t" + "MeanPathogenicCADDScore" + "\t" + "MeanDifference" + "\t" + "UTestPvalue" + "\t" + "Sens95thPerCADDThreshold" +"\t" + "Spec95thPerCADDThreshold");
 		
 		int nrOfGenesPathGtPopPval_5perc = 0;
 		int nrOfGenesPathGtPopPval_1perc = 0;
@@ -126,7 +142,7 @@ public class Step7_BasicResults
 				{
 					String[] split = lineForGene.split("\t", -1);
 					String group = split[5];
-					double cadd = Double.parseDouble(split[6]);
+					double cadd = Double.parseDouble(split[8]);
 					if(group.equals("PATHOGENIC"))
 					{
 						caddPatho.add(cadd);
@@ -146,7 +162,7 @@ public class Step7_BasicResults
 				//replace 'Cx' with 'N3'
 				if(caddPatho.size() == 0 || caddPopul.size() == 0)
 				{
-					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + NA, 6));
+					pw.println(gene + "\t" + "N3" + geneToInfo.get(gene).substring(2, geneToInfo.get(gene).length()) + "\t" + caddPopul.size() + "\t" + caddPatho.size() + StringUtils.repeat("\t" + NA, 5));
 					continue;
 				}
 				
@@ -221,20 +237,6 @@ public class Step7_BasicResults
 		
 		pw.flush();
 		pw.close();
-	}
-	
-	public Step7_BasicResults(String geneInfoFile, String variantInfoFile, String outputFile) throws Exception
-	{
-		System.out.println("starting..");
-		loadGeneInfo(geneInfoFile);
-		loadVariantInfo(variantInfoFile);
-		processAndWriteOutput(outputFile);
-		System.out.println("..done");
-	}
-
-	public static void main(String[] args) throws Exception
-	{
-		new Step7_BasicResults(args[0], args[1], args[2]);
 	}
 
 }

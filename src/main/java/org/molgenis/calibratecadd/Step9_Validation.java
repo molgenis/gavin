@@ -117,7 +117,7 @@ public class Step9_Validation
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
-		this.gavinData = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_r0.1.tsv").getGeneToEntry();
+		this.gavinData = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_r0.2.tsv").getGeneToEntry();
 		this.gavin = new GavinAlgorithm();
 		scanMVL(mvlFile, predictionToolPath, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes, outFile);

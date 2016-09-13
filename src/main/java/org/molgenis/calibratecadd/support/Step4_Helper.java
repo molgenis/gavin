@@ -65,6 +65,9 @@ public class Step4_Helper
 				}
 				exacVariantCopy.getKeyVal().put("IMPACT", impact);
 
+				String effect = GavinUtils.getEffect(exacVariant.getString("ANN"), gene, alt);
+				exacVariantCopy.getKeyVal().put("EFFECT", effect);
+
 				exac.add(exacVariantCopy);
 			}
 			//set original to null so we don't accidentally use it somewhere
@@ -72,6 +75,8 @@ public class Step4_Helper
 			exacVariant.set("AF", null);
 			exacVariant.set("AC_Adj", null);
 			exacVariant.set("IMPACT", null);
+			exacVariant.set("EFFECT", null);
+
 		}
 		
 		for (EntityPlus exacVariant : exac)

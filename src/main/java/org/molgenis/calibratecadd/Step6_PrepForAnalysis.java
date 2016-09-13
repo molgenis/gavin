@@ -27,18 +27,20 @@ import org.molgenis.calibratecadd.support.LoadCADDWebserviceOutput;
  * Plus all accompanying information outputted directly by Step 4:
  * 
  * gene	chr	pos	ref	alt	group
- * IFT172	2	27680627	A	T	PATHOGENIC
- * IFT172	2	27700177	A	T	PATHOGENIC
- * IFT172	2	27693963	C	T	PATHOGENIC
+ * IFT172	2	27680627	A	T	PATHOGENIC	splice_region_variant&intron_variant	LOW
+ * IFT172	2	27700177	A	T	PATHOGENIC	missense_variant	MODERATE
+ * IFT172	2	27693963	C	T	PATHOGENIC	splice_acceptor_variant&intron_variant	HIGH
+ * IFT172	2	27667971	TCCTGTG	T	POPULATION	frameshift_variant&splice_acceptor_variant&splice_region_variant&intron_variant	HIGH	36.0
  * etc
  * 
  * 
- * Combine this into:
+ * Combine / clean this into:
  * 
  * gene	chr	pos	ref	alt	group	cadd
- * IFT172	2	27680627	A	T	PATHOGENIC	28.0
- * IFT172	2	27700177	A	T	PATHOGENIC	15.99
- * IFT172	2	27693963	C	T	PATHOGENIC	36
+ * IFT172	2	27680627	A	T	PATHOGENIC	28.0	splice_region_variant	LOW
+ * IFT172	2	27700177	A	T	PATHOGENIC	15.99	missense_variant	MODERATE
+ * IFT172	2	27693963	C	T	PATHOGENIC	36	splice_acceptor_variant	HIGH
+ * IFT172	2	27667971	TCCTGTG	T	POPULATION	frameshift_variant	HIGH	36.0
  * etc
  * 
  *
@@ -48,54 +50,48 @@ public class Step6_PrepForAnalysis
 
 	public static void main(String[] args) throws Exception
 	{
-//		Scanner cadd = new Scanner(new File(args[0]));
-		Scanner info = new Scanner(new File(args[1]));
+		HashMap<String, Double> caddScores = LoadCADDWebserviceOutput.load(new File(args[0]));
+		Scanner variants = new Scanner(new File(args[1]));
 		PrintWriter pw = new PrintWriter(new File(args[2]));
 		
-		HashMap<String, Double> caddScores = LoadCADDWebserviceOutput.load(new File(args[0]));
-		
-//		HashMap<String, Double> caddScores = new HashMap<String, Double>();
-//		
 		String line = null;
-//		while(cadd.hasNextLine())
-//		{
-//			line = cadd.nextLine();
-//			if(line.startsWith("#"))
-//			{
-//				continue;
-//			}
-//			String[] split = line.split("\t", -1);
-//			caddScores.put(split[0] + "_" + split[1] + "_" + split[2] + "_" + split[3], Double.parseDouble(split[5]));
-//		}
-//		cadd.close();
 		
 		//write header of output
-		pw.println("gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group" + "\t" + "cadd");
+		pw.println("gene" + "\t" + "chr" + "\t" + "pos" + "\t" + "ref" + "\t" + "alt" + "\t" + "group" + "\t" + "effect" + "\t" + "impact" + "\t" + "cadd");
 		
 		//skip header of input
-		info.nextLine();
+		variants.nextLine();
 		
-		while(info.hasNextLine())
+		while(variants.hasNextLine())
 		{
-			line = info.nextLine();
+			line = variants.nextLine();
 			String[] split = line.split("\t", -1);
-			String chrPos = split[1] + "_" + split[2];
+			String gene = split[0];
+			String chr = split[1];
+			String pos = split[2];
 			String ref = split[3];
 			String alt = split[4];
-			String key = chrPos + "_" + ref + "_" + alt;
+			String group = split[5];
+			String effect = split[6];
+			String impact = split[7];
+
+			effect = effect.substring(0, (effect.indexOf("&") == -1 ? effect.length() : effect.indexOf("&")));
+			String printMe = gene + "\t" + chr + "\t" + pos + "\t" + ref + "\t" + alt + "\t" + group + "\t" + effect + "\t" + impact;
+
+			String key = chr + "_" + pos + "_" + ref + "_" + alt;
 			if(caddScores.containsKey(key))
 			{
 				//FIXME: need to replace '/' to prevent problems in R later on when writing plots based on gene names..
-				pw.println(line.replace("/", "_") + "\t" + caddScores.get(key));
+				pw.println(printMe.replace("/", "_") + "\t" + caddScores.get(key));
 			}
 			else
 			{
 				String trimmedRefAlt = LoadCADDWebserviceOutput.trimRefAlt(ref, alt, "_");
-				key = chrPos + "_" + trimmedRefAlt;
+				key = chr + "_" + pos + "_" + trimmedRefAlt;
 				if(caddScores.containsKey(key))
 				{
 					System.out.println("RESOLVED by trimming ref alt " + ref + "_" + alt + " to " + trimmedRefAlt);
-					pw.println(line.replace("/", "_") + "\t" + caddScores.get(key));
+					pw.println(printMe.replace("/", "_") + "\t" + caddScores.get(key));
 				}
 				else
 				{
@@ -105,8 +101,8 @@ public class Step6_PrepForAnalysis
 
 			}
 		}
-		
-		info.close();
+
+		variants.close();
 		pw.flush();
 		pw.close();
 		
