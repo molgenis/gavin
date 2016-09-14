@@ -20,11 +20,11 @@ ggplot() +
   scale_alpha_discrete(range = c(.75, .25))
 
 #basic patho MAF
-calibcaddAllGenes <- read.table('/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_r0.1.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibcaddAllGenes <- read.table('/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_r0.2.tsv',header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 calibcaddAllGenes$PathoMAFThreshold <- as.numeric(calibcaddAllGenes$PathoMAFThreshold)
 mean(calibcaddAllGenes$PathoMAFThreshold, na.rm = T)
-
-
+mean(calibcaddAllGenes$MeanPopulationCADDScore, na.rm = T)
+mean(calibcaddAllGenes$MeanPathogenicCADDScore, na.rm = T)
 
 
 # Multiple plot function
@@ -78,7 +78,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #source("/Users/joeri/github/gavin/data/other/step9_out.R")
 
 # CGD panel sets
-source("/Users/joeri/github/gavin/data/other/step9_panels_out.R")
+source("/Users/joeri/github/gavin/data/other/step9_panels_out_r0.2.R")
 
 #### ADD DERIVED COLUMNS ####
 df$TotalToolClsfNonVOUS <- 0
@@ -114,6 +114,8 @@ for(i in unique(df$Tool)) {
   row <- data.frame(Tool = i, medianSens = medianSens, medianSpec = medianSpec, medianPPV = medianPPV, medianNPV = medianNPV)
   stats <- rbind(stats, row)
 }
+stats
+
 
 #bit pointless but nevertheless: stats per data set (panel)
 panelstats <- data.frame()
