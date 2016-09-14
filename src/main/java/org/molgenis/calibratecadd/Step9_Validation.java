@@ -87,10 +87,10 @@ public class Step9_Validation
 	{
 		if(args.length != 4)
 		{
-			throw new Exception("please provide: gavin file, variant vcf, tool, output file");
+			throw new Exception("please provide: gavin file, variant vcf, tool, output file, version [e.g. 'r0.2']");
 		}
 		new File(args[3]).createNewFile();
-		new Step9_Validation(args[0], args[1], args[2], args[3]);
+		new Step9_Validation(args[0], args[1], args[2], args[3], args[4]);
 		GavinAnnotator ga = new GavinAnnotator();
 	//	ga.gavin().annotateEntity();
 	}
@@ -106,7 +106,7 @@ public class Step9_Validation
 	 * Check if classification matches
 	 * @throws Exception 
 	 */
-	public Step9_Validation(String predictionToolPath, String mvlLoc, String mode, String outFile) throws Exception
+	public Step9_Validation(String predictionToolPath, String mvlLoc, String mode, String outFile, String version) throws Exception
 	{
 		if(!EnumUtils.isValidEnum(ToolNames.class, mode))
 		{
@@ -117,7 +117,7 @@ public class Step9_Validation
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
-		this.gavinData = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_r0.2.tsv").getGeneToEntry();
+		this.gavinData = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_"+version+".tsv").getGeneToEntry();
 		this.gavin = new GavinAlgorithm();
 		scanMVL(mvlFile, predictionToolPath, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes, outFile);

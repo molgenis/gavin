@@ -47,7 +47,7 @@ public class AbstractValidationTest
 
 		for(String dataset: datasets)
 		{
-			new Step9_Validation(predictionsDir.getAbsolutePath(), new File(panelsDir, dataset).getAbsolutePath(), tool, observed.getAbsolutePath());
+			new Step9_Validation(predictionsDir.getAbsolutePath(), new File(panelsDir, dataset).getAbsolutePath(), tool, observed.getAbsolutePath(), "r0.1");
 		}
 
 		System.out.println("Going to compare files:\n\n" + expected.getAbsolutePath() + "\nvs.\n" + observed.getAbsolutePath());
