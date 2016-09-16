@@ -122,7 +122,7 @@ public class Step4_MatchingVariantsFromExAC {
 			}
 
 			System.out.println("\n#####\n");
-			System.out.println(gene + " (" + index + " of " + clinvarPatho.keySet().size() + ") at " + chrom + ":" + leftMostPos + "-" + rightMostPos + " " + " has " + clinvarPatho.get(gene).size() + " patho variants, and " + exacVariants.size() + " exac variants");
+			System.out.println(gene + " (" + index + " of " + clinvarPatho.keySet().size() + ") at " + chrom + ":" + leftMostPos + "-" + rightMostPos + " " + " has " + clinvarPatho.get(gene).size() + " patho variants, and " + exacVariants.size() + " exac sites (possibly multi-allelic)");
 
 
 			//there are a lot of genes with only 1 pathogenic variant.. a bit silly to consider them seriously for calibration work, drop and report as N1 (N=1)
@@ -144,7 +144,7 @@ public class Step4_MatchingVariantsFromExAC {
 			// intersect the sets
 			VariantIntersectResult vir = st4h.intersectVariants(exacVariants, clinvarPatho.get(gene), gene);
 
-			System.out.println("INFO - VariantIntersectResult for '" + gene + "', clinvaronly: " + vir.inClinVarOnly.size() + ", exaconly: " + vir.inExACOnly.size() + ", both: " + vir.inBoth_exac.size());
+			System.out.println("INFO - VariantIntersectResult for '" + gene + "' unique variants, clinvaronly: " + vir.inClinVarOnly.size() + ", exaconly: " + vir.inExACOnly.size() + ", both: " + vir.inBoth_exac.size());
 
 			//calculate MAF for shared variants, and use them to filter the other ExAC variants
 			//this way, we use the overlap to determine a fair cutoff for the 'assumed benign' variants
@@ -165,6 +165,7 @@ public class Step4_MatchingVariantsFromExAC {
 			//calculate impact ratios over all clinvar variants, and use them to 'shape' the remaining ExAC variants
 			//they must become a set that looks just like the ClinVar variants, including same distribution of impact types
 			ImpactRatios pathoImpactRatio = st4h.calculateImpactRatios(Stream.concat(vir.inClinVarOnly.stream(), vir.inBoth_clinvar.stream()).collect(Collectors.toList()), gene);
+			System.out.println("INFO - ExAC-only impact ratio: " + st4h.calculateImpactRatios(vir.inExACOnly, gene));
 			List<EntityPlus> exacFilteredByMAFandImpact = st4h.shapeExACvariantsByImpactRatios(exacFilteredByMAF, pathoImpactRatio);
 
 			System.out.println("INFO - Using Pathogenic impact ratio " + pathoImpactRatio + ", ExAC-only filtered down to " + exacFilteredByMAFandImpact.size() + " variants");
