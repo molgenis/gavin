@@ -29,7 +29,7 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 * This emulates the classification process using a different tool.
 * You can do this already for the GoldStandard_UMCG_MVLs_noClinVar data set. Use the "Prediction_UMCG_MVLs_noClinVar_XXXX" files for this (see code below).
 * 
-* First argument: the CCGG output file. Typically: CCGG_ClassificationSource_GeneSummary.tsv
+* First argument: the GAVIN output file. Typically: GAVIN_calibrations_r0.2.tsv
 * 
 * Second argument:
 * A gold standard file to test against. Typically a VCF file with 'MVL' and 'CLSF' columns denoting expert validated interpretations.
@@ -77,7 +77,7 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 * @author jvelde
 *
 */
-public class Step9_Validation
+public class Benchmark
 {
 	public enum ToolNames{
 		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC_ClinVar95CI, MSC_HGMD99CI, Condel, PredictSNP2, FATHMM, GWAVA, FunSeq, DANN
@@ -90,7 +90,7 @@ public class Step9_Validation
 			throw new Exception("please provide: gavin file, variant vcf, tool, output file, version [e.g. 'r0.2']");
 		}
 		new File(args[3]).createNewFile();
-		new Step9_Validation(args[0], args[1], args[2], args[3], args[4]);
+		new Benchmark(args[0], args[1], args[2], args[3], args[4]);
 		GavinAnnotator ga = new GavinAnnotator();
 	//	ga.gavin().annotateEntity();
 	}
@@ -106,7 +106,7 @@ public class Step9_Validation
 	 * Check if classification matches
 	 * @throws Exception 
 	 */
-	public Step9_Validation(String predictionToolPath, String mvlLoc, String mode, String outFile, String version) throws Exception
+	public Benchmark(String predictionToolPath, String mvlLoc, String mode, String outFile, String version) throws Exception
 	{
 		if(!EnumUtils.isValidEnum(ToolNames.class, mode))
 		{

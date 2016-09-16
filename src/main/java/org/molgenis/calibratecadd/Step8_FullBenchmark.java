@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class Step9_AllValidations
+public class Step8_FullBenchmark
 {
 	public static void main(String[] args) throws Exception
 	{
@@ -31,7 +31,7 @@ public class Step9_AllValidations
 		{
 			for(String tool: tools)
 			{
-				new Step9_Validation(path, "/Users/joeri/github/gavin/data/goldstandards/cgdpanels/" + dataset, tool, outFile, version);
+				new Benchmark(path, "/Users/joeri/github/gavin/data/goldstandards/cgdpanels/" + dataset, tool, outFile, version);
 			}
 		}
 
