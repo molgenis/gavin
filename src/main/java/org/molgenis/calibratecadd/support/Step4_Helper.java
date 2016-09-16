@@ -306,7 +306,7 @@ public class Step4_Helper
 			}
 		}
 		
-		System.out.println("counting exac impacts: high="+nrOfHigh+", modr="+nrOfModerate+", low="+nrOfLow + ", modf="+nrOfModifier);
+		//System.out.println("counting exac impacts: high="+nrOfHigh+", modr="+nrOfModerate+", low="+nrOfLow + ", modf="+nrOfModifier);
 		
 		//tackle:
 		//we have impact ratios, e.g.: [high=40, moderate=53, low=7, modifier=0]
@@ -467,19 +467,23 @@ public class Step4_Helper
 		//'how often does the final size fit within the list of variants? e.g. want 20 out of 190 variants = 9x
 		//this means we will step through the variant list in steps of 9, to get 'even coverage'
 		int div = Math.floorDiv(size, size-amountToRemove);
+
 		List<EntityPlus> res = new ArrayList<EntityPlus>();
 		for(int step = 0; step < size; step += div)
 		{
 			res.add(variants.get(step));
+			//when stepping with 1, stop once we have enough
+			if(res.size() == size-amountToRemove)
+			{
+				break;
+			}
 		}
-		
-	//	System.out.println("DIV: " + div);
-		
+
 		if(res.size() < size-amountToRemove)
 		{
 			throw new Exception("result too few! need" + (size-amountToRemove) + " variants, got " + res.size());
 		}
-		
+
 		return res;
 	}
 
