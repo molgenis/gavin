@@ -72,7 +72,7 @@ mean(calibcaddAllGenes$MeanPopulationCADDScore, na.rm = T)
 mean(calibcaddAllGenes$MeanPathogenicCADDScore, na.rm = T)
 mean(calibcaddAllGenes$MeanDifference, na.rm = T)
 sd(calibcaddAllGenes$MeanDifference, na.rm = T)
-
+table(calibcaddAllGenes$Category)
 
 
 
