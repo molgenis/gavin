@@ -1,9 +1,8 @@
 package org.molgenis.calibratecadd.support;
 
-import org.molgenis.calibratecadd.Step9_Validation;
+import org.molgenis.calibratecadd.Benchmark;
 
 import java.io.File;
-import java.util.List;
 
 
 public class BootStrappingAnalysisRunner
@@ -27,7 +26,7 @@ public class BootStrappingAnalysisRunner
 		}
 		new File(outFile).createNewFile();
 
-		BootStrappingAnalysis ba = new BootStrappingAnalysis(fullSet, gavin, outFile, Step9_Validation.ToolNames.GAVIN);
+		BootStrappingAnalysis ba = new BootStrappingAnalysis(fullSet, gavin, outFile, Benchmark.ToolNames.GAVIN);
 
 		for(int i = 0 ; i < iterations; i ++)
 		{
@@ -36,7 +35,7 @@ public class BootStrappingAnalysisRunner
 			ba.getStatsOnSet(ba.randomSubset(100, 100, BootStrappingVariant.Label.C4));
 		}
 
-		ba = new BootStrappingAnalysis(fullSet, gavin, outFile, Step9_Validation.ToolNames.GAVINnocal);
+		ba = new BootStrappingAnalysis(fullSet, gavin, outFile, Benchmark.ToolNames.GAVINnocal);
 
 		for(int i = 0 ; i < iterations; i ++)
 		{

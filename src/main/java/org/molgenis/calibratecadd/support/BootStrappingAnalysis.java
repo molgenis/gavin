@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 
-import org.molgenis.calibratecadd.Step9_Validation;
+import org.molgenis.calibratecadd.Benchmark;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.OutCome;
 import org.molgenis.calibratecadd.support.BootStrappingVariant.ExpClsf;
 import org.molgenis.data.Entity;
@@ -27,27 +27,27 @@ public class BootStrappingAnalysis
 	private List<BootStrappingVariant> variantClsfResults = new ArrayList<BootStrappingVariant>();
 	private String outputFile;
 	private BootStrappingVariant.Label label;
-	private Step9_Validation.ToolNames toolName;
+	private Benchmark.ToolNames toolName;
 
 	public static void main(String[] args) throws Exception
 	{
-		new BootStrappingAnalysis(args[0], args[1], args[3], Step9_Validation.ToolNames.valueOf(args[4]));
+		new BootStrappingAnalysis(args[0], args[1], args[3], Benchmark.ToolNames.valueOf(args[4]));
 	}
 
 	/**
-	 * checked to give the exact same behaviour as Step9_Validation
+	 * checked to give the exact same behaviour as Benchmark
 	 * Except now we do random subsets of variants
 	 * @param vcfFile
 	 * @param gavinFile
 	 * @throws Exception
 	 */
-	public BootStrappingAnalysis(String vcfFile, String gavinFile, String outputFile, Step9_Validation.ToolNames toolName) throws Exception
+	public BootStrappingAnalysis(String vcfFile, String gavinFile, String outputFile, Benchmark.ToolNames toolName) throws Exception
 	{
 		this.outputFile = outputFile;
 		this.toolName = toolName;
 		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tAcc\n".getBytes(), StandardOpenOption.APPEND);
 
-		HashMap<String, GavinEntry> gavinData = Step9_Validation.loadCCGG(gavinFile).getGeneToEntry();
+		HashMap<String, GavinEntry> gavinData = Benchmark.loadCCGG(gavinFile).getGeneToEntry();
 		GavinAlgorithm gavin = new GavinAlgorithm();
 
 		// file with combined variants has 25,995 variants
@@ -99,12 +99,12 @@ public class BootStrappingAnalysis
 					Impact impact = GavinUtils.getImpact(ann, gene, alt);
 					geneToIdMatchFound = true;
 					Judgment judgment;
-					if (toolName.equals(Step9_Validation.ToolNames.GAVIN))
+					if (toolName.equals(Benchmark.ToolNames.GAVIN))
 					{
 						judgment = gavin.classifyVariant(impact, CADDscore, MAF, gene, null, gavinData);
 
 					}
-					else if (toolName.equals(Step9_Validation.ToolNames.GAVINnocal))
+					else if (toolName.equals(Benchmark.ToolNames.GAVINnocal))
 					{
 						judgment = gavin.genomewideClassifyVariant(impact, CADDscore, MAF, gene);
 					}
