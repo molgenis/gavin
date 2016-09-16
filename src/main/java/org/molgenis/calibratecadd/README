@@ -1,12 +1,10 @@
-Work flow
-
-1) get clinvar pathogenic, curate, write to a vcf file (e.g. 'clinvarpatho.vcf')
+analysis work flow steps in a nutshell:
+1) get clinvar pathogenic variants, curate, write to a vcf file (e.g. 'clinvarpatho.vcf')
 2) fix indel notation where possible by merging with "ClinVar VCF edition"
 3) run snpeff on this file
-4) load clinvar-snpeff vcf and from ExAC, get similar variants
-5) write combined set to VCF and run though CADD web service
-6) combine CADD output with original file and write data frame for R
-7) basic results in the form of a table per gene
-8) run R script to perform advanced statistics and pictures
-
-
+4) load clinvar-snpeff vcf and from ExAC, get similar variants from the same genes
+5) run variant output file though CADD web service
+6) combine CADD output back with original variant file
+7) compute basic results as a calibration table per gene
+8) perform benchmark on GAVIN using calibration table, also run other tools
+9) run R script functions to perform derived statistics and visualizations
