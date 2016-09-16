@@ -63,7 +63,8 @@ df.ponp2 <- subset(df, Tool == "PONP2")
 (sum(df.ponp2$TotalExpertClsfNonVOUS)-sum(df.ponp2$TotalToolClsfNonVOUS)) / sum(df.ponp2$TotalExpertClsfNonVOUS)
 # GAVIN per panel
 df.gavin <- subset(df, Tool == "GAVIN")
-df.gavin[,c(2,16,17)]
+df.gavin.sub <- df.gavin[,c(1,2,5,4,6,7,9,8,16,17)]
+#save: write.table(df.gavin.sub, file = "~/gavinsub.tsv",row.names=FALSE, sep="\t")
 # Basic calculation of pathogenic MAF threshold, CADD means, etc.
 # Uses calibration results and not the benchmark output
 calibcaddAllGenes <- read.table(paste("/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
@@ -106,7 +107,7 @@ ggplot() + annotate("text", x = 1.2:6.2, y = .75, label = rep(c("Genome-wide", "
   scale_fill_manual(values=c(blueishgreen, yellow, skyblue), 
                     name="Selected gene group",
                     breaks=c("C1_C2", "C4", "C3"),
-                    labels=c("CADD predictive genes (737)", "CADD less predictive genes (684)", "Scarce training data genes (766)")) +
+                    labels=c("CADD predictive genes (681)", "CADD less predictive genes (732)", "Scarce training data genes (774)")) +
   scale_colour_manual(values=c("black", vermillion), name="GAVIN classification", breaks=c("GAVIN", "GAVINnocal"), labels=c("Gene-specific", "Genome-wide")) +
   coord_flip()
 
