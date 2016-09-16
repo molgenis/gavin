@@ -1,19 +1,8 @@
 
-version <- "r0.3"
+version <- "r0.2"
 
-# Basic calculation of pathogenic MAF threshold, CADD means
-calibcaddAllGenes <- read.table(paste("/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-mean(calibcaddAllGenes$PathoMAFThreshold, na.rm = T)
-mean(calibcaddAllGenes$MeanPopulationCADDScore, na.rm = T)
-mean(calibcaddAllGenes$MeanPathogenicCADDScore, na.rm = T)
-mean(calibcaddAllGenes$MeanDifference, na.rm = T)
-sd(calibcaddAllGenes$MeanDifference, na.rm = T)
-
-
-# CGD panel sets
+# Full performance results, Supplementary Table 1 in paper
 source(paste("/Users/joeri/github/gavin/data/other/step9_panels_out_",version,".R",sep=""))
-
-#### ADD DERIVED COLUMNS ####
 df$TotalToolClsfNonVOUS <- 0
 df$TotalExpertClsfNonVOUS <- 0
 df$Coverage <- 0
@@ -36,7 +25,7 @@ for(i in 1:nrow(df)) {
 }
 
 
-#stats per tool
+# Aggregated performance stats per tool, Table 3 in paper
 stats <- data.frame()
 for(i in unique(df$Tool)) {
   df.sub <- subset(df, Tool == i)
@@ -47,7 +36,6 @@ for(i in unique(df$Tool)) {
   row <- data.frame(Tool = i, medianSens = medianSens, medianSpec = medianSpec, medianPPV = medianPPV, medianNPV = medianNPV)
   stats <- rbind(stats, row)
 }
-
 stats
 
 
@@ -64,3 +52,16 @@ ggplot() +
   scale_y_continuous(breaks = seq(0, 1, by = 0.1))
 
 
+# Miscellaneous numbers
+df.ponp2 <- subset(df, Tool == "PONP2")
+# Percentage variants not classified across total benchmark variant count
+(sum(df.ponp2$TotalExpertClsfNonVOUS)-sum(df.ponp2$TotalToolClsfNonVOUS)) / sum(df.ponp2$TotalExpertClsfNonVOUS)
+
+# Basic calculation of pathogenic MAF threshold, CADD means, etc.
+# Uses calibration results and not the benchmark output
+calibcaddAllGenes <- read.table(paste("/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+mean(calibcaddAllGenes$PathoMAFThreshold, na.rm = T)
+mean(calibcaddAllGenes$MeanPopulationCADDScore, na.rm = T)
+mean(calibcaddAllGenes$MeanPathogenicCADDScore, na.rm = T)
+mean(calibcaddAllGenes$MeanDifference, na.rm = T)
+sd(calibcaddAllGenes$MeanDifference, na.rm = T)

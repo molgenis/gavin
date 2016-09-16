@@ -1,12 +1,13 @@
 
 ### bootstrap analysis result processing
+
 lightgray <- "#cccccc"; gray <- "#999999"; orange <- "#E69F00"; skyblue <- "#56B4E9"; blueishgreen <- "#009E73"
 yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <- "#CC79A7"
-
 
 df <- read.table("/Users/joeri/github/gavin/data/other/performancebootstrap_output_usedinpaper_r0.2.r",header=TRUE)
 df$Acc <- as.double(as.character(df$Acc))
 
+# Figure 2 in paper
 ggplot() + annotate("text", x = 1.2:6.2, y = .75, label = rep(c("Genome-wide", "Gene-specific"), 3)) + 
   geom_boxplot(data = df, aes(x = Label, y = Acc, fill = Calib, colour=Tool), size=1.1) +
   theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
