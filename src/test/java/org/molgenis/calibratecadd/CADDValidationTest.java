@@ -9,7 +9,7 @@ public class CADDValidationTest {
 
     @Test
     public void testPredictionTool() throws Exception {
-        new AbstractValidationTest("CADD").testPredictionTool();
+        new AbstractValidationTest("CADD_Thr15").testPredictionTool();
     }
 
 }
