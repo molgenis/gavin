@@ -24,56 +24,12 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 /**
 * Assess the performance of an in silico variant pathogenicity prediction tool on gold standard datasets.
 * 
-* In short: you can run any 'gold standard file' against the CCGG tool, as long as this is a VCF with columns for MVL, CLSF, CADD_SCALED and EXAC_AF.
+* In short: you can run any 'gold standard file' against the GAVIN tool, as long as this is a VCF with columns for MVL, CLSF, CADD_SCALED and EXAC_AF.
 * If you want to check the performance of a different tool, you must score the MVL manually and link to the (minimized/cleaned) output of these tools here.
 * This emulates the classification process using a different tool.
-* You can do this already for the GoldStandard_UMCG_MVLs_noClinVar data set. Use the "Prediction_UMCG_MVLs_noClinVar_XXXX" files for this (see code below).
-* 
-* First argument: the GAVIN output file. Typically: GAVIN_calibrations_r0.2.tsv
-* 
-* Second argument:
-* A gold standard file to test against. Typically a VCF file with 'MVL' and 'CLSF' columns denoting expert validated interpretations.
-* Three are used and available here:
-* 1) MutationTaster benchmark set (more info: http://www.mutationtaster.org/info/Comparison_20130328_with_results_ClinVar.html)
-* 		GoldStandard_MutationTaster_TestSet.vcf
-* 2) VariBench benign and pathogenic datasets. Used to train and test PON-P2.
-* 		GoldStandard_VariBench_ToleranceDS7_all.vcf.gz
-* 3) UMCG Managed Variant Lists for 5 disease types.
-* 		GoldStandard_UMCG_MVLs_noClinVar.vcf
-* 
-* Third argument:
-* The tool to classify the variants with and subsequently report the performance of this method.
-* Available by default are: 'ccgg' and 'naive', using CCGG_ClassificationSource_GeneSummary.tsv
-* Requiring extra input (pre-scored variants in minimized files) are: 'ponp2', 'mutationtaster2', 'provean', 'sift'
-* See file examples ('Prediction_XXX') in the hardcoded locations on how to plug in different files for different MVL inputs.
-* 
-* Example usages:
-* 
- /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/gavin/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
- ccgg
 *
- /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/gavin/data/GoldStandard_MutationTaster_TestSet.vcf
- ccgg
+* Example usages: See Step8_FullBenchmark.java
 *
- /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/gavin/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
- provean
-*
- /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/gavin/data/GoldStandard_VariBench_ToleranceDS7_all.vcf.gz
- ccgg
-* 
- /Users/jvelde/github/maven/gavin/data/CCGG_ClassificationSource_GeneSummary.tsv
- /Users/jvelde/github/maven/gavin/data/GoldStandard_UMCG_MVLs_noClinVar.vcf
- ponp2
-* 
-* MS Windows paths:
- C:\Users\Joeri\github\gavin\data\CCGG_ClassificationSource_GeneSummary.tsv
- C:\Users\Joeri\github\gavin\data\GoldStandard_UMCG_MVLs_noClinVar.vcf
- ccgg
-* 
 * @author jvelde
 *
 */
@@ -101,9 +57,7 @@ public class Benchmark
 	int judgmentsInCalibratedGenes = 0;
 	
 	/**
-	 * Take MVL (annotated with CADD, ExAC, SnpEff)
-	 * Take CCGG thresholds
-	 * Check if classification matches
+	 * Benchmark the performance of a prediction tool
 	 * @throws Exception 
 	 */
 	public Benchmark(String predictionToolPath, String mvlLoc, String mode, String outFile, String version) throws Exception
@@ -117,7 +71,7 @@ public class Benchmark
 		{
 			throw new Exception("MVL file "+mvlFile+" does not exist or is directory");
 		}
-		this.gavinData = loadCCGG(predictionToolPath + File.separatorChar + "GAVIN_calibrations_"+version+".tsv").getGeneToEntry();
+		this.gavinData = loadGAVIN(predictionToolPath + File.separatorChar + "GAVIN_calibrations_"+version+".tsv").getGeneToEntry();
 		this.gavin = new GavinAlgorithm();
 		scanMVL(mvlFile, predictionToolPath, ToolNames.valueOf(mode));
 		ProcessJudgedVariantMVLResults.printResults(judgedMVLVariants, mode, mvlFile.getName(), judgmentsInCalibratedGenes, outFile);
@@ -380,14 +334,14 @@ public class Benchmark
 		variants.add(new JudgedVariant(judgment, variant, ExpertClassification.valueOf(mvlClasfc)));
 	}
 	
-	public static GavinUtils loadCCGG(String ccggLoc) throws Exception
+	public static GavinUtils loadGAVIN(String gavinLoc) throws Exception
 	{
-		File ccggFile = new File(ccggLoc);
-		if(!ccggFile.exists())
+		File gavinFile = new File(gavinLoc);
+		if(!gavinFile.exists())
 		{
-			throw new Exception("CCGG file "+ccggFile+" does not exist or is directory");
+			throw new Exception("GAVIN file "+gavinFile+" does not exist or is directory");
 		}
-		GavinUtils ccggUtils = new GavinUtils(ccggFile);
-		return ccggUtils;
+		GavinUtils gavinUtils = new GavinUtils(gavinFile);
+		return gavinUtils;
 	}
 }

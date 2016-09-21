@@ -27,12 +27,12 @@ public class ProcessJudgedVariantMVLResults
 	public static void printResults(HashMap<String, List<JudgedVariant>> judgedMVLVariants, String toolName, String datasetName, int judgmentsInCalibratedGenes, String outFile) throws Exception
 	{
 		printCountsOfExpertMVLClassifications(judgedMVLVariants);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, null);
+		printCountsOfGAVINMVLClassifications(judgedMVLVariants, null);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, null);
 		//printYield();
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.calibrated);
+		printCountsOfGAVINMVLClassifications(judgedMVLVariants, Method.calibrated);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.calibrated);
-		printCountsOfCCGGMVLClassifications(judgedMVLVariants, Method.genomewide);
+		printCountsOfGAVINMVLClassifications(judgedMVLVariants, Method.genomewide);
 		calculateAndPrint_FP_FN_stats(judgedMVLVariants, Method.genomewide);
 		reportVOUScounts(judgedMVLVariants, Method.calibrated);
 		printVOUSresults(judgedMVLVariants, Method.calibrated);
@@ -347,7 +347,7 @@ public class ProcessJudgedVariantMVLResults
 		return (int)Math.round((OPM)*100) + "%";
 	}
 
-	public static void printCountsOfCCGGMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
+	public static void printCountsOfGAVINMVLClassifications(HashMap<String, List<JudgedVariant>> judgedMVLVariants, Method method)
 	{
 		System.out.println("\nCounts, method: " + (method == null ? "all" : method));
 		int grandTotal = 0;

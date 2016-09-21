@@ -47,7 +47,7 @@ public class BootStrappingAnalysis
 		this.toolName = toolName;
 		Files.write(Paths.get(outputFile), "Label\tCalib\tTool\tAcc\n".getBytes(), StandardOpenOption.APPEND);
 
-		HashMap<String, GavinEntry> gavinData = Benchmark.loadCCGG(gavinFile).getGeneToEntry();
+		HashMap<String, GavinEntry> gavinData = Benchmark.loadGAVIN(gavinFile).getGeneToEntry();
 		GavinAlgorithm gavin = new GavinAlgorithm();
 
 		// file with combined variants has 25,995 variants

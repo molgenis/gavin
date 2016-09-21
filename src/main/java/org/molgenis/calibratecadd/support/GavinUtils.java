@@ -16,9 +16,9 @@ public class GavinUtils
 {
 	HashMap<String, GavinEntry> geneToEntry = new HashMap<String, GavinEntry>();
 	
-	public GavinUtils(File ccgg) throws Exception
+	public GavinUtils(File gavin) throws Exception
 	{	
-		Scanner s = new Scanner(ccgg);
+		Scanner s = new Scanner(gavin);
 		
 		//skip header
 		s.nextLine();
@@ -173,8 +173,8 @@ public class GavinUtils
 
 	public static void main(String[] args) throws Exception
 	{
-		File ccgg = new File(args[0]);
-		new GavinUtils(ccgg);
+		File gavin = new File(args[0]);
+		new GavinUtils(gavin);
 
 	}
 
