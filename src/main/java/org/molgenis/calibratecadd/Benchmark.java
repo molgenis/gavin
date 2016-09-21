@@ -80,7 +80,7 @@ import org.molgenis.data.annotation.entity.impl.gavin.Judgment.Method;
 public class Benchmark
 {
 	public enum ToolNames{
-		GAVIN, GAVINnocal, PONP2, CADD, PROVEAN, SIFT, PolyPhen2, MSC_ClinVar95CI, MSC_HGMD99CI, Condel, PredictSNP2, FATHMM, GWAVA, FunSeq, DANN
+		GAVIN, GAVINnocal, PONP2, CADD_Thr15, CADD_Thr20, CADD_Thr25, PROVEAN, SIFT, PolyPhen2, MSC_ClinVar95CI, MSC_HGMD99CI, Condel, PredictSNP2, FATHMM, GWAVA, FunSeq, DANN
 	}
 	
 	public static void main(String[] args) throws Exception
@@ -250,7 +250,7 @@ public class Benchmark
 					{
 						judgment = predictSNP2r.classifyVariantUsingPredictSNP2Results(chr, pos, ref, alt, mode.toString());
 					}
-					else if (mode.equals(ToolNames.CADD))
+					else if (mode.equals(ToolNames.CADD_Thr15))
 					{
 						if(CADDscore != null && CADDscore > 15)
 						{
@@ -259,6 +259,34 @@ public class Benchmark
 						else if(CADDscore != null && CADDscore <= 15)
 						{
 							judgment = new Judgment(Classification.Benign, Method.calibrated, gene, "CADD score <= 15");
+						}
+						else{
+							judgment = new Judgment(Classification.VOUS, Method.calibrated, gene, "CADD score not available");
+						}
+					}
+					else if (mode.equals(ToolNames.CADD_Thr20))
+					{
+						if(CADDscore != null && CADDscore > 20)
+						{
+							judgment = new Judgment(Classification.Pathogenic, Method.calibrated, gene, "CADD score > 20");
+						}
+						else if(CADDscore != null && CADDscore <= 20)
+						{
+							judgment = new Judgment(Classification.Benign, Method.calibrated, gene, "CADD score <= 20");
+						}
+						else{
+							judgment = new Judgment(Classification.VOUS, Method.calibrated, gene, "CADD score not available");
+						}
+					}
+					else if (mode.equals(ToolNames.CADD_Thr25))
+					{
+						if(CADDscore != null && CADDscore > 25)
+						{
+							judgment = new Judgment(Classification.Pathogenic, Method.calibrated, gene, "CADD score > 25");
+						}
+						else if(CADDscore != null && CADDscore <= 25)
+						{
+							judgment = new Judgment(Classification.Benign, Method.calibrated, gene, "CADD score <= 25");
 						}
 						else{
 							judgment = new Judgment(Classification.VOUS, Method.calibrated, gene, "CADD score not available");

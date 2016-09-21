@@ -31,7 +31,8 @@ for(i in 1:nrow(df)) {
   df[i,]$NPV <- df[i,]$TN/(df[i,]$TN+df[i,]$FN)
   df[i,]$ACC <- (df[i,]$TP+df[i,]$TN)/(df[i,]$TP+df[i,]$TN+df[i,]$FP+df[i,]$FN+df[i,]$ExpPathoAsVOUS+df[i,]$ExpBenignAsVOUS)
 }
-#save: write.table(df, file = "~/gavinbenchmark.tsv",row.names=FALSE, sep="\t")
+df.selectedcolumns <- df[,c(1,2,5,4,6,7,9,8,16,17)]
+#save: write.table(df.selectedcolumns, file = "~/gavinbenchmark.tsv",row.names=FALSE, sep="\t")
 
 # Aggregated performance stats per tool, Table 3 in paper
 stats <- data.frame()
@@ -54,9 +55,9 @@ ggplot() +
   geom_point(data = df, aes(x = Sensitivity, y = Specificity, shape = Tool, colour = Tool), size=3, stroke = 3, alpha=0.75) +
   geom_text(data = df, aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, check_overlap = TRUE) +
   geom_text(data = df.notincgd , aes(x = Sensitivity, y = Specificity, label = Data), hjust = 0, nudge_x = 0.01, size = 3, colour="red",check_overlap = TRUE) +
-  scale_colour_manual(values=rainbow(14)) +
-  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) +
-  scale_x_continuous(lim=c(0.393,1), breaks = seq(0, 1, by = 0.1)) +
+  scale_colour_manual(values=rainbow(16)) +
+  scale_shape_manual(values = c(1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) +
+  scale_x_continuous(lim=c(0.377,1), breaks = seq(0, 1, by = 0.1)) +
   scale_y_continuous(breaks = seq(0, 1, by = 0.1))
 
 ###########################################################
