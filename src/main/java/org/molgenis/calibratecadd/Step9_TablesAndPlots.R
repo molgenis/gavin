@@ -3,11 +3,14 @@
 ######################################################
 
 version <- "r0.2"
+pathToGavinGitRepo <- "/Users/joeri/github/gavin"
 
 library(ggplot2)
+lightgray <- "#cccccc"; gray <- "#999999"; orange <- "#E69F00"; skyblue <- "#56B4E9"; blueishgreen <- "#009E73"
+yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <- "#CC79A7"
 
 # Full performance results, Supplementary Table 1 in paper
-source(paste("/Users/joeri/github/gavin/data/other/step9_panels_out_",version,".R",sep=""))
+source(paste(pathToGavinGitRepo,"/data/other/step9_panels_out_",version,".R",sep=""))
 df$TotalToolClsfNonVOUS <- 0
 df$TotalExpertClsfNonVOUS <- 0
 df$Coverage <- 0
@@ -70,7 +73,7 @@ df.gavin.sub <- df.gavin[,c(1,2,5,4,6,7,9,8,16,17)]
 
 # Basic calculation of pathogenic MAF threshold, CADD means, etc.
 # Uses calibration results and not the benchmark output
-calibrations <- read.table(paste("/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+calibrations <- read.table(paste(pathToGavinGitRepo,"/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
 mean(calibrations$PathoMAFThreshold, na.rm = T)
 mean(calibrations$MeanPopulationCADDScore, na.rm = T)
 mean(calibrations$MeanPathogenicCADDScore, na.rm = T)
@@ -79,10 +82,7 @@ sd(calibrations$MeanDifference, na.rm = T)
 table(calibrations$Category)
 
 # Some plots/stats on the variants used in calibration
-variants <- read.table("/Users/joeri/github/gavin/data/other/clinvar_exac_calibrationvariants_r0.2.tsv", sep="\t", header=T)
-lightgray <- "#cccccc"; gray <- "#999999"; orange <- "#E69F00"; skyblue <- "#56B4E9"; blueishgreen <- "#009E73"
-yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <- "#CC79A7"
-cbPalette <- c(gray, orange, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)
+variants <- read.table(paste(pathToGavinGitRepo,"/data/other/clinvar_exac_calibrationvariants_",version,".tsv",sep=""), sep="\t", header=T)
 ggplot() +
   theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
   geom_jitter(data = variants, aes(x = cadd, y = effect, colour = group, alpha=group), stroke = 2, size=2, position = position_jitter(width = .5, height=.5)) +
@@ -121,14 +121,7 @@ ggplot() +
 # Bootstrap analysis result processing and plotting
 ###################################################
 
-version <- "r0.2"
-
-library(ggplot2)
-
-lightgray <- "#cccccc"; gray <- "#999999"; orange <- "#E69F00"; skyblue <- "#56B4E9"; blueishgreen <- "#009E73"
-yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <- "#CC79A7"
-
-bootStrapResults <- paste("/Users/joeri/github/gavin/data/other/performancebootstrap_output_usedinpaper_",version,".r",sep="")
+bootStrapResults <- paste(pathToGavinGitRepo,"/data/other/performancebootstrap_output_usedinpaper_",version,".r",sep="")
 df <- read.table(bootStrapResults,header=TRUE)
 df$Acc <- as.double(as.character(df$Acc))
 
