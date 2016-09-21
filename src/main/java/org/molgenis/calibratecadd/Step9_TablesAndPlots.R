@@ -56,30 +56,70 @@ ggplot() +
   scale_x_continuous(lim=c(0.393,1), breaks = seq(0, 1, by = 0.1)) +
   scale_y_continuous(breaks = seq(0, 1, by = 0.1))
 
+###########################################################
+# Miscellaneous numbers and plots, used in paper or website
+###########################################################
 
-# Miscellaneous numbers
-df.ponp2 <- subset(df, Tool == "PONP2")
 # Percentage variants not classified across total benchmark variant count
+df.ponp2 <- subset(df, Tool == "PONP2")
 (sum(df.ponp2$TotalExpertClsfNonVOUS)-sum(df.ponp2$TotalToolClsfNonVOUS)) / sum(df.ponp2$TotalExpertClsfNonVOUS)
 # GAVIN per panel
 df.gavin <- subset(df, Tool == "GAVIN")
 df.gavin.sub <- df.gavin[,c(1,2,5,4,6,7,9,8,16,17)]
 #save: write.table(df.gavin.sub, file = "~/gavinsub.tsv",row.names=FALSE, sep="\t")
+
 # Basic calculation of pathogenic MAF threshold, CADD means, etc.
 # Uses calibration results and not the benchmark output
-calibcaddAllGenes <- read.table(paste("/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
-mean(calibcaddAllGenes$PathoMAFThreshold, na.rm = T)
-mean(calibcaddAllGenes$MeanPopulationCADDScore, na.rm = T)
-mean(calibcaddAllGenes$MeanPathogenicCADDScore, na.rm = T)
-mean(calibcaddAllGenes$MeanDifference, na.rm = T)
-sd(calibcaddAllGenes$MeanDifference, na.rm = T)
-table(calibcaddAllGenes$Category)
+calibrations <- read.table(paste("/Users/joeri/github/gavin/data/predictions/GAVIN_calibrations_",version,".tsv",sep=""),header=TRUE,sep='\t',quote="",comment.char="",as.is=TRUE)
+mean(calibrations$PathoMAFThreshold, na.rm = T)
+mean(calibrations$MeanPopulationCADDScore, na.rm = T)
+mean(calibrations$MeanPathogenicCADDScore, na.rm = T)
+mean(calibrations$MeanDifference, na.rm = T)
+sd(calibrations$MeanDifference, na.rm = T)
+table(calibrations$Category)
 
+# Some plots/stats on the variants used in calibration
+variants <- read.table("/Users/joeri/github/gavin/data/other/clinvar_exac_calibrationvariants_r0.2.tsv", sep="\t", header=T)
+lightgray <- "#cccccc"; gray <- "#999999"; orange <- "#E69F00"; skyblue <- "#56B4E9"; blueishgreen <- "#009E73"
+yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <- "#CC79A7"
+cbPalette <- c(gray, orange, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)
+ggplot() +
+  theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
+  geom_jitter(data = variants, aes(x = cadd, y = effect, colour = group, alpha=group), stroke = 2, size=2, position = position_jitter(width = .5, height=.5)) +
+  scale_colour_manual(values=c(vermillion, skyblue)) +
+  scale_alpha_discrete(range = c(.75, .25))
 
+## Gene plots, for single selected genes or all genes in a for-loop
+#for (selectGene in unique(variants$gene)) {
+  selectGene <- "RYR2"
+  variants.selectedGene.path <- subset(variants, gene == selectGene & group == "PATHOGENIC")
+  variants.selectedGene.popul <- subset(variants, gene == selectGene & group == "POPULATION")
+  calibrations.selectedGene <- subset(calibrations, Gene == selectGene)
+  p <- ggplot() +
+    geom_point(data = variants.selectedGene.popul, aes(x=pos, y=cadd), colour="blue", pch=19, alpha = .5) +
+    geom_point(data = variants.selectedGene.path, aes(x=pos, y=cadd), colour="red", pch=19, alpha = .5) +
+    geom_abline(intercept = calibrations.selectedGene$MeanPopulationCADDScore, slope = 0, colour = "blue", size = 2, alpha = .5) +
+    geom_abline(intercept = calibrations.selectedGene$MeanPathogenicCADDScore, slope = 0, colour = "red", size = 2, alpha = .5) +
+    geom_abline(intercept = calibrations.selectedGene$Sens95thPerCADDThreshold, slope = 0, colour = "green", size = 2, alpha = .5) +
+    geom_abline(intercept = calibrations.selectedGene$Spec95thPerCADDThreshold, slope = 0, colour = "orange", size = 2, alpha = .5) +
+    theme_bw() +
+    theme(axis.line = element_line(colour = "black"),
+          panel.grid.major = element_line(colour = "black"),
+          panel.grid.minor = element_line(colour = "gray"),
+          panel.border = element_blank(),
+          panel.background = element_blank()
+    ) +
+    labs(title=paste(selectGene, " - pathogenic mean: ", calibrations.selectedGene$MeanPathogenicCADDScore, ", population mean: ", calibrations.selectedGene$MeanPopulationCADDScore, ", p-value: ", signif(as.numeric(calibrations.selectedGene$UTestPvalue), digits=2), "\n95% sensitivity threshold (green): ", calibrations.selectedGene$Sens95thPerCADDThreshold, ", 95% specificity threshold (orange): ", calibrations.selectedGene$Spec95thPerCADDThreshold, "\nRed: ClinVar pathogenic variants - Blue: matched ExAC population variants", sep="")) +
+    ylab("CADD scaled C-score") +
+    xlab(paste("Genomic position [",selectGene,", chr. ",sort(unique(calibrations.selectedGene$Chr)),"]", sep="")) +
+    theme(legend.position = "none")
+  p
+  #ggsave(paste("/Users/jvelde/Desktop/gavin/website/plots/",selectGene,".png", sep=""), width=8, height=4.5)
+#}
 
-##################################################
-# Bootstrap analysis result processingand plotting
-##################################################
+###################################################
+# Bootstrap analysis result processing and plotting
+###################################################
 
 version <- "r0.2"
 

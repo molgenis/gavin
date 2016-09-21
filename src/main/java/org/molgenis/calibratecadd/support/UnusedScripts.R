@@ -11,16 +11,6 @@ yellow <- "#F0E442"; blue <-"#0072B2"; vermillion <- "#D55E00"; reddishpurple <-
 cbPalette <- c(gray, orange, skyblue, blueishgreen, yellow, blue, vermillion, reddishpurple)
 
 
-# variant plot
-variants <- read.table("/Users/joeri/Desktop/gavin-paper/REBUTTAL/clinvar.patho.fix.snpeff.exacsnpeff.vcf.variants.withcadd.tsv", sep="\t", header=T)
-ggplot() +
-  theme_bw() + theme(panel.grid.major = element_line(colour = "black"), axis.text=element_text(size=12),  axis.title=element_text(size=14,face="bold")) +
-  geom_jitter(data = variants, aes(x = cadd, y = effect, colour = group, alpha=group), stroke = 2, size=2, position = position_jitter(width = .5, height=.5)) +
-  scale_colour_manual(values=c(vermillion, skyblue)) +
-  scale_alpha_discrete(range = c(.75, .25))
-
-
-
 # Multiple plot function
 #
 # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
