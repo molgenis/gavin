@@ -47,8 +47,6 @@ public class Benchmark
 		}
 		new File(args[3]).createNewFile();
 		new Benchmark(args[0], args[1], args[2], args[3], args[4]);
-		GavinAnnotator ga = new GavinAnnotator();
-	//	ga.gavin().annotateEntity();
 	}
 
 	HashMap<String, GavinEntry> gavinData;
