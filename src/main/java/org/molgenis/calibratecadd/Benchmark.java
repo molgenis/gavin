@@ -43,7 +43,7 @@ public class Benchmark
 	{
 		if(args.length != 4)
 		{
-			throw new Exception("please provide: gavin file, variant vcf, tool, output file, version [e.g. 'r0.2']");
+			throw new Exception("please provide: path of predictions (e.g. ~/github/gavin/data/predictions), your variant vcf, tool name, output file, version [e.g. 'r0.2']");
 		}
 		new File(args[3]).createNewFile();
 		new Benchmark(args[0], args[1], args[2], args[3], args[4]);
