@@ -21,6 +21,9 @@
 ## N1 = Too few ClinVar variants for calibration at this time.
 ## N2 = Too few ExAC variants found for calibration.
 ## 
+## For C1 and C2, we use CADD score means of stratified benign and pathogenic variants.
+## For C3, C4 and C5 we use 95th percentile sensitivity/specificity thresholds of benign and pathogenic CADD score distributions.
+## 
 ## Genome-wide rules are applied if the gene-specific rules have failed to classify.
 ## These general rules are as follows:
 ## If impact equals MODIFIER -> benign

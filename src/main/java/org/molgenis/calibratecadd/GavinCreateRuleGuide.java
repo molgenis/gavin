@@ -70,6 +70,9 @@ public class GavinCreateRuleGuide {
         pw.println("## N1 = Too few ClinVar variants for calibration at this time.");
         pw.println("## N2 = Too few ExAC variants found for calibration.");
         pw.println("## ");
+        pw.println("## For C1 and C2, we use CADD score means of stratified benign and pathogenic variants.");
+        pw.println("## For C3, C4 and C5 we use 95th percentile sensitivity/specificity thresholds of benign and pathogenic CADD score distributions.");
+        pw.println("## ");
         pw.println("## Genome-wide rules are applied if the gene-specific rules have failed to classify.");
         pw.println("## These general rules are as follows:");
         pw.println("## If impact equals MODIFIER -> benign");
