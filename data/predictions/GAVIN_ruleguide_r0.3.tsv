@@ -8,28 +8,28 @@
 ## https://github.com/molgenis/molgenis and https://github.com/molgenis/gavin
 ## 
 ## Explanation of the gene calibration categories:
-## C1 = CADD scores highly predictive (pval < 0.01)
-## C2 = CADD scores predictive (pval < 0.05)
-## C3 = CADD may be predictive (pval > 0.05 but with few samples)
-## C4 = CADD not so predictive (pval > 0.05 with enough samples)
-## C5 = CADD not so predictive (population CADD > pathogenic CADD)
-## I1 = HIGH impact unique for pathogenic variants
-## I2 = MODERATE or HIGH impact unique for pathogenic variants
-## I3 = LOW or MODERATE or HIGH impact unique for pathogenic variants
+## C1 = CADD scores highly significantly predictive for pathogenicity (pval < 0.01).
+## C2 = CADD scores significantly predictive for pathogenicity (pval < 0.05).
+## C3 = CADD scores may be predictive for pathogenicity (pval > 0.05 but with few samples).
+## C4 = CADD scores less predictive for pathogenicity (pval > 0.05 with enough samples).
+## C5 = CADD scores less predictive for pathogenicity (population CADD > pathogenic CADD).
+## I1 = HIGH impact unique for, thus predictive, for pathogenic variants.
+## I2 = MODERATE or HIGH impact unique, thus predictive, for pathogenic variants.
+## I3 = LOW or MODERATE or HIGH impact unique, thus predictive, for pathogenic variants.
 ## T1 = Too few exac variants after filtering with pathogenic 95th percentile MAF.
 ## T2 = Too few exac variants after filtering with impact distribution.
 ## N1 = Too few ClinVar variants for calibration at this time.
 ## N2 = Too few ExAC variants found for calibration.
 ## 
-## For C1 and C2, we use CADD score means of stratified benign and pathogenic variants.
-## For C3, C4 and C5 we use 95th percentile sensitivity/specificity thresholds of benign and pathogenic CADD score distributions.
+## For C1 and C2, CADD score thresholds are means of stratified benign and pathogenic variants.
+## For C3, C4 and C5, CADD score thresholds are 95th sensitivity/specificity percentiles of stratified benign and pathogenic variants.
 ## 
-## Genome-wide rules are applied if the gene-specific rules have failed to classify.
-## These general rules are as follows:
-## If impact equals MODIFIER -> benign
-## If variant MAF greater than 0.004264361 -> benign
-## If CADD less than 15 -> benign
-## If CADD greater than 15 -> pathogenic
+## Genome-wide rules are used if the gene-specific rules fail to classify.
+## These rules are applied as follows:
+## 1) If impact equals MODIFIER -> benign,
+## 2) if MAF greater than 0.004264361 -> benign,
+## 3) if CADD greater than 15 -> pathogenic,
+## 4) if CADD less than 15 -> benign.
 ## 
 Gene	Category	PathogenicIfCADDScoreGreaterThan	BenignIfCADDScoreLessThan	BenignIfMAFGreaterThan	PathogenicIfImpactEquals
 NUP107	C4	31.700000000000003	15.27	8.236E-5	n/a
