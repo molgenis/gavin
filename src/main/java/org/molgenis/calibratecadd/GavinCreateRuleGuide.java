@@ -93,6 +93,8 @@ public class GavinCreateRuleGuide {
             Double sens95thPerCADDThreshold = gavinData.get(gene).Sens95thPerCADDThreshold != null ?
                     gavinData.get(gene).Sens95thPerCADDThreshold - GavinAlgorithm.extraSensitivityFactor : null;
 
+            pathoMAFThreshold = pathoMAFThreshold != null ? Math.min(pathoMAFThreshold, 1) : null;
+
             switch (category) {
                 case C1: case C2:
                     pw.println(gene + sep + category + sep + Math.max(meanPathogenicCADDScore, 0) + sep + Math.max(meanPopulationCADDScore, 0) + sep + pathoMAFThreshold + sep + NA);
