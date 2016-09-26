@@ -56,6 +56,13 @@ public class GavinCreateRuleGuide {
         pw.println("## benchmark GAVIN in the paper (Van der Velde et al., using r0.2), see:");
         pw.println("## https://github.com/molgenis/molgenis and https://github.com/molgenis/gavin");
         pw.println("## ");
+        pw.println("## Genome-wide rules are used if the gene-specific rules fail to classify.");
+        pw.println("## These rules are applied as follows:");
+        pw.println("## 1) If impact equals MODIFIER -> benign,");
+        pw.println("## 2) if MAF greater than " + GavinAlgorithm.GENOMEWIDE_MAF_THRESHOLD + " -> benign,");
+        pw.println("## 3) if CADD greater than "+GavinAlgorithm.GENOMEWIDE_CADD_THRESHOLD+" -> pathogenic,");
+        pw.println("## 4) if CADD less than "+GavinAlgorithm.GENOMEWIDE_CADD_THRESHOLD+" -> benign.");
+        pw.println("## ");
         pw.println("## Explanation of the gene calibration categories:");
         pw.println("## C1 = CADD scores highly significantly predictive for pathogenicity (pval < 0.01).");
         pw.println("## C2 = CADD scores significantly predictive for pathogenicity (pval < 0.05).");
@@ -73,14 +80,7 @@ public class GavinCreateRuleGuide {
         pw.println("## For C1 and C2, CADD score thresholds are means of stratified benign and pathogenic variants.");
         pw.println("## For C3, C4 and C5, CADD score thresholds are 95th sensitivity/specificity percentiles of stratified benign and pathogenic variants.");
         pw.println("## ");
-        pw.println("## Genome-wide rules are used if the gene-specific rules fail to classify.");
-        pw.println("## These rules are applied as follows:");
-        pw.println("## 1) If impact equals MODIFIER -> benign,");
-        pw.println("## 2) if MAF greater than " + GavinAlgorithm.GENOMEWIDE_MAF_THRESHOLD + " -> benign,");
-        pw.println("## 3) if CADD greater than "+GavinAlgorithm.GENOMEWIDE_CADD_THRESHOLD+" -> pathogenic,");
-        pw.println("## 4) if CADD less than "+GavinAlgorithm.GENOMEWIDE_CADD_THRESHOLD+" -> benign.");
-        pw.println("## ");
-        pw.println("Gene" + sep + "Category" + sep + "PathogenicIfCADDScoreGreaterThan" + sep + "BenignIfCADDScoreLessThan" + sep + "BenignIfMAFGreaterThan" + sep + "PathogenicIfImpactEquals");
+        pw.println("Gene" + sep + "PathogenicIfCADDScoreGreaterThan" + sep + "BenignIfCADDScoreLessThan" + sep + "BenignIfMAFGreaterThan" + sep + "PathogenicIfImpactEquals" + sep + "CalibrationCategory" );
 
         for(String gene : gavinData.keySet())
         {
@@ -100,19 +100,19 @@ public class GavinCreateRuleGuide {
 
             switch (category) {
                 case C1: case C2:
-                    pw.println(gene + sep + category + sep + Math.max(meanPathogenicCADDScore, 0) + sep + Math.max(meanPopulationCADDScore, 0) + sep + pathoMAFThreshold + sep + NA);
+                    pw.println(gene + sep + Math.max(meanPathogenicCADDScore, 0) + sep + Math.max(meanPopulationCADDScore, 0) + sep + pathoMAFThreshold + sep + NA + sep + category);
                     break;
                 case C3: case C4: case C5:
-                    pw.println(gene + sep + category + sep + Math.max(spec95thPerCADDThreshold, 0) + sep + Math.max(sens95thPerCADDThreshold, 0) + sep + pathoMAFThreshold + sep + NA);
+                    pw.println(gene + sep + Math.max(spec95thPerCADDThreshold, 0) + sep + Math.max(sens95thPerCADDThreshold, 0) + sep + pathoMAFThreshold + sep + NA + sep + category);
                     break;
                 case I1: case I2: case I3:
-                    pw.println(gene + sep + category + sep + NA + sep + NA + sep + pathoMAFThreshold + sep + (category == Category.I1 ? "HIGH" : category == Category.I2 ? "HIGH,MODERATE" : category == Category.I3 ? "HIGH,MODERATE,LOW" : null));
+                    pw.println(gene + sep + NA + sep + NA + sep + pathoMAFThreshold + sep + (category == Category.I1 ? "HIGH" : category == Category.I2 ? "HIGH,MODERATE" : category == Category.I3 ? "HIGH,MODERATE,LOW" : null) + sep + category);
                     break;
                 case T1: case T2:
-                    pw.println(gene + sep + category + sep + NA + sep + NA + sep + pathoMAFThreshold + sep + NA);
+                    pw.println(gene + sep + NA + sep + NA + sep + pathoMAFThreshold + sep + NA + sep + category);
                     break;
                 case N1: case N2:
-                    pw.println(gene + sep + category + sep + NA + sep + NA + sep + NA + sep + NA);
+                    pw.println(gene + sep + NA + sep + NA + sep + NA + sep + NA + sep + category);
                     break;
 
                 default:
