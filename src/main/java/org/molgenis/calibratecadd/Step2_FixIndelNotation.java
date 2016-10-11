@@ -148,6 +148,10 @@ public class Step2_FixIndelNotation
 		
 		for(String writeLine : lines.getLines().values())
 		{
+
+			//prevent VCF info field termination
+			writeLine = writeLine.replace(";", ",");
+
 			pw.println(writeLine);
 		}
 		
