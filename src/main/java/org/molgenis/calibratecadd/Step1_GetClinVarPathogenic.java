@@ -48,7 +48,7 @@ public class Step1_GetClinVarPathogenic
 	}
 	
 	
-	public static HashMap<String, List<ClinVarVariant>> getAsMap(File clinvarFile) throws FileNotFoundException
+	public static HashMap<String, List<ClinVarVariant>> getAsMap(File clinvarFile) throws Exception
 	{
 		System.out.println("loading clinvar..");
 		HashMap<String, List<ClinVarVariant>> res = new HashMap<String, List<ClinVarVariant>>();
@@ -59,21 +59,30 @@ public class Step1_GetClinVarPathogenic
 
 		int lost = 0;
 		int totalvariants = 0;
-		
+
+		//skip header
+		line = s.nextLine();
+
 		while (s.hasNextLine())
 		{
 			line = s.nextLine();
 			String[] lineSplit = line.split("\t", -1);
 
 			// needs to be GRCh37
-			String genomeBuild = lineSplit[12];
+			String genomeBuild = lineSplit[16];
+
+			if (!genomeBuild.equals("GRCh37") && !genomeBuild.equals("GRCh38") && !genomeBuild.equals("NCBI36") && !genomeBuild.equals(""))
+			{
+				throw new Exception("bad genome build: " + genomeBuild);
+			}
+
 			if (!genomeBuild.equals("GRCh37"))
 			{
 				continue;
 			}
 
 			// needs to contain 'pathogenic'
-			String clinsig = lineSplit[5];
+			String clinsig = lineSplit[6];
 			if (!clinsig.toLowerCase().contains("pathogenic"))
 			{
 				continue;
@@ -104,11 +113,11 @@ public class Step1_GetClinVarPathogenic
 				continue;
 			}
 
-			String chrom = lineSplit[13];
-			String pos = lineSplit[14];
-			String id = lineSplit[6];
-			String ref = lineSplit[25];
-			String alt = lineSplit[26];
+			String chrom = lineSplit[18];
+			String pos = lineSplit[19];
+			String id = lineSplit[9];
+			String ref = lineSplit[21];
+			String alt = lineSplit[22];
 
 			ClinVarVariant cvv = new ClinVarVariant(chrom, pos, id, ref, alt, name, gene, clinsig);
 			
