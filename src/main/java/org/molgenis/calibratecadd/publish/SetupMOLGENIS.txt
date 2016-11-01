@@ -35,5 +35,12 @@ Give the anonymous user EDIT permissions on the Gavin plugin
 Give anonymous user EDIT permissions on GavinJobExecution plugin
 Configure annotation resources
 
+7) load ruleguide
+Load the ruleguide emx, found on: https://molgenis26.gcc.rug.nl/downloads/gavin/variantclassificationwebtool/ 
+and give permissions to anonymous to view
 
+8) Configure menu
+Change dataexplorer menu item to: 
+Name: "Ruleguide"
+Query string: "entity=gavin_ruleguide&hideselect=true"
 
