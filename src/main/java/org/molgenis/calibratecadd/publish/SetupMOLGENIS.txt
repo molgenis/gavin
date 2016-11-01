@@ -1,6 +1,6 @@
 
-1) Import data
-todo
+1) change title 
+change title to to "GAVIN - MOLGENIS" in the app settings
 
 
 2) Setup home screen
